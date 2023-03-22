@@ -1,5 +1,6 @@
 package node
 
+// Tree 属性结构
 type Tree struct {
 	Children        []Statement
 	DeclarationList []*VariableDeclaration

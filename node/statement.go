@@ -4,60 +4,71 @@ import (
 	"github.com/team-ide/go-interpreter/token"
 )
 
-/**表达式**/
+/** 语句 **/
 
 // Statement 所有语句节点都实现了 Statement 接口
 type Statement interface {
 	Node
 	isStatement()
 }
+
+// BadStatement 错误的语句
 type BadStatement struct {
 	From *Position
 	To   *Position
 }
 
+// BlockStatement block语句
 type BlockStatement struct {
 	LeftBrace  *Position
 	List       []Statement
 	RightBrace *Position
 }
 
+// BranchStatement branch语句
 type BranchStatement struct {
 	Idx   *Position
 	Token token.Token
 	Label *Identifier
 }
 
+// CaseStatement case语句
 type CaseStatement struct {
 	Case       *Position
 	Test       Expression
 	Consequent []Statement
 }
 
+// CatchStatement cache快
 type CatchStatement struct {
 	Catch     *Position
 	Parameter BindingTarget
 	Body      *BlockStatement
 }
 
+// DebuggerStatement debugger语句
 type DebuggerStatement struct {
 	Debugger *Position
 }
 
+// DoWhileStatement do while 语句
 type DoWhileStatement struct {
 	Do   *Position
 	Test Expression
 	Body Statement
 }
 
+// EmptyStatement 空语句
 type EmptyStatement struct {
 	Semicolon *Position
 }
 
+// ExpressionStatement 表达式语句
 type ExpressionStatement struct {
 	Expression Expression
 }
 
+// ForInStatement for in 语句
 type ForInStatement struct {
 	For    *Position
 	Into   ForInto
@@ -65,6 +76,7 @@ type ForInStatement struct {
 	Body   Statement
 }
 
+// ForOfStatement for of 语句
 type ForOfStatement struct {
 	For    *Position
 	Into   ForInto
@@ -72,6 +84,7 @@ type ForOfStatement struct {
 	Body   Statement
 }
 
+// ForStatement for 语句
 type ForStatement struct {
 	For         *Position
 	Initializer ForLoopInitializer
@@ -80,6 +93,7 @@ type ForStatement struct {
 	Body        Statement
 }
 
+// IfStatement if 语句
 type IfStatement struct {
 	If         *Position
 	Test       Expression
@@ -87,17 +101,20 @@ type IfStatement struct {
 	Alternate  Statement
 }
 
+// LabelledStatement 带标签的 语句
 type LabelledStatement struct {
 	Label     *Identifier
 	Colon     *Position
 	Statement Statement
 }
 
+// ReturnStatement 返回 语句
 type ReturnStatement struct {
 	Return   *Position
 	Argument Expression
 }
 
+// SwitchStatement switch 语句
 type SwitchStatement struct {
 	Switch       *Position
 	Discriminant Expression
@@ -105,11 +122,13 @@ type SwitchStatement struct {
 	Body         []*CaseStatement
 }
 
+// ThrowStatement throw 语句
 type ThrowStatement struct {
 	Throw    *Position
 	Argument Expression
 }
 
+// TryStatement try 语句
 type TryStatement struct {
 	Try     *Position
 	Body    *BlockStatement
@@ -117,37 +136,44 @@ type TryStatement struct {
 	Finally *BlockStatement
 }
 
+// VariableStatement 变量 语句
 type VariableStatement struct {
 	Var  *Position
 	List []*Binding
 }
 
+// LexicalDeclaration 词汇声明
 type LexicalDeclaration struct {
 	Idx   *Position
 	Token token.Token
 	List  []*Binding
 }
 
+// WhileStatement while 语句
 type WhileStatement struct {
 	While *Position
 	Test  Expression
 	Body  Statement
 }
 
+// WithStatement with 语句
 type WithStatement struct {
 	With   *Position
 	Object Expression
 	Body   Statement
 }
 
+// FunctionDeclaration 函数 声明
 type FunctionDeclaration struct {
 	Function *FunctionLiteral
 }
 
+// ClassDeclaration 类 声明
 type ClassDeclaration struct {
 	Class *ClassLiteral
 }
 
+/* 实现 Statement 接口 */
 func (*BadStatement) isStatement()        {}
 func (*BlockStatement) isStatement()      {}
 func (*BranchStatement) isStatement()     {}
@@ -172,6 +198,8 @@ func (*WithStatement) isStatement()       {}
 func (*LexicalDeclaration) isStatement()  {}
 func (*FunctionDeclaration) isStatement() {}
 func (*ClassDeclaration) isStatement()    {}
+
+/* 实现 Node Start 接口 */
 
 func (this_ *BadStatement) Start() *Position        { return this_.From }
 func (this_ *BlockStatement) Start() *Position      { return this_.LeftBrace }
@@ -198,6 +226,8 @@ func (this_ *LexicalDeclaration) Start() *Position  { return this_.Idx }
 func (this_ *FunctionDeclaration) Start() *Position { return this_.Function.Start() }
 func (this_ *ClassDeclaration) Start() *Position    { return this_.Class.Start() }
 func (this_ *Binding) Start() *Position             { return this_.Target.Start() }
+
+/* 实现 Node End 接口 */
 
 func (this_ *BadStatement) End() *Position        { return this_.To }
 func (this_ *BlockStatement) End() *Position      { return this_.RightBrace.NewByColumnOffset(1) }

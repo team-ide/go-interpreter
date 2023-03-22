@@ -2,16 +2,19 @@ package node
 
 /** 声明 **/
 
+// VariableDeclaration 变量声明
 type VariableDeclaration struct {
 	Var  *Position
 	List []*Binding
 }
 
+// ClassElement 类元素
 type ClassElement interface {
 	Node
 	isClassElement()
 }
 
+// FieldDefinition 字段定义
 type FieldDefinition struct {
 	Idx         *Position
 	Key         Expression
@@ -20,6 +23,7 @@ type FieldDefinition struct {
 	Static      bool
 }
 
+// PropertyKind 属性类型
 type PropertyKind string
 
 const (
@@ -29,6 +33,7 @@ const (
 	PropertyKindMethod PropertyKind = "method"
 )
 
+// MethodDefinition 方法定义
 type MethodDefinition struct {
 	Idx      *Position
 	Key      Expression
@@ -38,6 +43,7 @@ type MethodDefinition struct {
 	Static   bool
 }
 
+// ClassStaticBlock 类静态块
 type ClassStaticBlock struct {
 	Static          *Position
 	Block           *BlockStatement
@@ -45,71 +51,94 @@ type ClassStaticBlock struct {
 	DeclarationList []*VariableDeclaration
 }
 
+// ForLoopInitializer 循环初始化程序
 type ForLoopInitializer interface {
 	Node
 	isForLoopInitializer()
 }
 
+// ForLoopInitializerExpression 循环初始化程序表达式
 type ForLoopInitializerExpression struct {
 	Expression Expression
 }
 
+// ForLoopInitializerVarDeclList 对于循环初始化程序变量声明列表
 type ForLoopInitializerVarDeclList struct {
 	Var  *Position
 	List []*Binding
 }
 
+// ForLoopInitializerLexicalDecl 对于循环初始化程序词法声明
 type ForLoopInitializerLexicalDecl struct {
 	LexicalDeclaration LexicalDeclaration
 }
 
+// ForInto 循环
 type ForInto interface {
 	Node
 	isForInto()
 }
 
+// ForIntoVar 循环变量
 type ForIntoVar struct {
 	Binding *Binding
 }
 
+// ForDeclaration 循环声明
 type ForDeclaration struct {
 	Idx     *Position
 	IsConst bool
 	Target  BindingTarget
 }
 
+// ForIntoExpression 循环表达式
 type ForIntoExpression struct {
 	Expression Expression
 }
 
+/* 实现 ForLoopInitializer 接口 */
 func (*ForLoopInitializerExpression) isForLoopInitializer()  {}
 func (*ForLoopInitializerVarDeclList) isForLoopInitializer() {}
 func (*ForLoopInitializerLexicalDecl) isForLoopInitializer() {}
 
+/* 实现 ForInto 接口 */
 func (*ForIntoVar) isForInto()        {}
 func (*ForDeclaration) isForInto()    {}
 func (*ForIntoExpression) isForInto() {}
 
-func (*ArrayPattern) isPattern()       {}
+/* 实现 Pattern 接口 */
+func (*ArrayPattern) isPattern() {}
+
+/* 实现 BindingTarget 接口 */
 func (*ArrayPattern) isBindingTarget() {}
 
-func (*ObjectPattern) isPattern()       {}
+/* 实现 Pattern 接口 */
+func (*ObjectPattern) isPattern() {}
+
+/* 实现 BindingTarget 接口 */
 func (*ObjectPattern) isBindingTarget() {}
 
+/* 实现 BindingTarget 接口 */
 func (*BadExpression) isBindingTarget() {}
 
+/* 实现 Property 接口 */
 func (*PropertyShort) isProperty() {}
 func (*PropertyKeyed) isProperty() {}
 func (*SpreadElement) isProperty() {}
 
+/* 实现 BindingTarget 接口 */
 func (*Identifier) isBindingTarget() {}
 
+/* 实现 ConciseBody 接口 */
 func (*BlockStatement) isConciseBody() {}
 func (*ExpressionBody) isConciseBody() {}
 
+/* 实现 ClassElement 接口 */
 func (*FieldDefinition) isClassElement()  {}
 func (*MethodDefinition) isClassElement() {}
 func (*ClassStaticBlock) isClassElement() {}
+
+/* 实现 Node Start 接口 */
 
 func (this_ *ForLoopInitializerExpression) Start() *Position  { return this_.Expression.Start() }
 func (this_ *ForLoopInitializerVarDeclList) Start() *Position { return this_.List[0].Start() }
@@ -128,6 +157,8 @@ func (this_ *ClassStaticBlock) Start() *Position    { return this_.Static }
 func (this_ *ForDeclaration) Start() *Position    { return this_.Idx }
 func (this_ *ForIntoVar) Start() *Position        { return this_.Binding.Start() }
 func (this_ *ForIntoExpression) Start() *Position { return this_.Expression.Start() }
+
+/* 实现 Node End 接口 */
 
 func (this_ *ForLoopInitializerExpression) End() *Position { return this_.Expression.End() }
 func (this_ *ForLoopInitializerVarDeclList) End() *Position {
@@ -151,7 +182,6 @@ func (this_ *VariableDeclaration) End() *Position {
 		return this_.List[len(this_.List)-1].End()
 	}
 
-	//return this_.Var + 3
 	return this_.Var.NewByColumnOffset(+3)
 }
 
@@ -174,7 +204,6 @@ func (this_ *YieldExpression) End() *Position {
 	if this_.Argument != nil {
 		return this_.Argument.End()
 	}
-	//return this_.Yield + 5
 	return this_.Yield.NewByColumnOffset(+5)
 }
 

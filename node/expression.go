@@ -13,38 +13,45 @@ type Expression interface {
 	isExpression()
 }
 
+// BindingTarget 绑定目标
 type BindingTarget interface {
 	Expression
 	isBindingTarget()
 }
 
+// Binding 绑定
 type Binding struct {
 	Target      BindingTarget
 	Initializer Expression
 }
 
+// Pattern 模式
 type Pattern interface {
 	BindingTarget
 	isPattern()
 }
 
+// YieldExpression 收益率表达式
 type YieldExpression struct {
 	Yield    *Position
 	Argument Expression
 	Delegate bool
 }
 
+// AwaitExpression 等待表达式
 type AwaitExpression struct {
 	Await    *Position
 	Argument Expression
 }
 
+// ArrayLiteral 数组
 type ArrayLiteral struct {
 	LeftBracket  *Position
 	RightBracket *Position
 	Value        []Expression
 }
 
+// ArrayPattern 阵列模式
 type ArrayPattern struct {
 	LeftBracket  *Position
 	RightBracket *Position
@@ -52,17 +59,20 @@ type ArrayPattern struct {
 	Rest         Expression
 }
 
+// AssignExpression 指定表达式
 type AssignExpression struct {
 	Operator token.Token
 	Left     Expression
 	Right    Expression
 }
 
+// BadExpression 错误的表达式
 type BadExpression struct {
 	From *Position
 	To   *Position
 }
 
+// BinaryExpression 二进制表达式
 type BinaryExpression struct {
 	Operator   token.Token
 	Left       Expression
@@ -70,12 +80,14 @@ type BinaryExpression struct {
 	Comparison bool
 }
 
+// BooleanLiteral 布尔
 type BooleanLiteral struct {
 	Idx     *Position
 	Literal string
 	Value   bool
 }
 
+// BracketExpression 括号表达式
 type BracketExpression struct {
 	Left         Expression
 	Member       Expression
@@ -83,6 +95,7 @@ type BracketExpression struct {
 	RightBracket *Position
 }
 
+// CallExpression 调用表达式
 type CallExpression struct {
 	Callee           Expression
 	LeftParenthesis  *Position
@@ -90,28 +103,36 @@ type CallExpression struct {
 	RightParenthesis *Position
 }
 
+// ConditionalExpression 条件表达式
 type ConditionalExpression struct {
 	Test       Expression
 	Consequent Expression
 	Alternate  Expression
 }
 
+// DotExpression 点表达式
 type DotExpression struct {
 	Left       Expression
 	Identifier Identifier
 }
 
+// PrivateDotExpression 私有点表达式
 type PrivateDotExpression struct {
 	Left       Expression
 	Identifier PrivateIdentifier
 }
+
+// OptionalChain 可选链条
 type OptionalChain struct {
 	Expression
 }
+
+// Optional 可选
 type Optional struct {
 	Expression
 }
 
+// FunctionLiteral 函数
 type FunctionLiteral struct {
 	Function      *Position
 	Name          *Identifier
@@ -124,6 +145,7 @@ type FunctionLiteral struct {
 	Async, Generator bool
 }
 
+// ClassLiteral 类
 type ClassLiteral struct {
 	Class      *Position
 	RightBrace *Position
@@ -133,15 +155,18 @@ type ClassLiteral struct {
 	Source     string
 }
 
+// ConciseBody 简明正文
 type ConciseBody interface {
 	Node
 	isConciseBody()
 }
 
+// ExpressionBody 表达式正文
 type ExpressionBody struct {
 	Expression Expression
 }
 
+// ArrowFunctionLiteral 箭头函数
 type ArrowFunctionLiteral struct {
 	Start_          *Position
 	ParameterList   *ParameterList
@@ -151,15 +176,18 @@ type ArrowFunctionLiteral struct {
 	Async           bool
 }
 
+// Identifier 标识符
 type Identifier struct {
 	Name unistring.String
 	Idx  *Position
 }
 
+// PrivateIdentifier 私有标识符
 type PrivateIdentifier struct {
 	Identifier
 }
 
+// NewExpression new标识符
 type NewExpression struct {
 	New              *Position
 	Callee           Expression
@@ -168,23 +196,27 @@ type NewExpression struct {
 	RightParenthesis *Position
 }
 
+// NullLiteral null
 type NullLiteral struct {
 	Idx     *Position
 	Literal string
 }
 
+// NumberLiteral 数字
 type NumberLiteral struct {
 	Idx     *Position
 	Literal string
 	Value   interface{}
 }
 
+// ObjectLiteral 对象
 type ObjectLiteral struct {
 	LeftBrace  *Position
 	RightBrace *Position
 	Value      []Property
 }
 
+// ObjectPattern 对象模式
 type ObjectPattern struct {
 	LeftBrace  *Position
 	RightBrace *Position
@@ -192,6 +224,7 @@ type ObjectPattern struct {
 	Rest       Expression
 }
 
+// ParameterList 参数列表
 type ParameterList struct {
 	Opening *Position
 	List    []*Binding
@@ -199,16 +232,19 @@ type ParameterList struct {
 	Closing *Position
 }
 
+// Property 属性
 type Property interface {
 	Expression
 	isProperty()
 }
 
+// PropertyShort 属性缩写
 type PropertyShort struct {
 	Name        Identifier
 	Initializer Expression
 }
 
+// PropertyKeyed 属性映射
 type PropertyKeyed struct {
 	Key      Expression
 	Kind     PropertyKind
@@ -216,10 +252,12 @@ type PropertyKeyed struct {
 	Computed bool
 }
 
+// SpreadElement 排列元素
 type SpreadElement struct {
 	Expression
 }
 
+// RegExpLiteral REG分解
 type RegExpLiteral struct {
 	Idx     *Position
 	Literal string
@@ -227,16 +265,19 @@ type RegExpLiteral struct {
 	Flags   string
 }
 
+// SequenceExpression 序列表达式
 type SequenceExpression struct {
 	Sequence []Expression
 }
 
+// StringLiteral 字符串
 type StringLiteral struct {
 	Idx     *Position
 	Literal string
 	Value   unistring.String
 }
 
+// TemplateElement 模板元素
 type TemplateElement struct {
 	Idx     *Position
 	Literal string
@@ -244,6 +285,7 @@ type TemplateElement struct {
 	Valid   bool
 }
 
+// TemplateLiteral 模板
 type TemplateLiteral struct {
 	OpenQuote   *Position
 	CloseQuote  *Position
@@ -252,14 +294,17 @@ type TemplateLiteral struct {
 	Expressions []Expression
 }
 
+// ThisExpression this
 type ThisExpression struct {
 	Idx *Position
 }
 
+// SuperExpression super
 type SuperExpression struct {
 	Idx *Position
 }
 
+// UnaryExpression 一元表达式
 type UnaryExpression struct {
 	Operator token.Token
 	Idx      *Position // If a prefix operation
@@ -267,11 +312,13 @@ type UnaryExpression struct {
 	Postfix  bool
 }
 
+// MetaProperty 元属性
 type MetaProperty struct {
 	Meta, Property *Identifier
 	Idx            *Position
 }
 
+/* 实现 Expression 接口 */
 func (*ArrayLiteral) isExpression()          {}
 func (*AssignExpression) isExpression()      {}
 func (*YieldExpression) isExpression()       {}
@@ -307,6 +354,8 @@ func (*Binding) isExpression()               {}
 func (*PropertyShort) isExpression() {}
 func (*PropertyKeyed) isExpression() {}
 
+/* 实现 Node Start 接口 */
+
 func (this_ *ArrayLiteral) Start() *Position          { return this_.LeftBracket }
 func (this_ *ArrayPattern) Start() *Position          { return this_.LeftBracket }
 func (this_ *YieldExpression) Start() *Position       { return this_.Yield }
@@ -339,6 +388,8 @@ func (this_ *ThisExpression) Start() *Position        { return this_.Idx }
 func (this_ *SuperExpression) Start() *Position       { return this_.Idx }
 func (this_ *UnaryExpression) Start() *Position       { return this_.Idx }
 func (this_ *MetaProperty) Start() *Position          { return this_.Idx }
+
+/* 实现 Node End 接口 */
 
 func (this_ *ArrayLiteral) End() *Position          { return this_.RightBracket.NewByColumnOffset(+1) }
 func (this_ *ArrayPattern) End() *Position          { return this_.RightBracket.NewByColumnOffset(+1) }
