@@ -1,16 +1,24 @@
 package parser
 
 import (
+	"github.com/dop251/goja/ast"
+	"github.com/dop251/goja/unistring"
+	"github.com/team-ide/go-interpreter/syntax"
 	"unicode/utf8"
 )
 
 type parser struct {
+	syntax.Syntax
 	str    string
 	length int
 
 	chr       rune // 当前 字符
 	chrOffset int  // 当前 字符 偏移量
 	offset    int  // 当前 字符 偏移量
+
+	scope             *_scope
+	insertSemicolon   bool // If we see a newline, then insert an implicit semicolon
+	implicitSemicolon bool // An implicit semicolon exists
 
 	errors ErrorList
 }
@@ -41,4 +49,20 @@ func (this_ *parser) read() {
 		this_.chrOffset = this_.length
 		this_.chr = -1 // EOF 读取结束
 	}
+}
+
+type _scope struct {
+	outer           *_scope
+	allowIn         bool
+	allowLet        bool
+	inIteration     bool
+	inSwitch        bool
+	inFuncParams    bool
+	inFunction      bool
+	inAsync         bool
+	allowAwait      bool
+	allowYield      bool
+	declarationList []*ast.VariableDeclaration
+
+	labels []unistring.String
 }

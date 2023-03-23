@@ -2,6 +2,7 @@ package token
 
 // 关键字 可能出现的所有关键字定义
 const (
+
 	// Golang中出现的关键字
 
 	Break       = "break"       // break
