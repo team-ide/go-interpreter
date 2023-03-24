@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"github.com/dop251/goja/unistring"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/syntax"
 	"github.com/team-ide/go-interpreter/token"
@@ -20,7 +19,7 @@ type parser struct {
 	idx           int         // The index of token
 	token         token.Token // The token
 	literal       string      // The literal of the token, if any
-	parsedLiteral unistring.String
+	parsedLiteral node.String
 
 	scope             *_scope
 	insertSemicolon   bool // If we see a newline, then insert an implicit semicolon
@@ -76,7 +75,7 @@ type _scope struct {
 	allowYield      bool
 	declarationList []*node.VariableDeclaration
 
-	labels []unistring.String
+	labels []node.String
 }
 
 func (this_ *parser) openScope() {
@@ -94,7 +93,7 @@ func (this_ *_scope) declare(declaration *node.VariableDeclaration) {
 	this_.declarationList = append(this_.declarationList, declaration)
 }
 
-func (this_ *_scope) hasLabel(name unistring.String) bool {
+func (this_ *_scope) hasLabel(name node.String) bool {
 	for _, label := range this_.labels {
 		if label == name {
 			return true

@@ -1,11 +1,11 @@
 package parser
 
 import (
-	"github.com/dop251/goja/unistring"
+	"github.com/team-ide/go-interpreter/node"
 	"unicode/utf8"
 )
 
-func (this_ *parser) parseTemplateCharacters() (literal string, parsed unistring.String, finished bool, parseErr, err string) {
+func (this_ *parser) parseTemplateCharacters() (literal string, parsed node.String, finished bool, parseErr, err string) {
 	offset := this_.chrOffset
 	var end int
 	length := 0
@@ -75,7 +75,7 @@ unterminated:
 	return
 }
 
-func (this_ *parser) scanString(offset int, parse bool) (literal string, parsed unistring.String, err string) {
+func (this_ *parser) scanString(offset int, parse bool) (literal string, parsed node.String, err string) {
 	// " ' /
 	quote := rune(this_.str[offset])
 	length := 0

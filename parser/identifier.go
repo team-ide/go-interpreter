@@ -2,11 +2,11 @@ package parser
 
 import (
 	"fmt"
-	"github.com/dop251/goja/unistring"
+	"github.com/team-ide/go-interpreter/node"
 	"unicode/utf8"
 )
 
-func (this_ *parser) scanIdentifier() (string, unistring.String, bool, string) {
+func (this_ *parser) scanIdentifier() (string, node.String, bool, string) {
 	offset := this_.chrOffset
 	hasEscape := false
 	isUnicode := false
@@ -76,7 +76,7 @@ func (this_ *parser) scanIdentifier() (string, unistring.String, bool, string) {
 	}
 
 	literal := this_.str[offset:this_.chrOffset]
-	var parsed unistring.String
+	var parsed node.String
 	if hasEscape || isUnicode {
 		var err string
 		// TODO strict
@@ -85,7 +85,7 @@ func (this_ *parser) scanIdentifier() (string, unistring.String, bool, string) {
 			return "", "", false, err
 		}
 	} else {
-		parsed = unistring.String(literal)
+		parsed = node.String(literal)
 	}
 
 	return literal, parsed, hasEscape, ""

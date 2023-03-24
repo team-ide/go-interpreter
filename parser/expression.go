@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"github.com/dop251/goja/unistring"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
 	"strings"
@@ -322,7 +321,7 @@ func (this_ *parser) parseVarDeclarationList(var_ int) []*node.Binding {
 	return declarationList
 }
 
-func (this_ *parser) parseObjectPropertyKey() (string, unistring.String, node.Expression, token.Token) {
+func (this_ *parser) parseObjectPropertyKey() (string, node.String, node.Expression, token.Token) {
 	if this_.token == token.LeftBracket {
 		this_.next()
 		expr := this_.parseAssignmentExpression()
@@ -363,7 +362,7 @@ func (this_ *parser) parseObjectPropertyKey() (string, unistring.String, node.Ex
 			value = &node.StringLiteral{
 				Idx:     idx,
 				Literal: literal,
-				Value:   unistring.String(literal),
+				Value:   node.String(literal),
 			}
 		} else {
 			_ = this_.errorUnexpectedToken(tkn)
@@ -678,7 +677,7 @@ func (this_ *parser) parseNewExpression() node.Expression {
 		if this_.literal == "target" {
 			return &node.MetaProperty{
 				Meta: &node.Identifier{
-					Name: unistring.String(token.New.String()),
+					Name: node.String(token.New.String()),
 					Idx:  idx,
 				},
 				Property: this_.parseIdentifier(),

@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"github.com/dop251/goja/unistring"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
 )
@@ -84,7 +83,7 @@ type parserState struct {
 	idx                                int
 	tok                                token.Token
 	literal                            string
-	parsedLiteral                      unistring.String
+	parsedLiteral                      node.String
 	implicitSemicolon, insertSemicolon bool
 	chr                                rune
 	chrOffset, offset                  int

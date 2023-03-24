@@ -1,7 +1,6 @@
 package node
 
 import (
-	"github.com/dop251/goja/unistring"
 	"github.com/team-ide/go-interpreter/token"
 )
 
@@ -178,7 +177,7 @@ type ArrowFunctionLiteral struct {
 
 // Identifier 标识符
 type Identifier struct {
-	Name unistring.String
+	Name String
 	Idx  int
 }
 
@@ -274,14 +273,14 @@ type SequenceExpression struct {
 type StringLiteral struct {
 	Idx     int
 	Literal string
-	Value   unistring.String
+	Value   String
 }
 
 // TemplateElement 模板元素
 type TemplateElement struct {
 	Idx     int
 	Literal string
-	Parsed  unistring.String
+	Parsed  String
 	Valid   bool
 }
 

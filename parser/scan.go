@@ -1,11 +1,11 @@
 package parser
 
 import (
-	"github.com/dop251/goja/unistring"
+	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
 )
 
-func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral unistring.String, idx int) {
+func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node.String, idx int) {
 
 	this_.implicitSemicolon = false
 

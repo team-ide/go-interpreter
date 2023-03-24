@@ -3,7 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"github.com/dop251/goja/unistring"
+	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
 	"strconv"
 	"strings"
@@ -170,12 +170,12 @@ error:
 	return nil, errors.New("illegal numeric literal")
 }
 
-func (this_ *parser) parseStringLiteral(literal string, length int, unicode, strict bool) (unistring.String, string) {
+func (this_ *parser) parseStringLiteral(literal string, length int, unicode, strict bool) (node.String, string) {
 	var sb strings.Builder
 	var chars []uint16
 	if unicode {
 		chars = make([]uint16, 1, length+1)
-		chars[0] = unistring.BOM
+		chars[0] = node.BOM
 	} else {
 		sb.Grow(length)
 	}
@@ -347,10 +347,10 @@ func (this_ *parser) parseStringLiteral(literal string, length int, unicode, str
 		if len(chars) != length+1 {
 			panic(fmt.Errorf("unexpected unicode length while parsing '%s'", literal))
 		}
-		return unistring.FromUtf16(chars), ""
+		return node.FromUtf16(chars), ""
 	}
 	if sb.Len() != length {
 		panic(fmt.Errorf("unexpected length while parsing '%s'", literal))
 	}
-	return unistring.String(sb.String()), ""
+	return node.String(sb.String()), ""
 }
