@@ -6,16 +6,16 @@ type Tree struct {
 	DeclarationList []*VariableDeclaration
 }
 
-func (this_ *Tree) Start() *Position {
+func (this_ *Tree) Start() int {
 	if len(this_.Children) == 0 {
-		return nil
+		return 0
 	}
 	return this_.Children[0].Start()
 }
 
-func (this_ *Tree) End() *Position {
+func (this_ *Tree) End() int {
 	if len(this_.Children) == 0 {
-		return nil
+		return 0
 	}
 	return this_.Children[len(this_.Children)-1].End()
 }

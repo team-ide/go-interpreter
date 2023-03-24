@@ -62,7 +62,7 @@ end:
 		return token.Illegal, this_.str[offset:this_.chrOffset]
 	}
 
-	return token.Token(tkn), this_.str[offset:this_.chrOffset]
+	return tkn, this_.str[offset:this_.chrOffset]
 }
 
 func (this_ *parser) scanMantissa(base int) {

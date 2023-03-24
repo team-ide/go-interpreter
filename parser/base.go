@@ -1,14 +1,25 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dop251/goja/unistring"
 	"github.com/team-ide/go-interpreter/token"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
 )
+
+func (this_ *parser) expect(value token.Token) int {
+	idx := this_.idx
+	if this_.token != value {
+		_ = this_.errorUnexpectedToken(this_.token)
+	}
+	this_.next()
+	return idx
+}
 
 func (this_ *parser) skipSingleLineComment() {
 	for this_.chr != -1 {
@@ -42,7 +53,7 @@ func (this_ *parser) skipMultiLineComment() (hasLineTerminator bool) {
 		}
 	}
 
-	this_.errorUnexpected(0, this_.chr)
+	_ = this_.errorUnexpected(0, this_.chr)
 	return
 }
 
@@ -83,7 +94,7 @@ func (this_ *parser) isBindingId(tok token.Token) bool {
 		return !this_.scope.allowYield
 	}
 
-	if token.IsUnreservedWord(tok) {
+	if this_.IsUnreservedWordToken(tok) {
 		return true
 	}
 	return false
@@ -120,7 +131,46 @@ func hex2decimal(chr byte) (value rune, ok bool) {
 	}
 }
 
-func parseStringLiteral(literal string, length int, unicode, strict bool) (unistring.String, string) {
+func (this_ *parser) parseNumberLiteral(literal string) (value interface{}, err error) {
+	// TODO Is Uint okay? What about -MAX_UINT
+	value, err = strconv.ParseInt(literal, 0, 64)
+	if err == nil {
+		return
+	}
+
+	parseIntErr := err // Save this first error, just in case
+
+	value, err = strconv.ParseFloat(literal, 64)
+	if err == nil {
+		return
+	} else if err.(*strconv.NumError).Err == strconv.ErrRange {
+		// Infinity, etc.
+		return value, nil
+	}
+
+	err = parseIntErr
+
+	if err.(*strconv.NumError).Err == strconv.ErrRange {
+		if len(literal) > 2 && literal[0] == '0' && (literal[1] == 'X' || literal[1] == 'x') {
+			// Could just be a very large number (e.g. 0x8000000000000000)
+			var value float64
+			literal = literal[2:]
+			for _, chr := range literal {
+				digit := this_.DigitValue(chr)
+				if digit >= 16 {
+					goto error
+				}
+				value = value*16 + float64(digit)
+			}
+			return value, nil
+		}
+	}
+
+error:
+	return nil, errors.New("illegal numeric literal")
+}
+
+func (this_ *parser) parseStringLiteral(literal string, length int, unicode, strict bool) (unistring.String, string) {
 	var sb strings.Builder
 	var chars []uint16
 	if unicode {

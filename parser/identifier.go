@@ -80,7 +80,7 @@ func (this_ *parser) scanIdentifier() (string, unistring.String, bool, string) {
 	if hasEscape || isUnicode {
 		var err string
 		// TODO strict
-		parsed, err = parseStringLiteral(literal, length, isUnicode, false)
+		parsed, err = this_.parseStringLiteral(literal, length, isUnicode, false)
 		if err != "" {
 			return "", "", false, err
 		}

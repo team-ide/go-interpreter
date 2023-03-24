@@ -7,251 +7,110 @@ import (
 )
 
 // 解析
-func (this_ *parser) parse() {
-	for {
-		this_.read()
-	}
-}
-
-func (this_ *parser) Position(offset int) (position *node.Position) {
-	position = &node.Position{}
+func (this_ *parser) parse() (tree *node.Tree, err error) {
+	this_.next()
+	tree = this_.parseTree()
+	err = this_.errors.Err()
 	return
 }
 
-func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral unistring.String, position *node.Position) {
+func (this_ *parser) parseTree() (tree *node.Tree) {
+	tree = &node.Tree{
+		Children:        this_.parseSourceElements(),
+		DeclarationList: this_.scope.declarationList,
+	}
+	//this_.file.SetSourceMap(this_.parseSourceMap())
+	return
+}
 
-	this_.implicitSemicolon = false
+func (this_ *parser) parseSourceElements() (statements []node.Statement) {
+	for this_.token != token.Eof {
+		this_.scope.allowLet = true
+		statements = append(statements, this_.parseStatement())
+	}
 
-	for {
-		//this_.skipWhiteSpace()
+	return statements
+}
 
-		position = this_.Position(this_.chrOffset)
-		insertSemicolon := false
+func (this_ *parser) Position(offset int) (position *node.Position) {
+	position = &node.Position{
+		Idx: offset,
+	}
+	return
+}
 
-		switch chr := this_.chr; {
-		case this_.IsIdentifierStart(chr):
-			var err string
-			var hasEscape bool
-			literal, parsedLiteral, hasEscape, err = this_.scanIdentifier()
-			if err != "" {
-				tkn = token.Illegal
-				break
-			}
-			if len(parsedLiteral) > 1 {
-				// Keywords are longer than 1 character, avoid lookup otherwise
-				var strict bool
-				tkn, strict = this_.IsKeyword(string(parsedLiteral))
-				if hasEscape {
-					this_.insertSemicolon = true
-					if tkn == "" || this_.isBindingId(tkn) {
-						tkn = token.Identifier
-					} else {
-						tkn = token.EscapedReservedWord
-					}
-					return
-				}
-				switch tkn {
-				case "": // Not a keyword
-					// no-op
-				case token.Keyword:
-					if strict {
-						// TODO If strict and in strict mode, then this is not a break
-						break
-					}
-					return
+func (this_ *parser) next() {
+	this_.token, this_.literal, this_.parsedLiteral, this_.idx = this_.scan()
+}
 
-				case
-					token.Boolean,
-					token.Nil,
-					token.Null,
-					token.This,
-					token.Break,
-					token.Throw, // A newline after a throw is not allowed, but we need to detect it
-					token.Yield,
-					token.Return,
-					token.Continue,
-					token.Debugger:
-					this_.insertSemicolon = true
-					return
+func (this_ *parser) slice(start, end int) string {
+	from := start
+	to := end
+	if from >= 0 && to <= len(this_.str) {
+		return this_.str[from:to]
+	}
 
-				case token.Async:
-					// async only has special meaning if not followed by a LineTerminator
-					if this_.skipWhiteSpaceCheckLineTerminator() {
-						this_.insertSemicolon = true
-						tkn = token.Identifier
-					}
-					return
-				default:
-					return
+	return ""
+}
 
-				}
-			}
-			this_.insertSemicolon = true
-			tkn = token.Identifier
-			return
-		case '0' <= chr && chr <= '9':
-			this_.insertSemicolon = true
-			tkn, literal = this_.scanNumericLiteral(false)
-			return
-		default:
-			this_.read()
-			switch chr {
-			case -1:
-				if this_.insertSemicolon {
-					this_.insertSemicolon = false
-					this_.implicitSemicolon = true
-				}
-				tkn = token.Eof
-			case '\r', '\n', '\u2028', '\u2029':
-				this_.insertSemicolon = false
-				this_.implicitSemicolon = true
-				continue
-			case ':':
-				tkn = token.Colon
-			case '.':
-				if this_.DigitValue(this_.chr) < 10 {
-					insertSemicolon = true
-					tkn, literal = this_.scanNumericLiteral(true)
-				} else {
-					if this_.chr == '.' {
-						this_.read()
-						if this_.chr == '.' {
-							this_.read()
-							tkn = token.Ellipsis
-						} else {
-							tkn = token.Illegal
-						}
-					} else {
-						tkn = token.Period
-					}
-				}
-			case ',':
-				tkn = token.Comma
-			case ';':
-				tkn = token.Semicolon
-			case '(':
-				tkn = token.LeftParenthesis
-			case ')':
-				tkn = token.RightParenthesis
-				insertSemicolon = true
-			case '[':
-				tkn = token.LeftBracket
-			case ']':
-				tkn = token.RightBracket
-				insertSemicolon = true
-			case '{':
-				tkn = token.LeftBrace
-			case '}':
-				tkn = token.RightBrace
-				insertSemicolon = true
-			case '+':
-				tkn = this_.switch3(token.Plus, token.AddAssign, '+', token.Increment)
-				if tkn == token.Increment {
-					insertSemicolon = true
-				}
-			case '-':
-				tkn = this_.switch3(token.Minus, token.SubtractAssign, '-', token.Decrement)
-				if tkn == token.Decrement {
-					insertSemicolon = true
-				}
-			case '*':
-				if this_.chr == '*' {
-					this_.read()
-					tkn = this_.switch2(token.Exponent, token.ExponentAssign)
-				} else {
-					tkn = this_.switch2(token.Multiply, token.MultiplyAssign)
-				}
-			case '/':
-				if this_.chr == '/' {
-					this_.skipSingleLineComment()
-					continue
-				} else if this_.chr == '*' {
-					if this_.skipMultiLineComment() {
-						this_.insertSemicolon = false
-						this_.implicitSemicolon = true
-					}
-					continue
-				} else {
-					// Could be division, could be RegExp literal
-					tkn = this_.switch2(token.Slash, token.QuotientAssign)
-					insertSemicolon = true
-				}
-			case '%':
-				tkn = this_.switch2(token.Remainder, token.RemainderAssign)
-			case '^':
-				tkn = this_.switch2(token.ExclusiveOr, token.ExclusiveOrAssign)
-			case '<':
-				tkn = this_.switch4(token.Less, token.LessOrEqual, '<', token.ShiftLeft, token.ShiftLeftAssign)
-			case '>':
-				tkn = this_.switch6(token.Greater, token.GreaterOrEqual, '>', token.ShiftRight, token.ShiftRightAssign, '>', token.UnsignedShiftRight, token.UnsignedShiftRightAssign)
-			case '=':
-				if this_.chr == '>' {
-					this_.read()
-					if this_.implicitSemicolon {
-						tkn = token.Illegal
-					} else {
-						tkn = token.Arrow
-					}
-				} else {
-					tkn = this_.switch2(token.Assign, token.Equal)
-					if tkn == token.Equal && this_.chr == '=' {
-						this_.read()
-						tkn = token.StrictEqual
-					}
-				}
-			case '!':
-				tkn = this_.switch2(token.Not, token.NotEqual)
-				if tkn == token.NotEqual && this_.chr == '=' {
-					this_.read()
-					tkn = token.StrictNotEqual
-				}
-			case '&':
-				tkn = this_.switch3(token.And, token.AndAssign, '&', token.LogicalAnd)
-			case '|':
-				tkn = this_.switch3(token.Or, token.OrAssign, '|', token.LogicalOr)
-			case '~':
-				tkn = token.BitwiseNot
-			case '?':
-				if this_.chr == '.' && !this_.IsDecimalDigit(this_.implicitRead()) {
-					this_.read()
-					tkn = token.QuestionDot
-				} else if this_.chr == '?' {
-					this_.read()
-					tkn = token.Coalesce
-				} else {
-					tkn = token.QuestionMark
-				}
-			case '"', '\'':
-				insertSemicolon = true
-				tkn = token.String
-				var err string
-				literal, parsedLiteral, err = this_.scanString(this_.chrOffset-1, true)
-				if err != "" {
-					tkn = token.Illegal
-				}
-			case '`':
-				tkn = token.Backtick
-			case '#':
-				if this_.chrOffset == 1 && this_.chr == '!' {
-					this_.skipSingleLineComment()
-					continue
-				}
-
-				var err string
-				literal, parsedLiteral, _, err = this_.scanIdentifier()
-				if err != "" || literal == "" {
-					tkn = token.Illegal
-					break
-				}
-				this_.insertSemicolon = true
-				tkn = token.PrivateIdentifier
-				return
-			default:
-				this_.errorUnexpected(idx, chr)
-				tkn = token.Illegal
-			}
-		}
-		this_.insertSemicolon = insertSemicolon
+func (this_ *parser) optionalSemicolon() {
+	if this_.token == token.Semicolon {
+		this_.next()
 		return
 	}
+
+	if this_.implicitSemicolon {
+		this_.implicitSemicolon = false
+		return
+	}
+
+	if this_.token != token.Eof && this_.token != token.RightBrace {
+		this_.expect(token.Semicolon)
+	}
+}
+
+func (this_ *parser) semicolon() {
+	if this_.token != token.RightParenthesis && this_.token != token.RightBrace {
+		if this_.implicitSemicolon {
+			this_.implicitSemicolon = false
+			return
+		}
+
+		this_.expect(token.Semicolon)
+	}
+}
+
+type parserState struct {
+	idx                                int
+	tok                                token.Token
+	literal                            string
+	parsedLiteral                      unistring.String
+	implicitSemicolon, insertSemicolon bool
+	chr                                rune
+	chrOffset, offset                  int
+	errorCount                         int
+}
+
+func (this_ *parser) mark(state *parserState) *parserState {
+	if state == nil {
+		state = &parserState{}
+	}
+	state.idx, state.tok, state.literal, state.parsedLiteral, state.implicitSemicolon, state.insertSemicolon, state.chr, state.chrOffset, state.offset =
+		this_.idx, this_.token, this_.literal, this_.parsedLiteral, this_.implicitSemicolon, this_.insertSemicolon, this_.chr, this_.chrOffset, this_.offset
+
+	state.errorCount = len(this_.errors)
+	return state
+}
+
+func (this_ *parser) restore(state *parserState) {
+	this_.idx, this_.token, this_.literal, this_.parsedLiteral, this_.implicitSemicolon, this_.insertSemicolon, this_.chr, this_.chrOffset, this_.offset =
+		state.idx, state.tok, state.literal, state.parsedLiteral, state.implicitSemicolon, state.insertSemicolon, state.chr, state.chrOffset, state.offset
+	this_.errors = this_.errors[:state.errorCount]
+}
+
+func (this_ *parser) peek() token.Token {
+	implicitSemicolon, insertSemicolon, chr, chrOffset, offset := this_.implicitSemicolon, this_.insertSemicolon, this_.chr, this_.chrOffset, this_.offset
+	tok, _, _, _ := this_.scan()
+	this_.implicitSemicolon, this_.insertSemicolon, this_.chr, this_.chrOffset, this_.offset = implicitSemicolon, insertSemicolon, chr, chrOffset, offset
+	return tok
 }

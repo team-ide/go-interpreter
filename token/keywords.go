@@ -5,165 +5,165 @@ const (
 
 	// Golang中出现的关键字
 
-	Break       = "break"       // break
-	Default     = "default"     // default
-	Interface   = "interface"   // interface
-	Func        = "func"        // func
-	Select      = "select"      // select
-	Case        = "case"        // case
-	Defer       = "defer"       // defer
-	Go          = "go"          // go
-	Map         = "map"         // map
-	Struct      = "struct"      // struct
-	Chan        = "chan"        // chan
-	Else        = "else"        // else
-	Goto        = "goto"        // goto
-	Package     = "package"     // package
-	Switch      = "switch"      // switch
-	Const       = "const"       // const
-	Fallthrough = "fallthrough" // fallthrough
-	If          = "if"          // if
-	Range       = "range"       // range
-	Type        = "type"        // type
-	Continue    = "continue"    // continue
-	For         = "for"         // for
-	Import      = "import"      // import
-	Return      = "return"      // return
-	Var         = "var"         // var
+	Break       Token = "break"       // break
+	Default     Token = "default"     // default
+	Interface   Token = "interface"   // interface
+	Func        Token = "func"        // func
+	Select      Token = "select"      // select
+	Case        Token = "case"        // case
+	Defer       Token = "defer"       // defer
+	Go          Token = "go"          // go
+	Map         Token = "map"         // map
+	Struct      Token = "struct"      // struct
+	Chan        Token = "chan"        // chan
+	Else        Token = "else"        // else
+	Goto        Token = "goto"        // goto
+	Package     Token = "package"     // package
+	Switch      Token = "switch"      // switch
+	Const       Token = "const"       // const
+	Fallthrough Token = "fallthrough" // fallthrough
+	If          Token = "if"          // if
+	Range       Token = "range"       // range
+	Type        Token = "type"        // type
+	Continue    Token = "continue"    // continue
+	For         Token = "for"         // for
+	Import      Token = "import"      // import
+	Return      Token = "return"      // return
+	Var         Token = "var"         // var
 
 	// Java中出现的补充
 
-	Abstract = "abstract" // abstract
-	Assert   = "assert"   // assert
-	Boolean  = "boolean"  // boolean
+	Abstract Token = "abstract" // abstract
+	Assert   Token = "assert"   // assert
+	Boolean  Token = "boolean"  // boolean
 
-	//Break        = "break"        // break
+	//Break         Token = "break"        // break
 
-	Byte = "byte" // byte
+	Byte Token = "byte" // byte
 
-	//Case         = "case"         // case
+	//Case          Token = "case"         // case
 
-	Catch = "catch" // catch
-	Char  = "char"  // char
-	Class = "class" // class
+	Catch Token = "catch" // catch
+	Char  Token = "char"  // char
+	Class Token = "class" // class
 
-	//Const        = "const"        // const
-	//Continue     = "continue"     // continue
-	//Default      = "default"      // default
+	//Const         Token = "const"        // const
+	//Continue      Token = "continue"     // continue
+	//Default       Token = "default"      // default
 
-	Do     = "do"     // do
-	Double = "double" // double
+	Do     Token = "do"     // do
+	Double Token = "double" // double
 
-	//Else         = "else"         // else
+	//Else          Token = "else"         // else
 
-	Enum    = "enum"    // enum
-	Extends = "extends" // extends
-	Final   = "final"   // final
-	Finally = "finally" // finally
-	Float   = "float"   // float
+	Enum    Token = "enum"    // enum
+	Extends Token = "extends" // extends
+	Final   Token = "final"   // final
+	Finally Token = "finally" // finally
+	Float   Token = "float"   // float
 
-	//For          = "for"          // for
-	//Goto         = "goto"         // goto
-	//If           = "if"           // if
+	//For           Token = "for"          // for
+	//Goto          Token = "goto"         // goto
+	//If            Token = "if"           // if
 
-	Implements = "implements" // implements
+	Implements Token = "implements" // implements
 
-	//Import       = "import"       // import
+	//Import        Token = "import"       // import
 
-	Instanceof = "instanceof" // instanceof
-	Int        = "int"        // int
+	Instanceof Token = "instanceof" // instanceof
+	Int        Token = "int"        // int
 
-	//Interface    = "interface"    // interface
+	//Interface     Token = "interface"    // interface
 
-	Long   = "long"   // long
-	Native = "native" // native
-	New    = "new"    // new
+	Long   Token = "long"   // long
+	Native Token = "native" // native
+	New    Token = "new"    // new
 
-	//Package      = "package"      // package
+	//Package       Token = "package"      // package
 
-	Private   = "private"   // private
-	Protected = "protected" // protected
-	Public    = "public"    // public
+	Private   Token = "private"   // private
+	Protected Token = "protected" // protected
+	Public    Token = "public"    // public
 
-	//Return       = "return"       // return
+	//Return        Token = "return"       // return
 
-	Short    = "short"    // short
-	Static   = "static"   // static
-	Strictfp = "strictfp" // strictfp
-	Super    = "super"    // super
+	Short    Token = "short"    // short
+	Static   Token = "static"   // static
+	Strictfp Token = "strictfp" // strictfp
+	Super    Token = "super"    // super
 
-	//Switch       = "switch"       // switch
+	//Switch        Token = "switch"       // switch
 
-	Synchronized = "synchronized" // synchronized
-	This         = "this"         // this
-	Throw        = "throw"        // throw
-	Throws       = "throws"       // throws
-	Transient    = "transient"    // transient
-	Try          = "try"          // try
-	Void         = "void"         // void
-	Volatile     = "volatile"     // volatile
-	While        = "while"        // while
+	Synchronized Token = "synchronized" // synchronized
+	This         Token = "this"         // this
+	Throw        Token = "throw"        // throw
+	Throws       Token = "throws"       // throws
+	Transient    Token = "transient"    // transient
+	Try          Token = "try"          // try
+	Void         Token = "void"         // void
+	Volatile     Token = "volatile"     // volatile
+	While        Token = "while"        // while
 
 	// JavaScript中出现的补充
-	//Break        = "break" // break
-	//Case = "case"          // case
-	//Catch = "catch" // catch
-	//Class = "class" // class
-	//Const = "const"       // const
-	//Continue = "continue" // continue
+	//Break         Token = "break" // break
+	//Case  Token = "case"          // case
+	//Catch  Token = "catch" // catch
+	//Class  Token = "class" // class
+	//Const  Token = "const"       // const
+	//Continue  Token = "continue" // continue
 
-	Debugger = "debugger" // debugger
+	Debugger Token = "debugger" // debugger
 
-	//Default = "default" // default
+	//Default  Token = "default" // default
 
-	Delete = "delete" // delete
+	Delete Token = "delete" // delete
 
-	//Do = "do"         // do
-	//Else = "else" // else
+	//Do  Token = "do"         // do
+	//Else  Token = "else" // else
 
-	Export = "export" // export
+	Export Token = "export" // export
 
-	//Extends    = "extends"    // extends
-	//Finally    = "finally"    // finally
-	//For        = "for"        // for
+	//Extends     Token = "extends"    // extends
+	//Finally     Token = "finally"    // finally
+	//For         Token = "for"        // for
 
-	Function = "function" // function
+	Function Token = "function" // function
 
-	//If         = "if"         // if
-	//Import     = "import"     // import
+	//If          Token = "if"         // if
+	//Import      Token = "import"     // import
 
-	In = "in" // in
+	In Token = "in" // in
 
-	//Instanceof = "instanceof" // instanceof
-	//New        = "new"        // new
-	//Return     = "return"     // return
-	//Super      = "super"      // super
-	//Switch     = "switch"     // switch
-	//This       = "this"       // this
-	//Throw      = "throw"      // throw
-	//Try        = "try"        // try
+	//Instanceof  Token = "instanceof" // instanceof
+	//New         Token = "new"        // new
+	//Return      Token = "return"     // return
+	//Super       Token = "super"      // super
+	//Switch      Token = "switch"     // switch
+	//This        Token = "this"       // this
+	//Throw       Token = "throw"      // throw
+	//Try         Token = "try"        // try
 
-	Typeof = "typeof" // typeof
+	Typeof Token = "typeof" // typeof
 
-	//Var        = "var"        // var
-	//Void       = "void"       // void
-	//While      = "while"      // while
+	//Var         Token = "var"        // var
+	//Void        Token = "void"       // void
+	//While       Token = "while"      // while
 
-	With = "with" // with
+	With Token = "with" // with
 
 	// JavaScript严格模式补充
 
-	//Implements = "implements" // implements
-	//Interface  = "interface"  // interface
+	//Implements  Token = "implements" // implements
+	//Interface   Token = "interface"  // interface
 
-	Let = "let" // let
+	Let Token = "let" // let
 
-	//Package    = "package"    // package
-	//Private    = "private"    // private
-	//Protected  = "protected"  // protected
-	//Public     = "public"     // public
-	//Static     = "static"     // static
+	//Package     Token = "package"    // package
+	//Private     Token = "private"    // private
+	//Protected   Token = "protected"  // protected
+	//Public      Token = "public"     // public
+	//Static      Token = "static"     // static
 
-	Yield = "yield" // yield
+	Yield Token = "yield" // yield
 
 )

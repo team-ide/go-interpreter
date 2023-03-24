@@ -14,53 +14,53 @@ type Statement interface {
 
 // BadStatement 错误的语句
 type BadStatement struct {
-	From *Position
-	To   *Position
+	From int
+	To   int
 }
 
 // BlockStatement block语句
 type BlockStatement struct {
-	LeftBrace  *Position
+	LeftBrace  int
 	List       []Statement
-	RightBrace *Position
+	RightBrace int
 }
 
 // BranchStatement branch语句
 type BranchStatement struct {
-	Idx   *Position
+	Idx   int
 	Token token.Token
 	Label *Identifier
 }
 
 // CaseStatement case语句
 type CaseStatement struct {
-	Case       *Position
+	Case       int
 	Test       Expression
 	Consequent []Statement
 }
 
 // CatchStatement cache快
 type CatchStatement struct {
-	Catch     *Position
+	Catch     int
 	Parameter BindingTarget
 	Body      *BlockStatement
 }
 
 // DebuggerStatement debugger语句
 type DebuggerStatement struct {
-	Debugger *Position
+	Debugger int
 }
 
 // DoWhileStatement do while 语句
 type DoWhileStatement struct {
-	Do   *Position
+	Do   int
 	Test Expression
 	Body Statement
 }
 
 // EmptyStatement 空语句
 type EmptyStatement struct {
-	Semicolon *Position
+	Semicolon int
 }
 
 // ExpressionStatement 表达式语句
@@ -70,7 +70,7 @@ type ExpressionStatement struct {
 
 // ForInStatement for in 语句
 type ForInStatement struct {
-	For    *Position
+	For    int
 	Into   ForInto
 	Source Expression
 	Body   Statement
@@ -78,7 +78,7 @@ type ForInStatement struct {
 
 // ForOfStatement for of 语句
 type ForOfStatement struct {
-	For    *Position
+	For    int
 	Into   ForInto
 	Source Expression
 	Body   Statement
@@ -86,7 +86,7 @@ type ForOfStatement struct {
 
 // ForStatement for 语句
 type ForStatement struct {
-	For         *Position
+	For         int
 	Initializer ForLoopInitializer
 	Update      Expression
 	Test        Expression
@@ -95,7 +95,7 @@ type ForStatement struct {
 
 // IfStatement if 语句
 type IfStatement struct {
-	If         *Position
+	If         int
 	Test       Expression
 	Consequent Statement
 	Alternate  Statement
@@ -104,19 +104,19 @@ type IfStatement struct {
 // LabelledStatement 带标签的 语句
 type LabelledStatement struct {
 	Label     *Identifier
-	Colon     *Position
+	Colon     int
 	Statement Statement
 }
 
 // ReturnStatement 返回 语句
 type ReturnStatement struct {
-	Return   *Position
+	Return   int
 	Argument Expression
 }
 
 // SwitchStatement switch 语句
 type SwitchStatement struct {
-	Switch       *Position
+	Switch       int
 	Discriminant Expression
 	Default      int
 	Body         []*CaseStatement
@@ -124,13 +124,13 @@ type SwitchStatement struct {
 
 // ThrowStatement throw 语句
 type ThrowStatement struct {
-	Throw    *Position
+	Throw    int
 	Argument Expression
 }
 
 // TryStatement try 语句
 type TryStatement struct {
-	Try     *Position
+	Try     int
 	Body    *BlockStatement
 	Catch   *CatchStatement
 	Finally *BlockStatement
@@ -138,27 +138,27 @@ type TryStatement struct {
 
 // VariableStatement 变量 语句
 type VariableStatement struct {
-	Var  *Position
+	Var  int
 	List []*Binding
 }
 
 // LexicalDeclaration 词汇声明
 type LexicalDeclaration struct {
-	Idx   *Position
+	Idx   int
 	Token token.Token
 	List  []*Binding
 }
 
 // WhileStatement while 语句
 type WhileStatement struct {
-	While *Position
+	While int
 	Test  Expression
 	Body  Statement
 }
 
 // WithStatement with 语句
 type WithStatement struct {
-	With   *Position
+	With   int
 	Object Expression
 	Body   Statement
 }
@@ -201,57 +201,57 @@ func (*ClassDeclaration) isStatement()    {}
 
 /* 实现 Node Start 接口 */
 
-func (this_ *BadStatement) Start() *Position        { return this_.From }
-func (this_ *BlockStatement) Start() *Position      { return this_.LeftBrace }
-func (this_ *BranchStatement) Start() *Position     { return this_.Idx }
-func (this_ *CaseStatement) Start() *Position       { return this_.Case }
-func (this_ *CatchStatement) Start() *Position      { return this_.Catch }
-func (this_ *DebuggerStatement) Start() *Position   { return this_.Debugger }
-func (this_ *DoWhileStatement) Start() *Position    { return this_.Do }
-func (this_ *EmptyStatement) Start() *Position      { return this_.Semicolon }
-func (this_ *ExpressionStatement) Start() *Position { return this_.Expression.Start() }
-func (this_ *ForInStatement) Start() *Position      { return this_.For }
-func (this_ *ForOfStatement) Start() *Position      { return this_.For }
-func (this_ *ForStatement) Start() *Position        { return this_.For }
-func (this_ *IfStatement) Start() *Position         { return this_.If }
-func (this_ *LabelledStatement) Start() *Position   { return this_.Label.Start() }
-func (this_ *ReturnStatement) Start() *Position     { return this_.Return }
-func (this_ *SwitchStatement) Start() *Position     { return this_.Switch }
-func (this_ *ThrowStatement) Start() *Position      { return this_.Throw }
-func (this_ *TryStatement) Start() *Position        { return this_.Try }
-func (this_ *VariableStatement) Start() *Position   { return this_.Var }
-func (this_ *WhileStatement) Start() *Position      { return this_.While }
-func (this_ *WithStatement) Start() *Position       { return this_.With }
-func (this_ *LexicalDeclaration) Start() *Position  { return this_.Idx }
-func (this_ *FunctionDeclaration) Start() *Position { return this_.Function.Start() }
-func (this_ *ClassDeclaration) Start() *Position    { return this_.Class.Start() }
-func (this_ *Binding) Start() *Position             { return this_.Target.Start() }
+func (this_ *BadStatement) Start() int        { return this_.From }
+func (this_ *BlockStatement) Start() int      { return this_.LeftBrace }
+func (this_ *BranchStatement) Start() int     { return this_.Idx }
+func (this_ *CaseStatement) Start() int       { return this_.Case }
+func (this_ *CatchStatement) Start() int      { return this_.Catch }
+func (this_ *DebuggerStatement) Start() int   { return this_.Debugger }
+func (this_ *DoWhileStatement) Start() int    { return this_.Do }
+func (this_ *EmptyStatement) Start() int      { return this_.Semicolon }
+func (this_ *ExpressionStatement) Start() int { return this_.Expression.Start() }
+func (this_ *ForInStatement) Start() int      { return this_.For }
+func (this_ *ForOfStatement) Start() int      { return this_.For }
+func (this_ *ForStatement) Start() int        { return this_.For }
+func (this_ *IfStatement) Start() int         { return this_.If }
+func (this_ *LabelledStatement) Start() int   { return this_.Label.Start() }
+func (this_ *ReturnStatement) Start() int     { return this_.Return }
+func (this_ *SwitchStatement) Start() int     { return this_.Switch }
+func (this_ *ThrowStatement) Start() int      { return this_.Throw }
+func (this_ *TryStatement) Start() int        { return this_.Try }
+func (this_ *VariableStatement) Start() int   { return this_.Var }
+func (this_ *WhileStatement) Start() int      { return this_.While }
+func (this_ *WithStatement) Start() int       { return this_.With }
+func (this_ *LexicalDeclaration) Start() int  { return this_.Idx }
+func (this_ *FunctionDeclaration) Start() int { return this_.Function.Start() }
+func (this_ *ClassDeclaration) Start() int    { return this_.Class.Start() }
+func (this_ *Binding) Start() int             { return this_.Target.Start() }
 
 /* 实现 Node End 接口 */
 
-func (this_ *BadStatement) End() *Position        { return this_.To }
-func (this_ *BlockStatement) End() *Position      { return this_.RightBrace.NewByColumnOffset(1) }
-func (this_ *BranchStatement) End() *Position     { return this_.Idx }
-func (this_ *CaseStatement) End() *Position       { return this_.Consequent[len(this_.Consequent)-1].End() }
-func (this_ *CatchStatement) End() *Position      { return this_.Body.End() }
-func (this_ *DebuggerStatement) End() *Position   { return this_.Debugger.NewByColumnOffset(8) }
-func (this_ *DoWhileStatement) End() *Position    { return this_.Test.End() }
-func (this_ *EmptyStatement) End() *Position      { return this_.Semicolon.NewByColumnOffset(1) }
-func (this_ *ExpressionStatement) End() *Position { return this_.Expression.End() }
-func (this_ *ForInStatement) End() *Position      { return this_.Body.End() }
-func (this_ *ForOfStatement) End() *Position      { return this_.Body.End() }
-func (this_ *ForStatement) End() *Position        { return this_.Body.End() }
-func (this_ *IfStatement) End() *Position {
+func (this_ *BadStatement) End() int        { return this_.To }
+func (this_ *BlockStatement) End() int      { return this_.RightBrace + (1) }
+func (this_ *BranchStatement) End() int     { return this_.Idx }
+func (this_ *CaseStatement) End() int       { return this_.Consequent[len(this_.Consequent)-1].End() }
+func (this_ *CatchStatement) End() int      { return this_.Body.End() }
+func (this_ *DebuggerStatement) End() int   { return this_.Debugger + (8) }
+func (this_ *DoWhileStatement) End() int    { return this_.Test.End() }
+func (this_ *EmptyStatement) End() int      { return this_.Semicolon + (1) }
+func (this_ *ExpressionStatement) End() int { return this_.Expression.End() }
+func (this_ *ForInStatement) End() int      { return this_.Body.End() }
+func (this_ *ForOfStatement) End() int      { return this_.Body.End() }
+func (this_ *ForStatement) End() int        { return this_.Body.End() }
+func (this_ *IfStatement) End() int {
 	if this_.Alternate != nil {
 		return this_.Alternate.End()
 	}
 	return this_.Consequent.End()
 }
-func (this_ *LabelledStatement) End() *Position { return this_.Colon.NewByColumnOffset(1) }
-func (this_ *ReturnStatement) End() *Position   { return this_.Return.NewByColumnOffset(6) }
-func (this_ *SwitchStatement) End() *Position   { return this_.Body[len(this_.Body)-1].End() }
-func (this_ *ThrowStatement) End() *Position    { return this_.Argument.End() }
-func (this_ *TryStatement) End() *Position {
+func (this_ *LabelledStatement) End() int { return this_.Colon + (1) }
+func (this_ *ReturnStatement) End() int   { return this_.Return + (6) }
+func (this_ *SwitchStatement) End() int   { return this_.Body[len(this_.Body)-1].End() }
+func (this_ *ThrowStatement) End() int    { return this_.Argument.End() }
+func (this_ *TryStatement) End() int {
 	if this_.Finally != nil {
 		return this_.Finally.End()
 	}
@@ -260,13 +260,13 @@ func (this_ *TryStatement) End() *Position {
 	}
 	return this_.Body.End()
 }
-func (this_ *VariableStatement) End() *Position   { return this_.List[len(this_.List)-1].End() }
-func (this_ *WhileStatement) End() *Position      { return this_.Body.End() }
-func (this_ *WithStatement) End() *Position       { return this_.Body.End() }
-func (this_ *LexicalDeclaration) End() *Position  { return this_.List[len(this_.List)-1].End() }
-func (this_ *FunctionDeclaration) End() *Position { return this_.Function.End() }
-func (this_ *ClassDeclaration) End() *Position    { return this_.Class.End() }
-func (this_ *Binding) End() *Position {
+func (this_ *VariableStatement) End() int   { return this_.List[len(this_.List)-1].End() }
+func (this_ *WhileStatement) End() int      { return this_.Body.End() }
+func (this_ *WithStatement) End() int       { return this_.Body.End() }
+func (this_ *LexicalDeclaration) End() int  { return this_.List[len(this_.List)-1].End() }
+func (this_ *FunctionDeclaration) End() int { return this_.Function.End() }
+func (this_ *ClassDeclaration) End() int    { return this_.Class.End() }
+func (this_ *Binding) End() int {
 	if this_.Initializer != nil {
 		return this_.Initializer.End()
 	}

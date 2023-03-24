@@ -33,28 +33,28 @@ type Pattern interface {
 
 // YieldExpression 收益率表达式
 type YieldExpression struct {
-	Yield    *Position
+	Yield    int
 	Argument Expression
 	Delegate bool
 }
 
 // AwaitExpression 等待表达式
 type AwaitExpression struct {
-	Await    *Position
+	Await    int
 	Argument Expression
 }
 
 // ArrayLiteral 数组
 type ArrayLiteral struct {
-	LeftBracket  *Position
-	RightBracket *Position
+	LeftBracket  int
+	RightBracket int
 	Value        []Expression
 }
 
 // ArrayPattern 阵列模式
 type ArrayPattern struct {
-	LeftBracket  *Position
-	RightBracket *Position
+	LeftBracket  int
+	RightBracket int
 	Elements     []Expression
 	Rest         Expression
 }
@@ -68,8 +68,8 @@ type AssignExpression struct {
 
 // BadExpression 错误的表达式
 type BadExpression struct {
-	From *Position
-	To   *Position
+	From int
+	To   int
 }
 
 // BinaryExpression 二进制表达式
@@ -82,7 +82,7 @@ type BinaryExpression struct {
 
 // BooleanLiteral 布尔
 type BooleanLiteral struct {
-	Idx     *Position
+	Idx     int
 	Literal string
 	Value   bool
 }
@@ -91,16 +91,16 @@ type BooleanLiteral struct {
 type BracketExpression struct {
 	Left         Expression
 	Member       Expression
-	LeftBracket  *Position
-	RightBracket *Position
+	LeftBracket  int
+	RightBracket int
 }
 
 // CallExpression 调用表达式
 type CallExpression struct {
 	Callee           Expression
-	LeftParenthesis  *Position
+	LeftParenthesis  int
 	ArgumentList     []Expression
-	RightParenthesis *Position
+	RightParenthesis int
 }
 
 // ConditionalExpression 条件表达式
@@ -134,7 +134,7 @@ type Optional struct {
 
 // FunctionLiteral 函数
 type FunctionLiteral struct {
-	Function      *Position
+	Function      int
 	Name          *Identifier
 	ParameterList *ParameterList
 	Body          *BlockStatement
@@ -147,8 +147,8 @@ type FunctionLiteral struct {
 
 // ClassLiteral 类
 type ClassLiteral struct {
-	Class      *Position
-	RightBrace *Position
+	Class      int
+	RightBrace int
 	Name       *Identifier
 	SuperClass Expression
 	Body       []ClassElement
@@ -168,7 +168,7 @@ type ExpressionBody struct {
 
 // ArrowFunctionLiteral 箭头函数
 type ArrowFunctionLiteral struct {
-	Start_          *Position
+	Start_          int
 	ParameterList   *ParameterList
 	Body            ConciseBody
 	Source          string
@@ -179,7 +179,7 @@ type ArrowFunctionLiteral struct {
 // Identifier 标识符
 type Identifier struct {
 	Name unistring.String
-	Idx  *Position
+	Idx  int
 }
 
 // PrivateIdentifier 私有标识符
@@ -189,47 +189,47 @@ type PrivateIdentifier struct {
 
 // NewExpression new标识符
 type NewExpression struct {
-	New              *Position
+	New              int
 	Callee           Expression
-	LeftParenthesis  *Position
+	LeftParenthesis  int
 	ArgumentList     []Expression
-	RightParenthesis *Position
+	RightParenthesis int
 }
 
 // NullLiteral null
 type NullLiteral struct {
-	Idx     *Position
+	Idx     int
 	Literal string
 }
 
 // NumberLiteral 数字
 type NumberLiteral struct {
-	Idx     *Position
+	Idx     int
 	Literal string
 	Value   interface{}
 }
 
 // ObjectLiteral 对象
 type ObjectLiteral struct {
-	LeftBrace  *Position
-	RightBrace *Position
+	LeftBrace  int
+	RightBrace int
 	Value      []Property
 }
 
 // ObjectPattern 对象模式
 type ObjectPattern struct {
-	LeftBrace  *Position
-	RightBrace *Position
+	LeftBrace  int
+	RightBrace int
 	Properties []Property
 	Rest       Expression
 }
 
 // ParameterList 参数列表
 type ParameterList struct {
-	Opening *Position
+	Opening int
 	List    []*Binding
 	Rest    Expression
-	Closing *Position
+	Closing int
 }
 
 // Property 属性
@@ -259,7 +259,7 @@ type SpreadElement struct {
 
 // RegExpLiteral REG分解
 type RegExpLiteral struct {
-	Idx     *Position
+	Idx     int
 	Literal string
 	Pattern string
 	Flags   string
@@ -272,14 +272,14 @@ type SequenceExpression struct {
 
 // StringLiteral 字符串
 type StringLiteral struct {
-	Idx     *Position
+	Idx     int
 	Literal string
 	Value   unistring.String
 }
 
 // TemplateElement 模板元素
 type TemplateElement struct {
-	Idx     *Position
+	Idx     int
 	Literal string
 	Parsed  unistring.String
 	Valid   bool
@@ -287,8 +287,8 @@ type TemplateElement struct {
 
 // TemplateLiteral 模板
 type TemplateLiteral struct {
-	OpenQuote   *Position
-	CloseQuote  *Position
+	OpenQuote   int
+	CloseQuote  int
 	Tag         Expression
 	Elements    []*TemplateElement
 	Expressions []Expression
@@ -296,18 +296,18 @@ type TemplateLiteral struct {
 
 // ThisExpression this
 type ThisExpression struct {
-	Idx *Position
+	Idx int
 }
 
 // SuperExpression super
 type SuperExpression struct {
-	Idx *Position
+	Idx int
 }
 
 // UnaryExpression 一元表达式
 type UnaryExpression struct {
 	Operator token.Token
-	Idx      *Position // If a prefix operation
+	Idx      int // If a prefix operation
 	Operand  Expression
 	Postfix  bool
 }
@@ -315,7 +315,7 @@ type UnaryExpression struct {
 // MetaProperty 元属性
 type MetaProperty struct {
 	Meta, Property *Identifier
-	Idx            *Position
+	Idx            int
 }
 
 /* 实现 Expression 接口 */
@@ -356,82 +356,82 @@ func (*PropertyKeyed) isExpression() {}
 
 /* 实现 Node Start 接口 */
 
-func (this_ *ArrayLiteral) Start() *Position          { return this_.LeftBracket }
-func (this_ *ArrayPattern) Start() *Position          { return this_.LeftBracket }
-func (this_ *YieldExpression) Start() *Position       { return this_.Yield }
-func (this_ *AwaitExpression) Start() *Position       { return this_.Await }
-func (this_ *ObjectPattern) Start() *Position         { return this_.LeftBrace }
-func (this_ *ParameterList) Start() *Position         { return this_.Opening }
-func (this_ *AssignExpression) Start() *Position      { return this_.Left.Start() }
-func (this_ *BadExpression) Start() *Position         { return this_.From }
-func (this_ *BinaryExpression) Start() *Position      { return this_.Left.Start() }
-func (this_ *BooleanLiteral) Start() *Position        { return this_.Idx }
-func (this_ *BracketExpression) Start() *Position     { return this_.Left.Start() }
-func (this_ *CallExpression) Start() *Position        { return this_.Callee.Start() }
-func (this_ *ConditionalExpression) Start() *Position { return this_.Test.Start() }
-func (this_ *DotExpression) Start() *Position         { return this_.Left.Start() }
-func (this_ *PrivateDotExpression) Start() *Position  { return this_.Left.Start() }
-func (this_ *FunctionLiteral) Start() *Position       { return this_.Function }
-func (this_ *ClassLiteral) Start() *Position          { return this_.Class }
-func (this_ *ArrowFunctionLiteral) Start() *Position  { return this_.Start_ }
-func (this_ *Identifier) Start() *Position            { return this_.Idx }
-func (this_ *NewExpression) Start() *Position         { return this_.New }
-func (this_ *NullLiteral) Start() *Position           { return this_.Idx }
-func (this_ *NumberLiteral) Start() *Position         { return this_.Idx }
-func (this_ *ObjectLiteral) Start() *Position         { return this_.LeftBrace }
-func (this_ *RegExpLiteral) Start() *Position         { return this_.Idx }
-func (this_ *SequenceExpression) Start() *Position    { return this_.Sequence[0].Start() }
-func (this_ *StringLiteral) Start() *Position         { return this_.Idx }
-func (this_ *TemplateElement) Start() *Position       { return this_.Idx }
-func (this_ *TemplateLiteral) Start() *Position       { return this_.OpenQuote }
-func (this_ *ThisExpression) Start() *Position        { return this_.Idx }
-func (this_ *SuperExpression) Start() *Position       { return this_.Idx }
-func (this_ *UnaryExpression) Start() *Position       { return this_.Idx }
-func (this_ *MetaProperty) Start() *Position          { return this_.Idx }
+func (this_ *ArrayLiteral) Start() int          { return this_.LeftBracket }
+func (this_ *ArrayPattern) Start() int          { return this_.LeftBracket }
+func (this_ *YieldExpression) Start() int       { return this_.Yield }
+func (this_ *AwaitExpression) Start() int       { return this_.Await }
+func (this_ *ObjectPattern) Start() int         { return this_.LeftBrace }
+func (this_ *ParameterList) Start() int         { return this_.Opening }
+func (this_ *AssignExpression) Start() int      { return this_.Left.Start() }
+func (this_ *BadExpression) Start() int         { return this_.From }
+func (this_ *BinaryExpression) Start() int      { return this_.Left.Start() }
+func (this_ *BooleanLiteral) Start() int        { return this_.Idx }
+func (this_ *BracketExpression) Start() int     { return this_.Left.Start() }
+func (this_ *CallExpression) Start() int        { return this_.Callee.Start() }
+func (this_ *ConditionalExpression) Start() int { return this_.Test.Start() }
+func (this_ *DotExpression) Start() int         { return this_.Left.Start() }
+func (this_ *PrivateDotExpression) Start() int  { return this_.Left.Start() }
+func (this_ *FunctionLiteral) Start() int       { return this_.Function }
+func (this_ *ClassLiteral) Start() int          { return this_.Class }
+func (this_ *ArrowFunctionLiteral) Start() int  { return this_.Start_ }
+func (this_ *Identifier) Start() int            { return this_.Idx }
+func (this_ *NewExpression) Start() int         { return this_.New }
+func (this_ *NullLiteral) Start() int           { return this_.Idx }
+func (this_ *NumberLiteral) Start() int         { return this_.Idx }
+func (this_ *ObjectLiteral) Start() int         { return this_.LeftBrace }
+func (this_ *RegExpLiteral) Start() int         { return this_.Idx }
+func (this_ *SequenceExpression) Start() int    { return this_.Sequence[0].Start() }
+func (this_ *StringLiteral) Start() int         { return this_.Idx }
+func (this_ *TemplateElement) Start() int       { return this_.Idx }
+func (this_ *TemplateLiteral) Start() int       { return this_.OpenQuote }
+func (this_ *ThisExpression) Start() int        { return this_.Idx }
+func (this_ *SuperExpression) Start() int       { return this_.Idx }
+func (this_ *UnaryExpression) Start() int       { return this_.Idx }
+func (this_ *MetaProperty) Start() int          { return this_.Idx }
 
 /* 实现 Node End 接口 */
 
-func (this_ *ArrayLiteral) End() *Position          { return this_.RightBracket.NewByColumnOffset(+1) }
-func (this_ *ArrayPattern) End() *Position          { return this_.RightBracket.NewByColumnOffset(+1) }
-func (this_ *AssignExpression) End() *Position      { return this_.Right.End() }
-func (this_ *AwaitExpression) End() *Position       { return this_.Argument.End() }
-func (this_ *BadExpression) End() *Position         { return this_.To }
-func (this_ *BinaryExpression) End() *Position      { return this_.Right.End() }
-func (this_ *BooleanLiteral) End() *Position        { return this_.Idx.NewByColumnOffset(len(this_.Literal)) }
-func (this_ *BracketExpression) End() *Position     { return this_.RightBracket.NewByColumnOffset(+1) }
-func (this_ *CallExpression) End() *Position        { return this_.RightParenthesis.NewByColumnOffset(+1) }
-func (this_ *ConditionalExpression) End() *Position { return this_.Test.End() }
-func (this_ *DotExpression) End() *Position         { return this_.Identifier.End() }
-func (this_ *PrivateDotExpression) End() *Position  { return this_.Identifier.End() }
-func (this_ *FunctionLiteral) End() *Position       { return this_.Body.End() }
-func (this_ *ClassLiteral) End() *Position          { return this_.RightBrace.NewByColumnOffset(+1) }
-func (this_ *ArrowFunctionLiteral) End() *Position  { return this_.Body.End() }
-func (this_ *Identifier) End() *Position            { return this_.Idx.NewByColumnOffset(len(this_.Name)) }
-func (this_ *NewExpression) End() *Position {
+func (this_ *ArrayLiteral) End() int          { return this_.RightBracket + (+1) }
+func (this_ *ArrayPattern) End() int          { return this_.RightBracket + (+1) }
+func (this_ *AssignExpression) End() int      { return this_.Right.End() }
+func (this_ *AwaitExpression) End() int       { return this_.Argument.End() }
+func (this_ *BadExpression) End() int         { return this_.To }
+func (this_ *BinaryExpression) End() int      { return this_.Right.End() }
+func (this_ *BooleanLiteral) End() int        { return this_.Idx + (len(this_.Literal)) }
+func (this_ *BracketExpression) End() int     { return this_.RightBracket + (+1) }
+func (this_ *CallExpression) End() int        { return this_.RightParenthesis + (+1) }
+func (this_ *ConditionalExpression) End() int { return this_.Test.End() }
+func (this_ *DotExpression) End() int         { return this_.Identifier.End() }
+func (this_ *PrivateDotExpression) End() int  { return this_.Identifier.End() }
+func (this_ *FunctionLiteral) End() int       { return this_.Body.End() }
+func (this_ *ClassLiteral) End() int          { return this_.RightBrace + (+1) }
+func (this_ *ArrowFunctionLiteral) End() int  { return this_.Body.End() }
+func (this_ *Identifier) End() int            { return this_.Idx + (len(this_.Name)) }
+func (this_ *NewExpression) End() int {
 	if this_.ArgumentList != nil {
-		return this_.RightParenthesis.NewByColumnOffset(+1)
+		return this_.RightParenthesis + (+1)
 	} else {
 		return this_.Callee.End()
 	}
 }
-func (this_ *NullLiteral) End() *Position        { return this_.Idx.NewByColumnOffset(+4) } // "null"
-func (this_ *NumberLiteral) End() *Position      { return this_.Idx.NewByColumnOffset(len(this_.Literal)) }
-func (this_ *ObjectLiteral) End() *Position      { return this_.RightBrace.NewByColumnOffset(+1) }
-func (this_ *ObjectPattern) End() *Position      { return this_.RightBrace.NewByColumnOffset(+1) }
-func (this_ *ParameterList) End() *Position      { return this_.Closing.NewByColumnOffset(+1) }
-func (this_ *RegExpLiteral) End() *Position      { return this_.Idx.NewByColumnOffset(len(this_.Literal)) }
-func (this_ *SequenceExpression) End() *Position { return this_.Sequence[len(this_.Sequence)-1].End() }
-func (this_ *StringLiteral) End() *Position      { return this_.Idx.NewByColumnOffset(len(this_.Literal)) }
-func (this_ *TemplateElement) End() *Position    { return this_.Idx.NewByColumnOffset(len(this_.Literal)) }
-func (this_ *TemplateLiteral) End() *Position    { return this_.CloseQuote.NewByColumnOffset(+1) }
-func (this_ *ThisExpression) End() *Position     { return this_.Idx.NewByColumnOffset(+4) }
-func (this_ *SuperExpression) End() *Position    { return this_.Idx.NewByColumnOffset(+5) }
-func (this_ *UnaryExpression) End() *Position {
+func (this_ *NullLiteral) End() int        { return this_.Idx + (+4) } // "null"
+func (this_ *NumberLiteral) End() int      { return this_.Idx + (len(this_.Literal)) }
+func (this_ *ObjectLiteral) End() int      { return this_.RightBrace + (+1) }
+func (this_ *ObjectPattern) End() int      { return this_.RightBrace + (+1) }
+func (this_ *ParameterList) End() int      { return this_.Closing + (+1) }
+func (this_ *RegExpLiteral) End() int      { return this_.Idx + (len(this_.Literal)) }
+func (this_ *SequenceExpression) End() int { return this_.Sequence[len(this_.Sequence)-1].End() }
+func (this_ *StringLiteral) End() int      { return this_.Idx + (len(this_.Literal)) }
+func (this_ *TemplateElement) End() int    { return this_.Idx + (len(this_.Literal)) }
+func (this_ *TemplateLiteral) End() int    { return this_.CloseQuote + (+1) }
+func (this_ *ThisExpression) End() int     { return this_.Idx + (+4) }
+func (this_ *SuperExpression) End() int    { return this_.Idx + (+5) }
+func (this_ *UnaryExpression) End() int {
 	if this_.Postfix {
-		return this_.Operand.End().NewByColumnOffset(+2) // ++ --
+		return this_.Operand.End() + (+2) // ++ --
 	}
 	return this_.Operand.End()
 }
-func (this_ *MetaProperty) End() *Position {
+func (this_ *MetaProperty) End() int {
 	return this_.Property.End()
 }

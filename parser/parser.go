@@ -1,9 +1,10 @@
 package parser
 
 import (
-	"github.com/dop251/goja/ast"
 	"github.com/dop251/goja/unistring"
+	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/syntax"
+	"github.com/team-ide/go-interpreter/token"
 	"unicode/utf8"
 )
 
@@ -16,9 +17,20 @@ type parser struct {
 	chrOffset int  // 当前 字符 偏移量
 	offset    int  // 当前 字符 偏移量
 
+	idx           int         // The index of token
+	token         token.Token // The token
+	literal       string      // The literal of the token, if any
+	parsedLiteral unistring.String
+
 	scope             *_scope
 	insertSemicolon   bool // If we see a newline, then insert an implicit semicolon
 	implicitSemicolon bool // An implicit semicolon exists
+
+	recover struct {
+		// Scratch when trying to seek to the next statement, etc.
+		idx   int
+		count int
+	}
 
 	errors ErrorList
 }
@@ -62,7 +74,35 @@ type _scope struct {
 	inAsync         bool
 	allowAwait      bool
 	allowYield      bool
-	declarationList []*ast.VariableDeclaration
+	declarationList []*node.VariableDeclaration
 
 	labels []unistring.String
+}
+
+func (this_ *parser) openScope() {
+	this_.scope = &_scope{
+		outer:   this_.scope,
+		allowIn: true,
+	}
+}
+
+func (this_ *parser) closeScope() {
+	this_.scope = this_.scope.outer
+}
+
+func (this_ *_scope) declare(declaration *node.VariableDeclaration) {
+	this_.declarationList = append(this_.declarationList, declaration)
+}
+
+func (this_ *_scope) hasLabel(name unistring.String) bool {
+	for _, label := range this_.labels {
+		if label == name {
+			return true
+		}
+	}
+	if this_.outer != nil && !this_.inFunction {
+		// Crossing a function boundary to look for a label is verboten
+		return this_.outer.hasLabel(name)
+	}
+	return false
 }

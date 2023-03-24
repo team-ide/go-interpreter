@@ -2,8 +2,51 @@ package parser
 
 import (
 	"fmt"
+	"github.com/team-ide/go-interpreter/token"
 	"sort"
 )
+
+const (
+	errUnexpectedToken      = "Unexpected token %v"
+	errUnexpectedEndOfInput = "Unexpected end of input"
+)
+
+func (this_ *parser) error(place int, msg string) *Error {
+	idx := place
+
+	this_.errors.Add(&Error{msg: msg, idx: idx})
+	return (this_.errors)[len(this_.errors)-1]
+}
+func (this_ *parser) errorUnexpected(offset int, chr rune) error {
+	if chr == -1 {
+		return this_.error(offset, errUnexpectedEndOfInput)
+	}
+	return this_.error(offset, fmt.Sprintf(errUnexpectedToken, token.Illegal))
+}
+
+func (this_ *parser) errorUnexpectedToken(tkn token.Token) error {
+	switch tkn {
+	case token.Eof:
+		return this_.error(0, errUnexpectedEndOfInput)
+	}
+	value := tkn.String()
+	switch tkn {
+	case token.Boolean, token.Null:
+		value = this_.literal
+	case token.Identifier:
+		return this_.error(this_.idx, "Unexpected identifier")
+	case token.Keyword:
+		// TODO Might be a future reserved word
+		return this_.error(this_.idx, "Unexpected reserved word")
+	case token.EscapedReservedWord:
+		return this_.error(this_.idx, "Keyword must not contain escaped characters")
+	case token.Number:
+		return this_.error(this_.idx, "Unexpected number")
+	case token.String:
+		return this_.error(this_.idx, "Unexpected string")
+	}
+	return this_.error(this_.idx, fmt.Sprintf(errUnexpectedToken, value))
+}
 
 type Error struct {
 	filename string
@@ -26,13 +69,6 @@ func (this_ *Error) Error() string {
 		this_.column,
 		this_.msg,
 	)
-}
-
-func (this_ *parser) error(place int, msg string) *Error {
-	idx := place
-
-	this_.errors.Add(&Error{msg: msg, idx: idx})
-	return (this_.errors)[len(this_.errors)-1]
 }
 
 type ErrorList []*Error

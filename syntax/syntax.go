@@ -27,6 +27,10 @@ type Syntax interface {
 	IsLineTerminator(chr rune) bool
 	// IsKeyword 是关键字
 	IsKeyword(literal string) (token.Token, bool)
+	// IsIdentifierToken 是否是表达式令牌
+	IsIdentifierToken(tkn token.Token) bool
+	// IsUnreservedWordToken 是否是 未保留的单词
+	IsUnreservedWordToken(tkn token.Token) bool
 }
 
 // IsDecimalDigit 是十进制数字

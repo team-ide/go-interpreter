@@ -4,7 +4,7 @@ package node
 
 // VariableDeclaration 变量声明
 type VariableDeclaration struct {
-	Var  *Position
+	Var  int
 	List []*Binding
 }
 
@@ -16,7 +16,7 @@ type ClassElement interface {
 
 // FieldDefinition 字段定义
 type FieldDefinition struct {
-	Idx         *Position
+	Idx         int
 	Key         Expression
 	Initializer Expression
 	Computed    bool
@@ -35,7 +35,7 @@ const (
 
 // MethodDefinition 方法定义
 type MethodDefinition struct {
-	Idx      *Position
+	Idx      int
 	Key      Expression
 	Kind     PropertyKind // "method", "get" or "set"
 	Body     *FunctionLiteral
@@ -45,7 +45,7 @@ type MethodDefinition struct {
 
 // ClassStaticBlock 类静态块
 type ClassStaticBlock struct {
-	Static          *Position
+	Static          int
 	Block           *BlockStatement
 	Source          string
 	DeclarationList []*VariableDeclaration
@@ -64,7 +64,7 @@ type ForLoopInitializerExpression struct {
 
 // ForLoopInitializerVarDeclList 对于循环初始化程序变量声明列表
 type ForLoopInitializerVarDeclList struct {
-	Var  *Position
+	Var  int
 	List []*Binding
 }
 
@@ -86,7 +86,7 @@ type ForIntoVar struct {
 
 // ForDeclaration 循环声明
 type ForDeclaration struct {
-	Idx     *Position
+	Idx     int
 	IsConst bool
 	Target  BindingTarget
 }
@@ -140,73 +140,73 @@ func (*ClassStaticBlock) isClassElement() {}
 
 /* 实现 Node Start 接口 */
 
-func (this_ *ForLoopInitializerExpression) Start() *Position  { return this_.Expression.Start() }
-func (this_ *ForLoopInitializerVarDeclList) Start() *Position { return this_.List[0].Start() }
-func (this_ *ForLoopInitializerLexicalDecl) Start() *Position {
+func (this_ *ForLoopInitializerExpression) Start() int  { return this_.Expression.Start() }
+func (this_ *ForLoopInitializerVarDeclList) Start() int { return this_.List[0].Start() }
+func (this_ *ForLoopInitializerLexicalDecl) Start() int {
 	return this_.LexicalDeclaration.Start()
 }
-func (this_ *PropertyShort) Start() *Position  { return this_.Name.Idx }
-func (this_ *PropertyKeyed) Start() *Position  { return this_.Key.Start() }
-func (this_ *ExpressionBody) Start() *Position { return this_.Expression.Start() }
+func (this_ *PropertyShort) Start() int  { return this_.Name.Idx }
+func (this_ *PropertyKeyed) Start() int  { return this_.Key.Start() }
+func (this_ *ExpressionBody) Start() int { return this_.Expression.Start() }
 
-func (this_ *VariableDeclaration) Start() *Position { return this_.Var }
-func (this_ *FieldDefinition) Start() *Position     { return this_.Idx }
-func (this_ *MethodDefinition) Start() *Position    { return this_.Idx }
-func (this_ *ClassStaticBlock) Start() *Position    { return this_.Static }
+func (this_ *VariableDeclaration) Start() int { return this_.Var }
+func (this_ *FieldDefinition) Start() int     { return this_.Idx }
+func (this_ *MethodDefinition) Start() int    { return this_.Idx }
+func (this_ *ClassStaticBlock) Start() int    { return this_.Static }
 
-func (this_ *ForDeclaration) Start() *Position    { return this_.Idx }
-func (this_ *ForIntoVar) Start() *Position        { return this_.Binding.Start() }
-func (this_ *ForIntoExpression) Start() *Position { return this_.Expression.Start() }
+func (this_ *ForDeclaration) Start() int    { return this_.Idx }
+func (this_ *ForIntoVar) Start() int        { return this_.Binding.Start() }
+func (this_ *ForIntoExpression) Start() int { return this_.Expression.Start() }
 
 /* 实现 Node End 接口 */
 
-func (this_ *ForLoopInitializerExpression) End() *Position { return this_.Expression.End() }
-func (this_ *ForLoopInitializerVarDeclList) End() *Position {
+func (this_ *ForLoopInitializerExpression) End() int { return this_.Expression.End() }
+func (this_ *ForLoopInitializerVarDeclList) End() int {
 	return this_.List[len(this_.List)-1].End()
 }
-func (this_ *ForLoopInitializerLexicalDecl) End() *Position { return this_.LexicalDeclaration.End() }
+func (this_ *ForLoopInitializerLexicalDecl) End() int { return this_.LexicalDeclaration.End() }
 
-func (this_ *PropertyShort) End() *Position {
+func (this_ *PropertyShort) End() int {
 	if this_.Initializer != nil {
 		return this_.Initializer.End()
 	}
 	return this_.Name.End()
 }
 
-func (this_ *PropertyKeyed) End() *Position { return this_.Value.End() }
+func (this_ *PropertyKeyed) End() int { return this_.Value.End() }
 
-func (this_ *ExpressionBody) End() *Position { return this_.Expression.End() }
+func (this_ *ExpressionBody) End() int { return this_.Expression.End() }
 
-func (this_ *VariableDeclaration) End() *Position {
+func (this_ *VariableDeclaration) End() int {
 	if len(this_.List) > 0 {
 		return this_.List[len(this_.List)-1].End()
 	}
 
-	return this_.Var.NewByColumnOffset(+3)
+	return this_.Var + (+3)
 }
 
-func (this_ *FieldDefinition) End() *Position {
+func (this_ *FieldDefinition) End() int {
 	if this_.Initializer != nil {
 		return this_.Initializer.End()
 	}
 	return this_.Key.End()
 }
 
-func (this_ *MethodDefinition) End() *Position {
+func (this_ *MethodDefinition) End() int {
 	return this_.Body.End()
 }
 
-func (this_ *ClassStaticBlock) End() *Position {
+func (this_ *ClassStaticBlock) End() int {
 	return this_.Block.End()
 }
 
-func (this_ *YieldExpression) End() *Position {
+func (this_ *YieldExpression) End() int {
 	if this_.Argument != nil {
 		return this_.Argument.End()
 	}
-	return this_.Yield.NewByColumnOffset(+5)
+	return this_.Yield + (+5)
 }
 
-func (this_ *ForDeclaration) End() *Position    { return this_.Target.End() }
-func (this_ *ForIntoVar) End() *Position        { return this_.Binding.End() }
-func (this_ *ForIntoExpression) End() *Position { return this_.Expression.End() }
+func (this_ *ForDeclaration) End() int    { return this_.Target.End() }
+func (this_ *ForIntoVar) End() int        { return this_.Binding.End() }
+func (this_ *ForIntoExpression) End() int { return this_.Expression.End() }

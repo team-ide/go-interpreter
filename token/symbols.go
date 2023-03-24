@@ -2,70 +2,70 @@ package token
 
 // 符号 可能出现的所有符号定义
 const (
-	Plus      = "+"  // +
-	Minus     = "-"  // -
-	Multiply  = "*"  // *
-	Exponent  = "**" // **
-	Slash     = "/"  // /
-	Remainder = "%"  // /
+	Plus      Token = "+"  // +
+	Minus     Token = "-"  // -
+	Multiply  Token = "*"  // *
+	Exponent  Token = "**" // **
+	Slash     Token = "/"  // /
+	Remainder Token = "%"  // /
 
-	And                = "&"   // &
-	Or                 = "|"   // |
-	ExclusiveOr        = "^"   // ^
-	ShiftLeft          = "<<"  // <<
-	ShiftRight         = ">>"  // >>
-	UnsignedShiftRight = ">>>" // >>>
+	And                Token = "&"   // &
+	Or                 Token = "|"   // |
+	ExclusiveOr        Token = "^"   // ^
+	ShiftLeft          Token = "<<"  // <<
+	ShiftRight         Token = ">>"  // >>
+	UnsignedShiftRight Token = ">>>" // >>>
 
-	AddAssign       = "+="  // +=
-	SubtractAssign  = "-="  // -=
-	MultiplyAssign  = "*="  // *=
-	ExponentAssign  = "**=" // **=
-	QuotientAssign  = "/="  // /=
-	RemainderAssign = "%="  // %=
+	AddAssign       Token = "+ Token ="  // + Token =
+	SubtractAssign  Token = "- Token ="  // - Token =
+	MultiplyAssign  Token = "* Token ="  // * Token =
+	ExponentAssign  Token = "** Token =" // ** Token =
+	QuotientAssign  Token = "/ Token ="  // / Token =
+	RemainderAssign Token = "% Token ="  // % Token =
 
-	AndAssign                = "&="   // &=
-	OrAssign                 = "|="   // |=
-	ExclusiveOrAssign        = "^="   // ^=
-	ShiftLeftAssign          = "<<="  // <<=
-	ShiftRightAssign         = ">>="  // >>=
-	UnsignedShiftRightAssign = ">>>=" // >>>=
+	AndAssign                Token = "& Token ="   // & Token =
+	OrAssign                 Token = "| Token ="   // | Token =
+	ExclusiveOrAssign        Token = "^ Token ="   // ^ Token =
+	ShiftLeftAssign          Token = "<< Token ="  // << Token =
+	ShiftRightAssign         Token = ">> Token ="  // >> Token =
+	UnsignedShiftRightAssign Token = ">>> Token =" // >>> Token =
 
-	LogicalAnd = "&&" // &&
-	LogicalOr  = "||" // ||
-	Coalesce   = "??" // ??
-	Increment  = "++" // ++
-	Decrement  = "--" // --
+	LogicalAnd Token = "&&" // &&
+	LogicalOr  Token = "||" // ||
+	Coalesce   Token = "??" // ??
+	Increment  Token = "++" // ++
+	Decrement  Token = "--" // --
 
-	Equal       = "=="  // ==
-	StrictEqual = "===" // ===
-	Less        = "<"   // <
-	Greater     = ">"   // >
-	Assign      = "="   // =
-	Not         = "!"   // !
+	Equal       Token = " Token = Token ="         //  Token = Token =
+	StrictEqual Token = " Token = Token = Token =" //  Token = Token = Token =
+	Less        Token = "<"                        // <
+	Greater     Token = ">"                        // >
+	Assign      Token = " Token ="                 //  Token =
+	Not         Token = "!"                        // !
 
-	BitwiseNot = "~" // ~
+	BitwiseNot Token = "~" // ~
 
-	NotEqual       = "!="  // !=
-	StrictNotEqual = "!==" // !==
-	LessOrEqual    = "<="  // <=
-	GreaterOrEqual = ">="  // >=
+	NotEqual       Token = "! Token ="         // ! Token =
+	StrictNotEqual Token = "! Token = Token =" // ! Token = Token =
+	LessOrEqual    Token = "< Token ="         // < Token =
+	GreaterOrEqual Token = "> Token ="         // > Token =
 
-	LeftParenthesis = "(" // (
-	LeftBracket     = "[" // [
-	LeftBrace       = "{" // {
-	Comma           = "," // ,
-	Period          = "." // .
+	LeftParenthesis Token = "(" // (
+	LeftBracket     Token = "[" // [
+	LeftBrace       Token = "{" // {
+	Comma           Token = "," // ,
+	Period          Token = "." // .
 
-	RightParenthesis = ")"   // )
-	RightBracket     = "]"   // ]
-	RightBrace       = "}"   // }
-	Semicolon        = ";"   // ;
-	Colon            = ":"   // :
-	QuestionMark     = "?"   // ?
-	QuestionDot      = "?."  // ?.
-	Arrow            = "=>"  // =>
-	Ellipsis         = "..." // ...
-	Backtick         = "`"   // `
-	ArrowRight       = "->"  // ->
-	ArrowLeft        = "<-"  // <-
+	RightParenthesis Token = ")"         // )
+	RightBracket     Token = "]"         // ]
+	RightBrace       Token = "}"         // }
+	Semicolon        Token = ";"         // ;
+	Colon            Token = ":"         // :
+	QuestionMark     Token = "?"         // ?
+	QuestionDot      Token = "?."        // ?.
+	Arrow            Token = " Token =>" //  Token =>
+	Ellipsis         Token = "..."       // ...
+	Backtick         Token = "`"         // `
+	ArrowRight       Token = "->"        // ->
+	ArrowLeft        Token = "<-"        // <-
 )
