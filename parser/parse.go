@@ -2,13 +2,30 @@ package parser
 
 import (
 	"github.com/team-ide/go-interpreter/node"
+	"github.com/team-ide/go-interpreter/syntax"
 	"github.com/team-ide/go-interpreter/token"
+	"unicode"
+	"unicode/utf8"
 )
+
+func Parse(src string, syntax syntax.Syntax) (tree *node.Tree, err error) {
+	p := &parser{
+		chr:    ' ',
+		str:    src,
+		length: len(src),
+		Syntax: syntax,
+	}
+	return p.parse()
+}
 
 // 解析
 func (this_ *parser) parse() (tree *node.Tree, err error) {
+	this_.openScope()
+	defer this_.closeScope()
+
 	this_.next()
 	tree = this_.parseTree()
+	//this_.errors.Sort()
 	err = this_.errors.Err()
 	return
 }
@@ -29,6 +46,34 @@ func (this_ *parser) parseSourceElements() (statements []node.Statement) {
 	}
 
 	return statements
+}
+
+func (this_ *parser) skipWhiteSpace() {
+	for {
+		switch this_.chr {
+		case ' ', '\t', '\f', '\v', '\u00a0', '\ufeff':
+			this_.read()
+			continue
+		case '\r':
+			if this_.implicitRead() == '\n' {
+				this_.read()
+			}
+			fallthrough
+		case '\u2028', '\u2029', '\n':
+			if this_.insertSemicolon {
+				return
+			}
+			this_.read()
+			continue
+		}
+		if this_.chr >= utf8.RuneSelf {
+			if unicode.IsSpace(this_.chr) {
+				this_.read()
+				continue
+			}
+		}
+		break
+	}
 }
 
 func (this_ *parser) Position(offset int) (position *node.Position) {

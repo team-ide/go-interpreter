@@ -15,6 +15,7 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 		idx = this_.chrOffset
 		insertSemicolon := false
 
+		this_.read()
 		switch chr := this_.chr; {
 		case this_.IsIdentifierStart(chr):
 			var err string
@@ -79,6 +80,9 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 		case '0' <= chr && chr <= '9':
 			this_.insertSemicolon = true
 			tkn, literal = this_.scanNumericLiteral(false)
+			return
+		case chr == '\n' || chr == '\r' || chr == '\t' || chr == ' ':
+			tkn = token.BlankSpace
 			return
 		default:
 			this_.read()
@@ -234,7 +238,7 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 				tkn = token.PrivateIdentifier
 				return
 			default:
-				_ = this_.errorUnexpected(idx, chr)
+				_ = this_.errorUnexpected("scan chr:"+string(chr), idx, chr)
 				tkn = token.Illegal
 			}
 		}

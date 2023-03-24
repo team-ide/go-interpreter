@@ -12,10 +12,10 @@ import (
 	"unicode/utf8"
 )
 
-func (this_ *parser) expect(value token.Token) int {
+func (this_ *parser) expect(from string, value token.Token) int {
 	idx := this_.idx
 	if this_.token != value {
-		_ = this_.errorUnexpectedToken(this_.token)
+		_ = this_.errorUnexpectedToken("expect by "+from+" this_.token:"+this_.token.String()+",value:"+value.String(), this_.token)
 	}
 	this_.next()
 	return idx
@@ -53,7 +53,7 @@ func (this_ *parser) skipMultiLineComment() (hasLineTerminator bool) {
 		}
 	}
 
-	_ = this_.errorUnexpected(0, this_.chr)
+	_ = this_.errorUnexpected("skipMultiLineComment", 0, this_.chr)
 	return
 }
 

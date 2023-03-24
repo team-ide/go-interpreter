@@ -51,7 +51,7 @@ func (this_ *parser) read() {
 		if chr >= utf8.RuneSelf { // !ASCII
 			chr, width = utf8.DecodeRuneInString(this_.str[this_.offset:])
 			if chr == utf8.RuneError && width == 1 {
-				_ = this_.error(this_.chrOffset, "Invalid UTF-8 character")
+				_ = this_.error("read char utf8.RuneError chr:"+string(chr), this_.chrOffset, "Invalid UTF-8 character")
 			}
 		}
 		this_.offset += width

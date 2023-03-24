@@ -16,19 +16,19 @@ const (
 	ShiftRight         Token = ">>"  // >>
 	UnsignedShiftRight Token = ">>>" // >>>
 
-	AddAssign       Token = "+ Token ="  // + Token =
-	SubtractAssign  Token = "- Token ="  // - Token =
-	MultiplyAssign  Token = "* Token ="  // * Token =
-	ExponentAssign  Token = "** Token =" // ** Token =
-	QuotientAssign  Token = "/ Token ="  // / Token =
-	RemainderAssign Token = "% Token ="  // % Token =
+	AddAssign       Token = "+="  // + Token =
+	SubtractAssign  Token = "-="  // - Token =
+	MultiplyAssign  Token = "*="  // * Token =
+	ExponentAssign  Token = "**=" // ** Token =
+	QuotientAssign  Token = "/="  // / Token =
+	RemainderAssign Token = "%="  // % Token =
 
-	AndAssign                Token = "& Token ="   // & Token =
-	OrAssign                 Token = "| Token ="   // | Token =
-	ExclusiveOrAssign        Token = "^ Token ="   // ^ Token =
-	ShiftLeftAssign          Token = "<< Token ="  // << Token =
-	ShiftRightAssign         Token = ">> Token ="  // >> Token =
-	UnsignedShiftRightAssign Token = ">>> Token =" // >>> Token =
+	AndAssign                Token = "&="   // & Token =
+	OrAssign                 Token = "|="   // | Token =
+	ExclusiveOrAssign        Token = "^="   // ^ Token =
+	ShiftLeftAssign          Token = "<<="  // << Token =
+	ShiftRightAssign         Token = ">>="  // >> Token =
+	UnsignedShiftRightAssign Token = ">>>=" // >>> Token =
 
 	LogicalAnd Token = "&&" // &&
 	LogicalOr  Token = "||" // ||
@@ -36,19 +36,19 @@ const (
 	Increment  Token = "++" // ++
 	Decrement  Token = "--" // --
 
-	Equal       Token = " Token = Token ="         //  Token = Token =
-	StrictEqual Token = " Token = Token = Token =" //  Token = Token = Token =
-	Less        Token = "<"                        // <
-	Greater     Token = ">"                        // >
-	Assign      Token = " Token ="                 //  Token =
-	Not         Token = "!"                        // !
+	Equal       Token = "=="  //  Token = Token =
+	StrictEqual Token = "===" //  Token = Token = Token =
+	Less        Token = "<"   // <
+	Greater     Token = ">"   // >
+	Assign      Token = "="   //  Token =
+	Not         Token = "!"   // !
 
 	BitwiseNot Token = "~" // ~
 
-	NotEqual       Token = "! Token ="         // ! Token =
-	StrictNotEqual Token = "! Token = Token =" // ! Token = Token =
-	LessOrEqual    Token = "< Token ="         // < Token =
-	GreaterOrEqual Token = "> Token ="         // > Token =
+	NotEqual       Token = "!="  // ! Token =
+	StrictNotEqual Token = "!==" // ! Token = Token =
+	LessOrEqual    Token = "<="  // < Token =
+	GreaterOrEqual Token = ">="  // > Token =
 
 	LeftParenthesis Token = "(" // (
 	LeftBracket     Token = "[" // [
@@ -56,16 +56,16 @@ const (
 	Comma           Token = "," // ,
 	Period          Token = "." // .
 
-	RightParenthesis Token = ")"         // )
-	RightBracket     Token = "]"         // ]
-	RightBrace       Token = "}"         // }
-	Semicolon        Token = ";"         // ;
-	Colon            Token = ":"         // :
-	QuestionMark     Token = "?"         // ?
-	QuestionDot      Token = "?."        // ?.
-	Arrow            Token = " Token =>" //  Token =>
-	Ellipsis         Token = "..."       // ...
-	Backtick         Token = "`"         // `
-	ArrowRight       Token = "->"        // ->
-	ArrowLeft        Token = "<-"        // <-
+	RightParenthesis Token = ")"   // )
+	RightBracket     Token = "]"   // ]
+	RightBrace       Token = "}"   // }
+	Semicolon        Token = ";"   // ;
+	Colon            Token = ":"   // :
+	QuestionMark     Token = "?"   // ?
+	QuestionDot      Token = "?."  // ?.
+	Arrow            Token = "=>"  //  Token =>
+	Ellipsis         Token = "..." // ...
+	Backtick         Token = "`"   // `
+	ArrowRight       Token = "->"  // ->
+	ArrowLeft        Token = "<-"  // <-
 )

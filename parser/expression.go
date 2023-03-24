@@ -1,8 +1,10 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
+	"reflect"
 	"strings"
 )
 
@@ -41,7 +43,7 @@ func (this_ *parser) parsePrimaryExpression() node.Expression {
 		case "false":
 			value = false
 		default:
-			_ = this_.error(idx, "Illegal boolean literal")
+			_ = this_.error("parsePrimaryExpression parsedLiteral:"+string(parsedLiteral), idx, "Illegal boolean literal")
 		}
 		return &node.BooleanLiteral{
 			Idx:     idx,
@@ -59,7 +61,7 @@ func (this_ *parser) parsePrimaryExpression() node.Expression {
 		this_.next()
 		value, err := this_.parseNumberLiteral(literal)
 		if err != nil {
-			_ = this_.error(idx, err.Error())
+			_ = this_.error("parsePrimaryExpression parseNumberLiteral error literal:"+string(literal), idx, err.Error())
 			value = 0
 		}
 		return &node.NumberLiteral{
@@ -102,7 +104,7 @@ func (this_ *parser) parsePrimaryExpression() node.Expression {
 		}
 	}
 
-	_ = this_.errorUnexpectedToken(this_.token)
+	_ = this_.errorUnexpectedToken("parsePrimaryExpression", this_.token)
 	this_.nextStatement()
 	return &node.BadExpression{From: idx, To: this_.idx}
 }
@@ -139,7 +141,7 @@ func (this_ *parser) parseSuperProperty() node.Expression {
 			Idx: idx,
 		})
 	default:
-		_ = this_.error(idx, "'super' keyword unexpected here")
+		_ = this_.error("parseSuperProperty this_.token:"+this_.token.String(), idx, "'super' keyword unexpected here")
 		this_.nextStatement()
 		return &node.BadExpression{From: idx, To: this_.idx}
 	}
@@ -156,7 +158,7 @@ func (this_ *parser) reinterpretSequenceAsArrowFuncParams(list []node.Expression
 			}
 		}
 		if firstRestIdx != -1 {
-			_ = this_.error(list[firstRestIdx].Start(), "Rest parameter must be last formal parameter")
+			_ = this_.error("reinterpretSequenceAsArrowFuncParams firstRestIdx != -1 firstRestIdx:"+fmt.Sprintf("%d", firstRestIdx), list[firstRestIdx].Start(), "Rest parameter must be last formal parameter")
 			return &node.ParameterList{}
 		}
 		params = append(params, this_.reinterpretAsBinding(item))
@@ -179,7 +181,7 @@ func (this_ *parser) parseParenthesisedExpression() node.Expression {
 		for {
 			if this_.token == token.Ellipsis {
 				start := this_.idx
-				_ = this_.errorUnexpectedToken(token.Ellipsis)
+				_ = this_.errorUnexpectedToken("parseParenthesisedExpression", token.Ellipsis)
 				this_.next()
 				expr := this_.parseAssignmentExpression()
 				list = append(list, &node.BadExpression{
@@ -194,7 +196,7 @@ func (this_ *parser) parseParenthesisedExpression() node.Expression {
 			}
 			this_.next()
 			if this_.token == token.RightParenthesis {
-				_ = this_.errorUnexpectedToken(token.RightParenthesis)
+				_ = this_.errorUnexpectedToken("parseParenthesisedExpression", token.RightParenthesis)
 				break
 			}
 		}
@@ -204,7 +206,7 @@ func (this_ *parser) parseParenthesisedExpression() node.Expression {
 		return list[0]
 	}
 	if len(list) == 0 {
-		_ = this_.errorUnexpectedToken(token.RightParenthesis)
+		_ = this_.errorUnexpectedToken("parseParenthesisedExpression", token.RightParenthesis)
 		return &node.BadExpression{
 			From: opening,
 			To:   this_.idx,
@@ -341,7 +343,7 @@ func (this_ *parser) parseObjectPropertyKey() (string, node.String, node.Express
 	case token.Number:
 		num, err := this_.parseNumberLiteral(literal)
 		if err != nil {
-			_ = this_.error(idx, err.Error())
+			_ = this_.error("parseObjectPropertyKey parseNumberLiteral literal:"+string(literal), idx, err.Error())
 		} else {
 			value = &node.NumberLiteral{
 				Idx:     idx,
@@ -365,7 +367,7 @@ func (this_ *parser) parseObjectPropertyKey() (string, node.String, node.Express
 				Value:   node.String(literal),
 			}
 		} else {
-			_ = this_.errorUnexpectedToken(tkn)
+			_ = this_.errorUnexpectedToken("parseObjectPropertyKey not IsIdentifierToken:"+tkn.String(), tkn)
 		}
 	}
 	return literal, parsedLiteral, value, tkn
@@ -422,7 +424,7 @@ func (this_ *parser) parseObjectProperty() node.Property {
 					Initializer: initializer,
 				}
 			} else {
-				_ = this_.errorUnexpectedToken(this_.token)
+				_ = this_.errorUnexpectedToken("parseObjectProperty not this_.isBindingId:"+tkn.String(), this_.token)
 			}
 		case (literal == "get" || literal == "set" || tkn == token.Async) && this_.token != token.Colon:
 			_, _, keyValue, tkn1 := this_.parseObjectPropertyKey()
@@ -477,11 +479,11 @@ func (this_ *parser) parseMethodDefinition(keyStartIdx int, kind node.PropertyKi
 	switch kind {
 	case node.PropertyKindGet:
 		if len(parameterList.List) > 0 || parameterList.Rest != nil {
-			_ = this_.error(idx1, "Getter must not have any formal parameters.")
+			_ = this_.error("parseMethodDefinition node.PropertyKindGet", idx1, "Getter must not have any formal parameters.")
 		}
 	case node.PropertyKindSet:
 		if len(parameterList.List) != 1 || parameterList.Rest != nil {
-			_ = this_.error(idx1, "Setter must have exactly one formal parameter.")
+			_ = this_.error("parseMethodDefinition node.PropertyKindSet", idx1, "Setter must have exactly one formal parameter.")
 		}
 	}
 	res := &node.FunctionLiteral{
@@ -557,7 +559,7 @@ func (this_ *parser) parseTemplateLiteral(tagged bool) *node.TemplateLiteral {
 		start := this_.offset
 		literal, parsed, finished, parseErr, err := this_.parseTemplateCharacters()
 		if err != "" {
-			_ = this_.error(this_.offset, err)
+			_ = this_.error("parseTemplateLiteral parseTemplateCharacters err", this_.offset, err)
 		}
 		res.Elements = append(res.Elements, &node.TemplateElement{
 			Idx:     start,
@@ -566,7 +568,7 @@ func (this_ *parser) parseTemplateLiteral(tagged bool) *node.TemplateLiteral {
 			Valid:   parseErr == "",
 		})
 		if !tagged && parseErr != "" {
-			_ = this_.error(this_.offset, parseErr)
+			_ = this_.error("parseTemplateLiteral parseTemplateCharacters parseErr", this_.offset, parseErr)
 		}
 		end := this_.chrOffset - 1
 		this_.next()
@@ -577,7 +579,7 @@ func (this_ *parser) parseTemplateLiteral(tagged bool) *node.TemplateLiteral {
 		expr := this_.parseExpression()
 		res.Expressions = append(res.Expressions, expr)
 		if this_.token != token.RightBrace {
-			_ = this_.errorUnexpectedToken(this_.token)
+			_ = this_.errorUnexpectedToken("parseTemplateLiteral this_.token:"+this_.token.String()+" is not token.RightBrace:"+token.RightBrace.String(), this_.token)
 		}
 	}
 	return res
@@ -683,7 +685,7 @@ func (this_ *parser) parseNewExpression() node.Expression {
 				Property: this_.parseIdentifier(),
 			}
 		}
-		_ = this_.errorUnexpectedToken(token.Identifier)
+		_ = this_.errorUnexpectedToken("parseNewExpression", token.Identifier)
 	}
 	callee := this_.parseLeftHandSideExpression()
 	if bad, ok := callee.(*node.BadExpression); ok {
@@ -756,7 +758,7 @@ L:
 			left = this_.parseCallExpression(left)
 		case token.Backtick:
 			if optionalChain {
-				_ = this_.error(this_.idx, "Invalid template literal on optional chain")
+				_ = this_.error("parseLeftHandSideExpressionAllowCall token.Backtick optionalChain:true", this_.idx, "Invalid template literal on optional chain")
 				this_.nextStatement()
 				return &node.BadExpression{From: start, To: this_.idx}
 			}
@@ -797,7 +799,7 @@ func (this_ *parser) parsePostfixExpression() node.Expression {
 		switch operand.(type) {
 		case *node.Identifier, *node.DotExpression, *node.PrivateDotExpression, *node.BracketExpression:
 		default:
-			_ = this_.error(idx, "Invalid left-hand side in assignment")
+			_ = this_.error("parsePostfixExpression operand type:"+reflect.TypeOf(operand).String(), idx, "Invalid left-hand side in assignment")
 			this_.nextStatement()
 			return &node.BadExpression{From: idx, To: this_.idx}
 		}
@@ -834,7 +836,7 @@ func (this_ *parser) parseUnaryExpression() node.Expression {
 		switch operand.(type) {
 		case *node.Identifier, *node.DotExpression, *node.PrivateDotExpression, *node.BracketExpression:
 		default:
-			_ = this_.error(idx, "Invalid left-hand side in assignment")
+			_ = this_.error("parseUnaryExpression operand type:"+reflect.TypeOf(operand).String(), idx, "Invalid left-hand side in assignment")
 			this_.nextStatement()
 			return &node.BadExpression{From: idx, To: this_.idx}
 		}
@@ -848,14 +850,14 @@ func (this_ *parser) parseUnaryExpression() node.Expression {
 			idx := this_.idx
 			this_.next()
 			if !this_.scope.inAsync {
-				_ = this_.errorUnexpectedToken(token.Await)
+				_ = this_.errorUnexpectedToken("parseUnaryExpression is not this_.scope.inAsync", token.Await)
 				return &node.BadExpression{
 					From: idx,
 					To:   this_.idx,
 				}
 			}
 			if this_.scope.inFuncParams {
-				_ = this_.error(idx, "Illegal await-expression in formal parameters of async function")
+				_ = this_.error("parseUnaryExpression this_.scope.inFuncParams", idx, "Illegal await-expression in formal parameters of async function")
 			}
 			return &node.AwaitExpression{
 				Await:    idx,
@@ -1139,7 +1141,7 @@ func (this_ *parser) parseLogicalOrExpression() node.Expression {
 	}
 
 mixed:
-	_ = this_.error(idx, "Logical expressions and coalesce expressions cannot be mixed. Wrap either by parentheses")
+	_ = this_.error("parseLogicalOrExpression", idx, "Logical expressions and coalesce expressions cannot be mixed. Wrap either by parentheses")
 	return left
 }
 
@@ -1184,7 +1186,7 @@ func (this_ *parser) parseSingleArgArrowFunction(start int, async bool) node.Exp
 	}
 	this_.tokenToBindingId()
 	if this_.token != token.Identifier {
-		_ = this_.errorUnexpectedToken(this_.token)
+		_ = this_.errorUnexpectedToken("parseSingleArgArrowFunction this_.token:"+this_.token.String()+" not token.Identifier:"+token.Identifier.String(), this_.token)
 		this_.next()
 		return &node.BadExpression{
 			From: start,
@@ -1293,7 +1295,7 @@ func (this_ *parser) parseAssignmentExpression() node.Expression {
 			}
 		}
 		if paramList == nil {
-			_ = this_.error(left.Start(), "Malformed arrow function parameter list")
+			_ = this_.error("parseAssignmentExpression paramList is empty ", left.Start(), "Malformed arrow function parameter list")
 			return &node.BadExpression{From: left.Start(), To: left.End()}
 		}
 		return this_.parseArrowFunction(start, paramList, async)
@@ -1324,7 +1326,7 @@ func (this_ *parser) parseAssignmentExpression() node.Expression {
 				Right:    this_.parseAssignmentExpression(),
 			}
 		}
-		_ = this_.error(left.Start(), "Invalid left-hand side in assignment")
+		_ = this_.error("parseAssignmentExpression", left.Start(), "Invalid left-hand side in assignment")
 		this_.nextStatement()
 		return &node.BadExpression{From: idx, To: this_.idx}
 	}
@@ -1336,7 +1338,7 @@ func (this_ *parser) parseYieldExpression() node.Expression {
 	idx := this_.expect(token.Yield)
 
 	if this_.scope.inFuncParams {
-		_ = this_.error(idx, "Yield expression not allowed in formal parameter")
+		_ = this_.error("parseYieldExpression this_.scope.inFuncParams:true", idx, "Yield expression not allowed in formal parameter")
 	}
 
 	res := &node.YieldExpression{
@@ -1384,7 +1386,7 @@ func (this_ *parser) parseExpression() node.Expression {
 
 func (this_ *parser) checkComma(from, to int) {
 	if pos := strings.IndexByte(this_.str[(from):(to)], ','); pos >= 0 {
-		_ = this_.error(from+(pos), "Comma is not allowed here")
+		_ = this_.error("checkComma", from+(pos), "Comma is not allowed here")
 	}
 }
 
@@ -1394,7 +1396,7 @@ func (this_ *parser) reinterpretAsArrayAssignmentPattern(left *node.ArrayLiteral
 	for i, item := range value {
 		if spread, ok := item.(*node.SpreadElement); ok {
 			if i != len(value)-1 {
-				_ = this_.error(item.Start(), "Rest element must be last element")
+				_ = this_.error("reinterpretAsArrayAssignmentPattern", item.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: left.Start(), To: left.End()}
 			}
 			this_.checkComma(spread.Expression.End(), left.RightBracket)
@@ -1428,7 +1430,7 @@ func (this_ *parser) reinterpretAsArrayBindingPattern(left *node.ArrayLiteral) n
 	for i, item := range value {
 		if spread, ok := item.(*node.SpreadElement); ok {
 			if i != len(value)-1 {
-				_ = this_.error(item.Start(), "Rest element must be last element")
+				_ = this_.error("reinterpretAsArrayBindingPattern", item.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: left.Start(), To: left.End()}
 			}
 			this_.checkComma(spread.Expression.End(), left.RightBracket)
@@ -1481,7 +1483,7 @@ func (this_ *parser) reinterpretAsObjectBindingPattern(expr *node.ObjectLiteral)
 			ok = true
 		case *node.SpreadElement:
 			if i != len(expr.Value)-1 {
-				_ = this_.error(prop.Start(), "Rest element must be last element")
+				_ = this_.error("reinterpretAsObjectBindingPattern", prop.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: expr.Start(), To: expr.End()}
 			}
 			// TODO make sure there is no trailing Comma
@@ -1490,7 +1492,7 @@ func (this_ *parser) reinterpretAsObjectBindingPattern(expr *node.ObjectLiteral)
 			ok = true
 		}
 		if !ok {
-			_ = this_.error(prop.Start(), "Invalid destructuring binding target")
+			_ = this_.error("reinterpretAsObjectBindingPattern", prop.Start(), "Invalid destructuring binding target")
 			return &node.BadExpression{From: expr.Start(), To: expr.End()}
 		}
 	}
@@ -1517,7 +1519,7 @@ func (this_ *parser) reinterpretAsObjectAssignmentPattern(l *node.ObjectLiteral)
 			ok = true
 		case *node.SpreadElement:
 			if i != len(l.Value)-1 {
-				_ = this_.error(prop.Start(), "Rest element must be last element")
+				_ = this_.error("reinterpretAsObjectAssignmentPattern", prop.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: l.Start(), To: l.End()}
 			}
 			// TODO make sure there is no trailing Comma
@@ -1526,7 +1528,7 @@ func (this_ *parser) reinterpretAsObjectAssignmentPattern(l *node.ObjectLiteral)
 			ok = true
 		}
 		if !ok {
-			_ = this_.error(prop.Start(), "Invalid destructuring assignment target")
+			_ = this_.error("reinterpretAsObjectAssignmentPattern", prop.Start(), "Invalid destructuring assignment target")
 			return &node.BadExpression{From: l.Start(), To: l.End()}
 		}
 	}
@@ -1545,7 +1547,7 @@ func (this_ *parser) reinterpretAsAssignmentElement(expr node.Expression) node.E
 			expr.Left = this_.reinterpretAsDestructAssignTarget(expr.Left)
 			return expr
 		} else {
-			_ = this_.error(expr.Start(), "Invalid destructuring assignment target")
+			_ = this_.error("reinterpretAsAssignmentElement", expr.Start(), "Invalid destructuring assignment target")
 			return &node.BadExpression{From: expr.Start(), To: expr.End()}
 		}
 	default:
@@ -1560,7 +1562,7 @@ func (this_ *parser) reinterpretAsBindingElement(expr node.Expression) node.Expr
 			expr.Left = this_.reinterpretAsDestructBindingTarget(expr.Left)
 			return expr
 		} else {
-			_ = this_.error(expr.Start(), "Invalid destructuring assignment target")
+			_ = this_.error("reinterpretAsBindingElement", expr.Start(), "Invalid destructuring assignment target")
 			return &node.BadExpression{From: expr.Start(), To: expr.End()}
 		}
 	default:
@@ -1577,7 +1579,7 @@ func (this_ *parser) reinterpretAsBinding(expr node.Expression) *node.Binding {
 				Initializer: expr.Right,
 			}
 		} else {
-			_ = this_.error(expr.Start(), "Invalid destructuring assignment target")
+			_ = this_.error("reinterpretAsBinding", expr.Start(), "Invalid destructuring assignment target")
 			return &node.Binding{
 				Target: &node.BadExpression{From: expr.Start(), To: expr.End()},
 			}
@@ -1600,7 +1602,7 @@ func (this_ *parser) reinterpretAsDestructAssignTarget(item node.Expression) nod
 	case node.Pattern, *node.Identifier, *node.DotExpression, *node.PrivateDotExpression, *node.BracketExpression:
 		return item
 	}
-	_ = this_.error(item.Start(), "Invalid destructuring assignment target")
+	_ = this_.error("reinterpretAsDestructAssignTarget", item.Start(), "Invalid destructuring assignment target")
 	return &node.BadExpression{From: item.Start(), To: item.End()}
 }
 
@@ -1621,7 +1623,7 @@ func (this_ *parser) reinterpretAsDestructBindingTarget(item node.Expression) no
 			return item
 		}
 	}
-	_ = this_.error(item.Start(), "Invalid destructuring binding target")
+	_ = this_.error("reinterpretAsDestructBindingTarget", item.Start(), "Invalid destructuring binding target")
 	return &node.BadExpression{From: item.Start(), To: item.End()}
 }
 
@@ -1629,6 +1631,6 @@ func (this_ *parser) reinterpretAsBindingRestElement(expr node.Expression) node.
 	if _, ok := expr.(*node.Identifier); ok {
 		return expr
 	}
-	_ = this_.error(expr.Start(), "Invalid binding rest")
+	_ = this_.error("reinterpretAsBindingRestElement", expr.Start(), "Invalid binding rest")
 	return &node.BadExpression{From: expr.Start(), To: expr.End()}
 }

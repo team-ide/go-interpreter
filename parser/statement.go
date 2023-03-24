@@ -29,11 +29,25 @@ func (this_ *parser) parseStatementList() (list []node.Statement) {
 	return
 }
 
-func (this_ *parser) parseStatement() node.Statement {
+func (this_ *parser) parseStatementBlankSpace() node.Statement {
+	res := &node.BlankSpaceStatement{
+		From: this_.chrOffset,
+		To:   this_.chrOffset + 1,
+	}
+	this_.next()
+	return res
+}
 
+func (this_ *parser) parseStatement() node.Statement {
+	fmt.Println("parseStatement:", this_.token)
 	if this_.token == token.Eof {
-		_ = this_.errorUnexpectedToken(this_.token)
+		_ = this_.errorUnexpectedToken("parseStatement this_.token is token.Eof", this_.token)
 		return &node.BadStatement{From: this_.idx, To: this_.idx + 1}
+	}
+
+	// 处理 空格 回车 缩进的空白
+	if this_.token == token.BlankSpace {
+		return this_.parseStatementBlankSpace()
 	}
 
 	switch this_.token {
@@ -100,7 +114,7 @@ func (this_ *parser) parseStatement() node.Statement {
 		label := identifier.Name
 		for _, value := range this_.scope.labels {
 			if label == value {
-				_ = this_.error(identifier.Start(), fmt.Sprintf("Label '%s' already exists", label))
+				_ = this_.error("parseStatement", identifier.Start(), fmt.Sprintf("Label '%s' already exists", label))
 			}
 		}
 		this_.scope.labels = append(this_.scope.labels, label) // Push the label
@@ -150,7 +164,7 @@ func (this_ *parser) parseTryStatement() node.Statement {
 	}
 
 	if res.Catch == nil && res.Finally == nil {
-		_ = this_.error(res.Try, "Missing catch or finally after try")
+		_ = this_.error("parseTryStatement", res.Try, "Missing catch or finally after try")
 		return &node.BadStatement{From: res.Try, To: res.Body.End()}
 	}
 
@@ -294,7 +308,7 @@ func (this_ *parser) parseArrowFunctionBody(async bool) (node.ConciseBody, []*no
 
 func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 	if !this_.scope.allowLet && this_.token == token.Class {
-		_ = this_.errorUnexpectedToken(token.Class)
+		_ = this_.errorUnexpectedToken("parseClass", token.Class)
 	}
 
 	res := &node.ClassLiteral{
@@ -379,7 +393,7 @@ func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 		_, private := value.(*node.PrivateIdentifier)
 
 		if static && !private && keyName == "prototype" {
-			_ = this_.error(value.Start(), "Classes may not have a static property named 'prototype'")
+			_ = this_.error("parseClass", value.Start(), "Classes may not have a static property named 'prototype'")
 		}
 
 		if kind == "" && this_.token == token.LeftParenthesis {
@@ -391,14 +405,14 @@ func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 			if keyName == "constructor" && !computed {
 				if !static {
 					if kind != node.PropertyKindMethod {
-						_ = this_.error(value.Start(), "Class constructor may not be an accessor")
+						_ = this_.error("parseClass", value.Start(), "Class constructor may not be an accessor")
 					} else if async {
-						_ = this_.error(value.Start(), "Class constructor may not be an async method")
+						_ = this_.error("parseClass", value.Start(), "Class constructor may not be an async method")
 					} else if generator {
-						_ = this_.error(value.Start(), "Class constructor may not be a generator")
+						_ = this_.error("parseClass", value.Start(), "Class constructor may not be a generator")
 					}
 				} else if private {
-					_ = this_.error(value.Start(), "Class constructor may not be a private method")
+					_ = this_.error("parseClass", value.Start(), "Class constructor may not be a private method")
 				}
 			}
 			md := &node.MethodDefinition{
@@ -419,7 +433,7 @@ func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 				}
 			}
 			if isCtor {
-				_ = this_.error(value.Start(), "Classes may not have a field named 'constructor'")
+				_ = this_.error("parseClass", value.Start(), "Classes may not have a field named 'constructor'")
 			}
 			var initializer node.Expression
 			if this_.token == token.Assign {
@@ -428,7 +442,7 @@ func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 			}
 
 			if !this_.implicitSemicolon && this_.token != token.Semicolon && this_.token != token.RightBrace {
-				_ = this_.errorUnexpectedToken(this_.token)
+				_ = this_.errorUnexpectedToken("parseClass", this_.token)
 				break
 			}
 			res.Body = append(res.Body, &node.FieldDefinition{
@@ -463,7 +477,7 @@ func (this_ *parser) parseReturnStatement() node.Statement {
 	idx := this_.expect(token.Return)
 
 	if !this_.scope.inFunction {
-		_ = this_.error(idx, "Illegal return statement")
+		_ = this_.error("parseReturnStatement", idx, "Illegal return statement")
 		this_.nextStatement()
 		return &node.BadStatement{From: idx, To: this_.idx}
 	}
@@ -486,9 +500,9 @@ func (this_ *parser) parseThrowStatement() node.Statement {
 
 	if this_.implicitSemicolon {
 		if this_.chr == -1 { // Hackish
-			_ = this_.error(idx, "Unexpected end of input")
+			_ = this_.error("parseThrowStatement", idx, "Unexpected end of input")
 		} else {
-			_ = this_.error(idx, "Illegal newline after throw")
+			_ = this_.error("parseThrowStatement", idx, "Illegal newline after throw")
 		}
 		this_.nextStatement()
 		return &node.BadStatement{From: idx, To: this_.idx}
@@ -530,7 +544,7 @@ func (this_ *parser) parseSwitchStatement() node.Statement {
 		clause := this_.parseCaseStatement()
 		if clause.Test == nil {
 			if res.Default != -1 {
-				_ = this_.error(clause.Case, "Already saw a default in switch")
+				_ = this_.error("parseSwitchStatement", clause.Case, "Already saw a default in switch")
 			}
 			res.Default = index
 		}
@@ -687,7 +701,7 @@ func (this_ *parser) parseForOrForInStatement() node.Statement {
 			}
 			if forIn || forOf {
 				if list[0].Initializer != nil {
-					_ = this_.error(list[0].Initializer.Start(), "for-in loop variable declaration may not have an initializer")
+					_ = this_.error("parseForOrForInStatement", list[0].Initializer.Start(), "for-in loop variable declaration may not have an initializer")
 				}
 				if tok == token.Var {
 					into = &node.ForIntoVar{
@@ -734,7 +748,7 @@ func (this_ *parser) parseForOrForInStatement() node.Statement {
 				case *node.ArrayLiteral:
 					expr = this_.reinterpretAsArrayAssignmentPattern(e)
 				default:
-					_ = this_.error(idx, "Invalid left-hand side in for-in or for-of")
+					_ = this_.error("parseForOrForInStatement", idx, "Invalid left-hand side in for-in or for-of")
 					this_.nextStatement()
 					return &node.BadStatement{From: idx, To: this_.idx}
 				}
@@ -765,7 +779,7 @@ func (this_ *parser) ensurePatternInit(list []*node.Binding) {
 	for _, item := range list {
 		if _, ok := item.Target.(node.Pattern); ok {
 			if item.Initializer == nil {
-				_ = this_.error(item.End(), "Missing initializer in destructuring declaration")
+				_ = this_.error("ensurePatternInit", item.End(), "Missing initializer in destructuring declaration")
 				break
 			}
 		}
@@ -789,7 +803,7 @@ func (this_ *parser) parseVariableStatement() *node.VariableStatement {
 func (this_ *parser) parseLexicalDeclaration(tok token.Token) *node.LexicalDeclaration {
 	idx := this_.expect(tok)
 	if !this_.scope.allowLet {
-		_ = this_.error(idx, "Lexical declaration cannot appear in a single-statement context")
+		_ = this_.error("parseLexicalDeclaration", idx, "Lexical declaration cannot appear in a single-statement context")
 	}
 
 	list := this_.parseVariableDeclarationList()
@@ -889,7 +903,7 @@ func (this_ *parser) parseBreakStatement() node.Statement {
 	if this_.token == token.Identifier {
 		identifier := this_.parseIdentifier()
 		if !this_.scope.hasLabel(identifier.Name) {
-			_ = this_.error(idx, fmt.Sprintf("Undefined label '%s'", identifier.Name))
+			_ = this_.error("parseBreakStatement", idx, fmt.Sprintf("Undefined label '%s'", identifier.Name))
 			return &node.BadStatement{From: idx, To: identifier.End()}
 		}
 		this_.semicolon()
@@ -903,7 +917,7 @@ func (this_ *parser) parseBreakStatement() node.Statement {
 	this_.expect(token.Identifier)
 
 illegal:
-	this_.error(idx, "Illegal break statement")
+	this_.error("parseBreakStatement", idx, "Illegal break statement")
 	this_.nextStatement()
 	return &node.BadStatement{From: idx, To: this_.idx}
 }
@@ -931,7 +945,7 @@ func (this_ *parser) parseContinueStatement() node.Statement {
 	if this_.token == token.Identifier {
 		identifier := this_.parseIdentifier()
 		if !this_.scope.hasLabel(identifier.Name) {
-			_ = this_.error(idx, fmt.Sprintf("Undefined label '%s'", identifier.Name))
+			_ = this_.error("parseContinueStatement", idx, fmt.Sprintf("Undefined label '%s'", identifier.Name))
 			return &node.BadStatement{From: idx, To: identifier.End()}
 		}
 		if !this_.scope.inIteration {
@@ -948,7 +962,7 @@ func (this_ *parser) parseContinueStatement() node.Statement {
 	this_.expect(token.Identifier)
 
 illegal:
-	this_.error(idx, "Illegal continue statement")
+	this_.error("parseContinueStatement", idx, "Illegal continue statement")
 	this_.nextStatement()
 	return &node.BadStatement{From: idx, To: this_.idx}
 }

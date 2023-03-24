@@ -133,7 +133,7 @@ newline:
 	errStr := "String not terminated"
 	if quote == '/' {
 		errStr = "Invalid regular expression: missing /"
-		_ = this_.error(offset, errStr)
+		_ = this_.error("scanString", offset, errStr)
 	}
 	return "", "", errStr
 }

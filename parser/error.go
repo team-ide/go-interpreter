@@ -11,41 +11,41 @@ const (
 	errUnexpectedEndOfInput = "Unexpected end of input"
 )
 
-func (this_ *parser) error(place int, msg string) *Error {
+func (this_ *parser) error(from string, place int, msg string) *Error {
 	idx := place
 
-	this_.errors.Add(&Error{msg: msg, idx: idx})
+	this_.errors.Add(&Error{msg: "from:" + from + ",msg:" + msg, idx: idx})
 	return (this_.errors)[len(this_.errors)-1]
 }
-func (this_ *parser) errorUnexpected(offset int, chr rune) error {
+func (this_ *parser) errorUnexpected(from string, offset int, chr rune) error {
 	if chr == -1 {
-		return this_.error(offset, errUnexpectedEndOfInput)
+		return this_.error(from, offset, errUnexpectedEndOfInput)
 	}
-	return this_.error(offset, fmt.Sprintf(errUnexpectedToken, token.Illegal))
+	return this_.error(from, offset, fmt.Sprintf(errUnexpectedToken, token.Illegal))
 }
 
-func (this_ *parser) errorUnexpectedToken(tkn token.Token) error {
+func (this_ *parser) errorUnexpectedToken(from string, tkn token.Token) error {
 	switch tkn {
 	case token.Eof:
-		return this_.error(0, errUnexpectedEndOfInput)
+		return this_.error(from, 0, errUnexpectedEndOfInput)
 	}
 	value := tkn.String()
 	switch tkn {
 	case token.Boolean, token.Null:
 		value = this_.literal
 	case token.Identifier:
-		return this_.error(this_.idx, "Unexpected identifier")
+		return this_.error(from, this_.idx, "Unexpected identifier")
 	case token.Keyword:
 		// TODO Might be a future reserved word
-		return this_.error(this_.idx, "Unexpected reserved word")
+		return this_.error(from, this_.idx, "Unexpected reserved word")
 	case token.EscapedReservedWord:
-		return this_.error(this_.idx, "Keyword must not contain escaped characters")
+		return this_.error(from, this_.idx, "Keyword must not contain escaped characters")
 	case token.Number:
-		return this_.error(this_.idx, "Unexpected number")
+		return this_.error(from, this_.idx, "Unexpected number")
 	case token.String:
-		return this_.error(this_.idx, "Unexpected string")
+		return this_.error(from, this_.idx, "Unexpected string")
 	}
-	return this_.error(this_.idx, fmt.Sprintf(errUnexpectedToken, value))
+	return this_.error(from, this_.idx, fmt.Sprintf(errUnexpectedToken, value))
 }
 
 type Error struct {

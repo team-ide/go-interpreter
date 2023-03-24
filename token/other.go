@@ -5,7 +5,8 @@ const (
 	Nil     Token = "nil"     // 标记 nil
 	Null    Token = "null"    // 标记 null
 
-	Eof Token = "eof" // 标记 结束
+	Eof            Token = "eof"            // 标记 结束
+	LineTerminator Token = "LineTerminator" // 标记 结束
 
 	Illegal Token = "illegal" // 标记 非法的
 	Empty   Token = "empty"   // 标记 是空的
@@ -20,4 +21,8 @@ const (
 
 	String Token = "string" // 标记 是 字符串
 	Number Token = "number" // 标记 是 数字
+
+	Of Token = "of" //
+
+	BlankSpace Token = "blankSpace" // 是空白 空格 回车 缩进等
 )
