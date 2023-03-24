@@ -2,7 +2,10 @@ module github.com/team-ide/go-interpreter
 
 go 1.18
 
-require github.com/team-ide/go-tool v0.1.4
+require (
+	github.com/team-ide/go-tool v0.1.4
+	golang.org/x/text v0.6.0
+)
 
 require (
 	github.com/Chain-Zhang/pinyin v0.1.3 // indirect
