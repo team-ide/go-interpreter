@@ -33,9 +33,10 @@ type BlockStatement struct {
 
 // BranchStatement branch语句
 type BranchStatement struct {
-	Idx   int
-	Token token.Token
-	Label *Identifier
+	Idx    int
+	EndIdx int
+	Token  token.Token
+	Label  *Identifier
 }
 
 // CaseStatement case语句
@@ -59,9 +60,10 @@ type DebuggerStatement struct {
 
 // DoWhileStatement do while 语句
 type DoWhileStatement struct {
-	Do   int
-	Test Expression
-	Body Statement
+	Do     int
+	EndIdx int
+	Test   Expression
+	Body   Statement
 }
 
 // EmptyStatement 空语句
@@ -240,11 +242,13 @@ func (this_ *Binding) Start() int             { return this_.Target.Start() }
 func (this_ *BadStatement) End() int        { return this_.To }
 func (this_ *BlankSpaceStatement) End() int { return this_.To }
 func (this_ *BlockStatement) End() int      { return this_.RightBrace + (1) }
-func (this_ *BranchStatement) End() int     { return this_.Idx }
+func (this_ *BranchStatement) End() int {
+	return this_.EndIdx
+}
 func (this_ *CaseStatement) End() int       { return this_.Consequent[len(this_.Consequent)-1].End() }
 func (this_ *CatchStatement) End() int      { return this_.Body.End() }
 func (this_ *DebuggerStatement) End() int   { return this_.Debugger + (8) }
-func (this_ *DoWhileStatement) End() int    { return this_.Test.End() }
+func (this_ *DoWhileStatement) End() int    { return this_.EndIdx }
 func (this_ *EmptyStatement) End() int      { return this_.Semicolon + (1) }
 func (this_ *ExpressionStatement) End() int { return this_.Expression.End() }
 func (this_ *ForInStatement) End() int      { return this_.Body.End() }

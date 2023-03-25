@@ -22,7 +22,8 @@ const (
 	String Token = "string" // 标记 是 字符串
 	Number Token = "number" // 标记 是 数字
 
-	Of Token = "of" //
+	Of     Token = "of"     //
+	Field  Token = "field"  // 表示 字段
+	Method Token = "method" // 表示 方法
 
-	BlankSpace Token = "blankSpace" // 是空白 空格 回车 缩进等
 )

@@ -787,6 +787,7 @@ L:
 func (this_ *parser) parsePostfixExpression() node.Expression {
 	operand := this_.parseLeftHandSideExpressionAllowCall()
 
+	//fmt.Println("parsePostfixExpression start:", operand.Start(), ",end:", operand.End(), ",operand:", this_.slice(operand.Start(), operand.End()))
 	switch this_.token {
 	case token.Increment, token.Decrement:
 		// Make sure there is no line terminator here

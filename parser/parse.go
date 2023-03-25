@@ -1,12 +1,9 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/syntax"
 	"github.com/team-ide/go-interpreter/token"
-	"unicode"
-	"unicode/utf8"
 )
 
 func Parse(src string, syntax syntax.Syntax) (tree *node.Tree, err error) {
@@ -44,57 +41,6 @@ func (this_ *parser) parseTree() (tree *node.Tree) {
 		DeclarationList: this_.scope.declarationList,
 	}
 	//this_.file.SetSourceMap(this_.parseSourceMap())
-	return
-}
-
-func (this_ *parser) readWhiteSpace() (startIdx, endIdx int) {
-	startIdx = this_.chrOffset
-	defer func() {
-		endIdx = this_.chrOffset
-		fmt.Println("readWhiteSpace startIdx:", startIdx, ",endIdx:", endIdx)
-	}()
-	chr := this_.chr
-	isImplicitRead := false
-	for {
-		shouldContinue := false
-		switch chr {
-		case ' ', '\t', '\f', '\v', '\u00a0', '\ufeff':
-			shouldContinue = true
-			break
-		case '\r':
-			if this_.implicitRead() == '\n' {
-				this_.read()
-			}
-			// 终止 下边 case
-			fallthrough
-		case '\u2028', '\u2029', '\n':
-			if this_.insertSemicolon {
-				return
-			}
-			shouldContinue = true
-		}
-
-		if this_.chr >= utf8.RuneSelf {
-			if unicode.IsSpace(this_.chr) {
-				this_.read()
-				shouldContinue = true
-			}
-		}
-		if shouldContinue {
-			// 如果是预读 表示 预读的也是空字符 需要真正读取下
-			if isImplicitRead {
-				this_.read()
-			}
-			chr = this_.implicitRead()
-			if chr == -1 {
-				break
-			}
-			isImplicitRead = true
-		} else {
-			break
-		}
-
-	}
 	return
 }
 
@@ -139,7 +85,7 @@ func (this_ *parser) optionalSemicolon() {
 }
 
 func (this_ *parser) semicolon(from string) {
-	if this_.token != token.RightParenthesis && this_.token != token.RightBrace && this_.token != token.BlankSpace {
+	if this_.token != token.RightParenthesis && this_.token != token.RightBrace {
 		if this_.implicitSemicolon {
 			this_.implicitSemicolon = false
 			return

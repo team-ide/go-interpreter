@@ -6,16 +6,6 @@ import (
 	"github.com/team-ide/go-interpreter/token"
 )
 
-func (this_ *parser) parseStatementBlankSpace() node.Statement {
-	from, to := this_.readWhiteSpace()
-	res := &node.BlankSpaceStatement{
-		From: from,
-		To:   to,
-	}
-	this_.next()
-	return res
-}
-
 func (this_ *parser) parseStatement() node.Statement {
 	if this_.token == token.Eof {
 		_ = this_.errorUnexpectedToken("parseStatement this_.token is token.Eof", this_.token)
@@ -23,9 +13,6 @@ func (this_ *parser) parseStatement() node.Statement {
 	}
 
 	switch this_.token {
-	// 处理 空格 回车 缩进的空白
-	case token.BlankSpace:
-		return this_.parseStatementBlankSpace()
 	case token.Semicolon:
 		return this_.parseEmptyStatement()
 	case token.LeftBrace:
@@ -105,6 +92,8 @@ func (this_ *parser) parseStatement() node.Statement {
 
 	this_.optionalSemicolon()
 
+	//bs, _ := json.Marshal(expression)
+	//fmt.Println("expression type:", reflect.TypeOf(expression).String(), ",value:", this_.slice(expression.Start(), expression.End()), ",data:", string(bs))
 	return &node.ExpressionStatement{
 		Expression: expression,
 	}
@@ -549,6 +538,8 @@ func (this_ *parser) parseSwitchStatement() node.Statement {
 		}
 		res.Body = append(res.Body, clause)
 	}
+	//bs, _ := json.Marshal(res)
+	//fmt.Println("parseSwitchStatement res:", string(bs))
 
 	return res
 }
@@ -587,10 +578,14 @@ func (this_ *parser) parseCaseStatement() *node.CaseStatement {
 			this_.token == token.Default {
 			break
 		}
+		//fmt.Println("parseCaseStatement token:", this_.token)
 		this_.scope.allowLet = true
-		res.Consequent = append(res.Consequent, this_.parseStatement())
+		state := this_.parseStatement()
+		//fmt.Println("parseCaseStatement state:", reflect.TypeOf(state).String())
+		res.Consequent = append(res.Consequent, state)
 
 	}
+	//fmt.Println("parseCaseStatement res.Consequent:", res.Consequent)
 
 	return res
 }
@@ -775,6 +770,7 @@ func (this_ *parser) parseForOrForInStatement() node.Statement {
 	return this_.parseFor(idx, initializer)
 }
 
+// 确保模式初始化
 func (this_ *parser) ensurePatternInit(list []*node.Binding) {
 	for _, item := range list {
 		if _, ok := item.Target.(node.Pattern); ok {
@@ -838,7 +834,8 @@ func (this_ *parser) parseDoWhileStatement() node.Statement {
 	this_.expect("parseDoWhileStatement", token.While)
 	this_.expect("parseDoWhileStatement", token.LeftParenthesis)
 	res.Test = this_.parseExpression()
-	this_.expect("parseDoWhileStatement", token.RightParenthesis)
+	endIdx := this_.expect("parseDoWhileStatement", token.RightParenthesis)
+	res.EndIdx = endIdx + 1
 	if this_.token == token.Semicolon {
 		this_.next()
 	}
@@ -898,8 +895,9 @@ func (this_ *parser) parseBreakStatement() node.Statement {
 			goto illegal
 		}
 		return &node.BranchStatement{
-			Idx:   idx,
-			Token: token.Break,
+			Idx:    idx,
+			EndIdx: this_.idx + 1,
+			Token:  token.Break,
 		}
 	}
 
@@ -912,9 +910,10 @@ func (this_ *parser) parseBreakStatement() node.Statement {
 		}
 		this_.semicolon("parseBreakStatement")
 		return &node.BranchStatement{
-			Idx:   idx,
-			Token: token.Break,
-			Label: identifier,
+			Idx:    idx,
+			EndIdx: identifier.End(),
+			Token:  token.Break,
+			Label:  identifier,
 		}
 	}
 
@@ -940,8 +939,9 @@ func (this_ *parser) parseContinueStatement() node.Statement {
 			goto illegal
 		}
 		return &node.BranchStatement{
-			Idx:   idx,
-			Token: token.Continue,
+			Idx:    idx,
+			EndIdx: this_.idx + 1,
+			Token:  token.Continue,
 		}
 	}
 
@@ -957,9 +957,10 @@ func (this_ *parser) parseContinueStatement() node.Statement {
 		}
 		this_.semicolon("parseContinueStatement")
 		return &node.BranchStatement{
-			Idx:   idx,
-			Token: token.Continue,
-			Label: identifier,
+			Idx:    idx,
+			EndIdx: identifier.End(),
+			Token:  token.Continue,
+			Label:  identifier,
 		}
 	}
 

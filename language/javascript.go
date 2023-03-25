@@ -359,3 +359,6 @@ func (this_ *JavaScriptSyntax) IsIdentifierToken(tkn token.Token) bool {
 func (this_ *JavaScriptSyntax) IsUnreservedWordToken(tkn token.Token) bool {
 	return TokenIndexOf(javaScriptUnreservedWordTokens, tkn) >= 0
 }
+func (this_ *JavaScriptSyntax) IsModifier(fromToken token.Token, modifierToken token.Token) bool {
+	return false
+}

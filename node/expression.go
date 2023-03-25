@@ -385,8 +385,13 @@ func (this_ *TemplateElement) Start() int       { return this_.Idx }
 func (this_ *TemplateLiteral) Start() int       { return this_.OpenQuote }
 func (this_ *ThisExpression) Start() int        { return this_.Idx }
 func (this_ *SuperExpression) Start() int       { return this_.Idx }
-func (this_ *UnaryExpression) Start() int       { return this_.Idx }
-func (this_ *MetaProperty) Start() int          { return this_.Idx }
+func (this_ *UnaryExpression) Start() int {
+	if this_.Postfix {
+		return this_.Operand.Start()
+	}
+	return this_.Idx
+}
+func (this_ *MetaProperty) Start() int { return this_.Idx }
 
 /* 实现 Node End 接口 */
 

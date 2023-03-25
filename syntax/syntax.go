@@ -31,6 +31,8 @@ type Syntax interface {
 	IsIdentifierToken(tkn token.Token) bool
 	// IsUnreservedWordToken 是否是 未保留的单词
 	IsUnreservedWordToken(tkn token.Token) bool
+	// IsModifier 是否是修饰符
+	IsModifier(fromToken token.Token, modifierToken token.Token) bool
 }
 
 // IsDecimalDigit 是十进制数字
