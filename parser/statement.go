@@ -6,51 +6,26 @@ import (
 	"github.com/team-ide/go-interpreter/token"
 )
 
-func (this_ *parser) parseBlockStatement() *node.BlockStatement {
-	res := &node.BlockStatement{}
-	res.LeftBrace = this_.expect(token.LeftBrace)
-	res.List = this_.parseStatementList()
-	res.RightBrace = this_.expect(token.RightBrace)
-
-	return res
-}
-
-func (this_ *parser) parseEmptyStatement() node.Statement {
-	idx := this_.expect(token.Semicolon)
-	return &node.EmptyStatement{Semicolon: idx}
-}
-
-func (this_ *parser) parseStatementList() (list []node.Statement) {
-	for this_.token != token.RightBrace && this_.token != token.Eof {
-		this_.scope.allowLet = true
-		list = append(list, this_.parseStatement())
-	}
-
-	return
-}
-
 func (this_ *parser) parseStatementBlankSpace() node.Statement {
+	from, to := this_.readWhiteSpace()
 	res := &node.BlankSpaceStatement{
-		From: this_.chrOffset,
-		To:   this_.chrOffset + 1,
+		From: from,
+		To:   to,
 	}
 	this_.next()
 	return res
 }
 
 func (this_ *parser) parseStatement() node.Statement {
-	fmt.Println("parseStatement:", this_.token)
 	if this_.token == token.Eof {
 		_ = this_.errorUnexpectedToken("parseStatement this_.token is token.Eof", this_.token)
 		return &node.BadStatement{From: this_.idx, To: this_.idx + 1}
 	}
 
-	// 处理 空格 回车 缩进的空白
-	if this_.token == token.BlankSpace {
-		return this_.parseStatementBlankSpace()
-	}
-
 	switch this_.token {
+	// 处理 空格 回车 缩进的空白
+	case token.BlankSpace:
+		return this_.parseStatementBlankSpace()
 	case token.Semicolon:
 		return this_.parseEmptyStatement()
 	case token.LeftBrace:
@@ -135,10 +110,33 @@ func (this_ *parser) parseStatement() node.Statement {
 	}
 }
 
+func (this_ *parser) parseBlockStatement() *node.BlockStatement {
+	res := &node.BlockStatement{}
+	res.LeftBrace = this_.expect("parseBlockStatement", token.LeftBrace)
+	res.List = this_.parseStatementList()
+	res.RightBrace = this_.expect("parseBlockStatement", token.RightBrace)
+
+	return res
+}
+
+func (this_ *parser) parseEmptyStatement() node.Statement {
+	idx := this_.expect("parseEmptyStatement", token.Semicolon)
+	return &node.EmptyStatement{Semicolon: idx}
+}
+
+func (this_ *parser) parseStatementList() (list []node.Statement) {
+	for this_.token != token.RightBrace && this_.token != token.Eof {
+		this_.scope.allowLet = true
+		list = append(list, this_.parseStatement())
+	}
+
+	return
+}
+
 func (this_ *parser) parseTryStatement() node.Statement {
 
 	res := &node.TryStatement{
-		Try:  this_.expect(token.Try),
+		Try:  this_.expect("parseTryStatement", token.Try),
 		Body: this_.parseBlockStatement(),
 	}
 
@@ -149,7 +147,7 @@ func (this_ *parser) parseTryStatement() node.Statement {
 		if this_.token == token.LeftParenthesis {
 			this_.next()
 			parameter = this_.parseBindingTarget()
-			this_.expect(token.RightParenthesis)
+			this_.expect("parseTryStatement", token.RightParenthesis)
 		}
 		res.Catch = &node.CatchStatement{
 			Catch:     catch,
@@ -172,7 +170,7 @@ func (this_ *parser) parseTryStatement() node.Statement {
 }
 
 func (this_ *parser) parseFunctionParameterList() *node.ParameterList {
-	opening := this_.expect(token.LeftParenthesis)
+	opening := this_.expect("parseFunctionParameterList", token.LeftParenthesis)
 	var list []*node.Binding
 	var rest node.Expression
 	if !this_.scope.inFuncParams {
@@ -189,10 +187,10 @@ func (this_ *parser) parseFunctionParameterList() *node.ParameterList {
 		}
 		this_.parseVariableDeclaration(&list)
 		if this_.token != token.RightParenthesis {
-			this_.expect(token.Comma)
+			this_.expect("parseFunctionParameterList", token.Comma)
 		}
 	}
-	closing := this_.expect(token.RightParenthesis)
+	closing := this_.expect("parseFunctionParameterList", token.RightParenthesis)
 
 	return &node.ParameterList{
 		Opening: opening,
@@ -217,7 +215,7 @@ func (this_ *parser) parseFunction(declaration, async bool, start int) *node.Fun
 		Function: start,
 		Async:    async,
 	}
-	this_.expect(token.Function)
+	this_.expect("parseFunction", token.Function)
 
 	if this_.token == token.Multiply {
 		res.Generator = true
@@ -245,7 +243,7 @@ func (this_ *parser) parseFunction(declaration, async bool, start int) *node.Fun
 		name = this_.parseIdentifier()
 	} else if declaration {
 		// Use expect error handling
-		this_.expect(token.Identifier)
+		this_.expect("parseFunction", token.Identifier)
 	}
 	res.Name = name
 
@@ -273,11 +271,11 @@ func (this_ *parser) parseFunction(declaration, async bool, start int) *node.Fun
 
 func (this_ *parser) parseFunctionBlock(async, allowAwait, allowYield bool) (body *node.BlockStatement, declarationList []*node.VariableDeclaration) {
 	this_.openScope()
+	defer this_.closeScope()
 	this_.scope.inFunction = true
 	this_.scope.inAsync = async
 	this_.scope.allowAwait = allowAwait
 	this_.scope.allowYield = allowYield
-	defer this_.closeScope()
 	body = this_.parseBlockStatement()
 	declarationList = this_.scope.declarationList
 	return
@@ -312,7 +310,7 @@ func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 	}
 
 	res := &node.ClassLiteral{
-		Class: this_.expect(token.Class),
+		Class: this_.expect("parseClass", token.Class),
 	}
 
 	this_.tokenToBindingId()
@@ -321,17 +319,17 @@ func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 		name = this_.parseIdentifier()
 	} else if declaration {
 		// Use expect error handling
-		this_.expect(token.Identifier)
+		this_.expect("parseClass", token.Identifier)
 	}
 
 	res.Name = name
 
 	if this_.token != token.LeftBrace {
-		this_.expect(token.Extends)
+		this_.expect("parseClass", token.Extends)
 		res.SuperClass = this_.parseLeftHandSideExpressionAllowCall()
 	}
 
-	this_.expect(token.LeftBrace)
+	this_.expect("parseClass", token.LeftBrace)
 
 	for this_.token != token.RightBrace && this_.token != token.Eof {
 		if this_.token == token.Semicolon {
@@ -455,26 +453,26 @@ func (this_ *parser) parseClass(declaration bool) *node.ClassLiteral {
 		}
 	}
 
-	res.RightBrace = this_.expect(token.RightBrace)
+	res.RightBrace = this_.expect("parseClass", token.RightBrace)
 	res.Source = this_.slice(res.Class, res.RightBrace+1)
 
 	return res
 }
 
 func (this_ *parser) parseDebuggerStatement() node.Statement {
-	idx := this_.expect(token.Debugger)
+	idx := this_.expect("parseDebuggerStatement", token.Debugger)
 
 	res := &node.DebuggerStatement{
 		Debugger: idx,
 	}
 
-	this_.semicolon()
+	this_.semicolon("parseDebuggerStatement")
 
 	return res
 }
 
 func (this_ *parser) parseReturnStatement() node.Statement {
-	idx := this_.expect(token.Return)
+	idx := this_.expect("parseReturnStatement", token.Return)
 
 	if !this_.scope.inFunction {
 		_ = this_.error("parseReturnStatement", idx, "Illegal return statement")
@@ -490,13 +488,13 @@ func (this_ *parser) parseReturnStatement() node.Statement {
 		res.Argument = this_.parseExpression()
 	}
 
-	this_.semicolon()
+	this_.semicolon("parseReturnStatement")
 
 	return res
 }
 
 func (this_ *parser) parseThrowStatement() node.Statement {
-	idx := this_.expect(token.Throw)
+	idx := this_.expect("parseThrowStatement", token.Throw)
 
 	if this_.implicitSemicolon {
 		if this_.chr == -1 { // Hackish
@@ -513,21 +511,22 @@ func (this_ *parser) parseThrowStatement() node.Statement {
 		Argument: this_.parseExpression(),
 	}
 
-	this_.semicolon()
+	this_.semicolon("parseThrowStatement")
 
 	return res
 }
 
 func (this_ *parser) parseSwitchStatement() node.Statement {
-	this_.expect(token.Switch)
-	this_.expect(token.LeftParenthesis)
+	idx := this_.expect("parseSwitchStatement", token.Switch)
+	this_.expect("parseSwitchStatement", token.LeftParenthesis)
 	res := &node.SwitchStatement{
+		Switch:       idx,
 		Discriminant: this_.parseExpression(),
 		Default:      -1,
 	}
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseSwitchStatement", token.RightParenthesis)
 
-	this_.expect(token.LeftBrace)
+	this_.expect("parseSwitchStatement", token.LeftBrace)
 
 	inSwitch := this_.scope.inSwitch
 	this_.scope.inSwitch = true
@@ -555,12 +554,13 @@ func (this_ *parser) parseSwitchStatement() node.Statement {
 }
 
 func (this_ *parser) parseWithStatement() node.Statement {
-	this_.expect(token.With)
-	this_.expect(token.LeftParenthesis)
+	idx := this_.expect("parseWithStatement", token.With)
+	this_.expect("parseWithStatement", token.LeftParenthesis)
 	res := &node.WithStatement{
+		With:   idx,
 		Object: this_.parseExpression(),
 	}
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseWithStatement", token.RightParenthesis)
 	this_.scope.allowLet = false
 	res.Body = this_.parseStatement()
 
@@ -575,10 +575,10 @@ func (this_ *parser) parseCaseStatement() *node.CaseStatement {
 	if this_.token == token.Default {
 		this_.next()
 	} else {
-		this_.expect(token.Case)
+		this_.expect("parseCaseStatement", token.Case)
 		res.Test = this_.parseExpression()
 	}
-	this_.expect(token.Colon)
+	this_.expect("parseCaseStatement", token.Colon)
 
 	for {
 		if this_.token == token.Eof ||
@@ -610,7 +610,7 @@ func (this_ *parser) parseForIn(idx int, into node.ForInto) *node.ForInStatement
 	// Already have consumed "<into> in"
 
 	source := this_.parseExpression()
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseForIn", token.RightParenthesis)
 
 	return &node.ForInStatement{
 		For:    idx,
@@ -625,7 +625,7 @@ func (this_ *parser) parseForOf(idx int, into node.ForInto) *node.ForOfStatement
 	// Already have consumed "<into> of"
 
 	source := this_.parseAssignmentExpression()
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseForOf", token.RightParenthesis)
 
 	return &node.ForOfStatement{
 		For:    idx,
@@ -644,12 +644,12 @@ func (this_ *parser) parseFor(idx int, initializer node.ForLoopInitializer) *nod
 	if this_.token != token.Semicolon {
 		test = this_.parseExpression()
 	}
-	this_.expect(token.Semicolon)
+	this_.expect("parseFor", token.Semicolon)
 
 	if this_.token != token.RightParenthesis {
 		update = this_.parseExpression()
 	}
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseFor", token.RightParenthesis)
 
 	return &node.ForStatement{
 		For:         idx,
@@ -661,8 +661,8 @@ func (this_ *parser) parseFor(idx int, initializer node.ForLoopInitializer) *nod
 }
 
 func (this_ *parser) parseForOrForInStatement() node.Statement {
-	idx := this_.expect(token.For)
-	this_.expect(token.LeftParenthesis)
+	idx := this_.expect("parseForOrForInStatement", token.For)
+	this_.expect("parseForOrForInStatement", token.LeftParenthesis)
 
 	var initializer node.ForLoopInitializer
 
@@ -771,7 +771,7 @@ func (this_ *parser) parseForOrForInStatement() node.Statement {
 		return this_.parseForOf(idx, into)
 	}
 
-	this_.expect(token.Semicolon)
+	this_.expect("parseForOrForInStatement", token.Semicolon)
 	return this_.parseFor(idx, initializer)
 }
 
@@ -788,11 +788,11 @@ func (this_ *parser) ensurePatternInit(list []*node.Binding) {
 
 func (this_ *parser) parseVariableStatement() *node.VariableStatement {
 
-	idx := this_.expect(token.Var)
+	idx := this_.expect("parseVariableStatement", token.Var)
 
 	list := this_.parseVarDeclarationList(idx)
 	this_.ensurePatternInit(list)
-	this_.semicolon()
+	this_.semicolon("parseVariableStatement")
 
 	return &node.VariableStatement{
 		Var:  idx,
@@ -801,14 +801,14 @@ func (this_ *parser) parseVariableStatement() *node.VariableStatement {
 }
 
 func (this_ *parser) parseLexicalDeclaration(tok token.Token) *node.LexicalDeclaration {
-	idx := this_.expect(tok)
+	idx := this_.expect("parseLexicalDeclaration", tok)
 	if !this_.scope.allowLet {
 		_ = this_.error("parseLexicalDeclaration", idx, "Lexical declaration cannot appear in a single-statement context")
 	}
 
 	list := this_.parseVariableDeclarationList()
 	this_.ensurePatternInit(list)
-	this_.semicolon()
+	this_.semicolon("parseLexicalDeclaration")
 
 	return &node.LexicalDeclaration{
 		Idx:   idx,
@@ -824,8 +824,10 @@ func (this_ *parser) parseDoWhileStatement() node.Statement {
 		this_.scope.inIteration = inIteration
 	}()
 
-	this_.expect(token.Do)
-	res := &node.DoWhileStatement{}
+	idx := this_.expect("parseDoWhileStatement", token.Do)
+	res := &node.DoWhileStatement{
+		Do: idx,
+	}
 	if this_.token == token.LeftBrace {
 		res.Body = this_.parseBlockStatement()
 	} else {
@@ -833,10 +835,10 @@ func (this_ *parser) parseDoWhileStatement() node.Statement {
 		res.Body = this_.parseStatement()
 	}
 
-	this_.expect(token.While)
-	this_.expect(token.LeftParenthesis)
+	this_.expect("parseDoWhileStatement", token.While)
+	this_.expect("parseDoWhileStatement", token.LeftParenthesis)
 	res.Test = this_.parseExpression()
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseDoWhileStatement", token.RightParenthesis)
 	if this_.token == token.Semicolon {
 		this_.next()
 	}
@@ -845,24 +847,26 @@ func (this_ *parser) parseDoWhileStatement() node.Statement {
 }
 
 func (this_ *parser) parseWhileStatement() node.Statement {
-	this_.expect(token.While)
-	this_.expect(token.LeftParenthesis)
+	idx := this_.expect("parseWhileStatement", token.While)
+	this_.expect("parseWhileStatement", token.LeftParenthesis)
 	res := &node.WhileStatement{
-		Test: this_.parseExpression(),
+		While: idx,
+		Test:  this_.parseExpression(),
 	}
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseWhileStatement", token.RightParenthesis)
 	res.Body = this_.parseIterationStatement()
 
 	return res
 }
 
 func (this_ *parser) parseIfStatement() node.Statement {
-	this_.expect(token.If)
-	this_.expect(token.LeftParenthesis)
+	idx := this_.expect("parseIfStatement", token.If)
+	this_.expect("parseIfStatement", token.LeftParenthesis)
 	res := &node.IfStatement{
+		If:   idx,
 		Test: this_.parseExpression(),
 	}
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseIfStatement", token.RightParenthesis)
 
 	if this_.token == token.LeftBrace {
 		res.Consequent = this_.parseBlockStatement()
@@ -881,7 +885,7 @@ func (this_ *parser) parseIfStatement() node.Statement {
 }
 
 func (this_ *parser) parseBreakStatement() node.Statement {
-	idx := this_.expect(token.Break)
+	idx := this_.expect("parseBreakStatement", token.Break)
 	semicolon := this_.implicitSemicolon
 	if this_.token == token.Semicolon {
 		semicolon = true
@@ -906,7 +910,7 @@ func (this_ *parser) parseBreakStatement() node.Statement {
 			_ = this_.error("parseBreakStatement", idx, fmt.Sprintf("Undefined label '%s'", identifier.Name))
 			return &node.BadStatement{From: idx, To: identifier.End()}
 		}
-		this_.semicolon()
+		this_.semicolon("parseBreakStatement")
 		return &node.BranchStatement{
 			Idx:   idx,
 			Token: token.Break,
@@ -914,7 +918,7 @@ func (this_ *parser) parseBreakStatement() node.Statement {
 		}
 	}
 
-	this_.expect(token.Identifier)
+	this_.expect("parseBreakStatement", token.Identifier)
 
 illegal:
 	this_.error("parseBreakStatement", idx, "Illegal break statement")
@@ -923,7 +927,7 @@ illegal:
 }
 
 func (this_ *parser) parseContinueStatement() node.Statement {
-	idx := this_.expect(token.Continue)
+	idx := this_.expect("parseContinueStatement", token.Continue)
 	semicolon := this_.implicitSemicolon
 	if this_.token == token.Semicolon {
 		semicolon = true
@@ -951,7 +955,7 @@ func (this_ *parser) parseContinueStatement() node.Statement {
 		if !this_.scope.inIteration {
 			goto illegal
 		}
-		this_.semicolon()
+		this_.semicolon("parseContinueStatement")
 		return &node.BranchStatement{
 			Idx:   idx,
 			Token: token.Continue,
@@ -959,7 +963,7 @@ func (this_ *parser) parseContinueStatement() node.Statement {
 		}
 	}
 
-	this_.expect(token.Identifier)
+	this_.expect("parseContinueStatement", token.Identifier)
 
 illegal:
 	this_.error("parseContinueStatement", idx, "Illegal continue statement")

@@ -16,6 +16,8 @@ type parser struct {
 	chrOffset int  // 当前 字符 偏移量
 	offset    int  // 当前 字符 偏移量
 
+	base int
+
 	idx           int         // The index of token
 	token         token.Token // The token
 	literal       string      // The literal of the token, if any

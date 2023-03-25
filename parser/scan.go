@@ -3,19 +3,48 @@ package parser
 import (
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
+	"unicode"
+	"unicode/utf8"
 )
+
+func (this_ *parser) skipWhiteSpace() {
+	for {
+		switch this_.chr {
+		case ' ', '\t', '\f', '\v', '\u00a0', '\ufeff':
+			this_.read()
+			continue
+		case '\r':
+			if this_.implicitRead() == '\n' {
+				this_.read()
+			}
+			fallthrough
+		case '\u2028', '\u2029', '\n':
+			if this_.insertSemicolon {
+				return
+			}
+			this_.read()
+			continue
+		}
+		if this_.chr >= utf8.RuneSelf {
+			if unicode.IsSpace(this_.chr) {
+				this_.read()
+				continue
+			}
+		}
+		break
+	}
+}
 
 func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node.String, idx int) {
 
 	this_.implicitSemicolon = false
 
 	for {
-		//this_.skipWhiteSpace()
+		this_.skipWhiteSpace()
 
-		idx = this_.chrOffset
+		idx = this_.idxOf(this_.chrOffset)
 		insertSemicolon := false
 
-		this_.read()
 		switch chr := this_.chr; {
 		case this_.IsIdentifierStart(chr):
 			var err string
@@ -81,9 +110,9 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 			this_.insertSemicolon = true
 			tkn, literal = this_.scanNumericLiteral(false)
 			return
-		case chr == '\n' || chr == '\r' || chr == '\t' || chr == ' ':
-			tkn = token.BlankSpace
-			return
+		//case chr == '\n' || chr == '\r' || chr == '\t' || chr == ' ':
+		//	tkn = token.BlankSpace
+		//	return
 		default:
 			this_.read()
 			switch chr {

@@ -167,7 +167,7 @@ type ExpressionBody struct {
 
 // ArrowFunctionLiteral 箭头函数
 type ArrowFunctionLiteral struct {
-	Start_          int
+	Idx             int
 	ParameterList   *ParameterList
 	Body            ConciseBody
 	Source          string
@@ -372,7 +372,7 @@ func (this_ *DotExpression) Start() int         { return this_.Left.Start() }
 func (this_ *PrivateDotExpression) Start() int  { return this_.Left.Start() }
 func (this_ *FunctionLiteral) Start() int       { return this_.Function }
 func (this_ *ClassLiteral) Start() int          { return this_.Class }
-func (this_ *ArrowFunctionLiteral) Start() int  { return this_.Start_ }
+func (this_ *ArrowFunctionLiteral) Start() int  { return this_.Idx }
 func (this_ *Identifier) Start() int            { return this_.Idx }
 func (this_ *NewExpression) Start() int         { return this_.New }
 func (this_ *NullLiteral) Start() int           { return this_.Idx }

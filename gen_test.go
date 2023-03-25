@@ -89,10 +89,10 @@ import (
 		name := modelPathName[modelPath]
 		if strings.HasSuffix(modelPath, "/"+name) {
 			//genContent += "\t" + `"` + modelPath + `"` + "\n"
-			genContent += "\t" + `_ "` + modelPath + `"` + "\n"
+			//genContent += "\t" + `_ "` + modelPath + `"` + "\n"
 		} else {
 			//genContent += "\t" + name + ` "` + modelPath + `"` + "\n"
-			genContent += "\t" + `_ "` + modelPath + `"` + "\n"
+			//genContent += "\t" + `_ "` + modelPath + `"` + "\n"
 		}
 	}
 	genContent += `)` + "\n"
@@ -118,6 +118,7 @@ import (
 	if err != nil {
 		panic("os.Create error:" + err.Error())
 	}
+	defer func() { _ = f.Close() }()
 	_, _ = f.WriteString(genContent)
 }
 

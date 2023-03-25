@@ -116,7 +116,7 @@ func (this_ *parser) parseSuperProperty() node.Expression {
 	case token.Period:
 		this_.next()
 		if !this_.IsIdentifierToken(this_.token) {
-			this_.expect(token.Identifier)
+			this_.expect("parseSuperProperty", token.Identifier)
 			this_.nextStatement()
 			return &node.BadExpression{From: idx, To: this_.idx}
 		}
@@ -175,7 +175,7 @@ func (this_ *parser) reinterpretSequenceAsArrowFuncParams(list []node.Expression
 
 func (this_ *parser) parseParenthesisedExpression() node.Expression {
 	opening := this_.idx
-	this_.expect(token.LeftParenthesis)
+	this_.expect("parseParenthesisedExpression", token.LeftParenthesis)
 	var list []node.Expression
 	if this_.token != token.RightParenthesis {
 		for {
@@ -201,7 +201,7 @@ func (this_ *parser) parseParenthesisedExpression() node.Expression {
 			}
 		}
 	}
-	this_.expect(token.RightParenthesis)
+	this_.expect("parseParenthesisedExpression", token.RightParenthesis)
 	if len(list) == 1 && len(this_.errors) == 0 {
 		return list[0]
 	}
@@ -223,7 +223,7 @@ func (this_ *parser) parseRegExpLiteral() *node.RegExpLiteral {
 	if this_.token == token.QuotientAssign {
 		offset -= 1 // =
 	}
-	idx := offset
+	idx := this_.idxOf(offset)
 
 	pattern, _, err := this_.scanString(offset, false)
 	endOffset := this_.chrOffset
@@ -276,7 +276,7 @@ func (this_ *parser) parseBindingTarget() (target node.BindingTarget) {
 	case token.LeftBrace:
 		target = this_.parseObjectBindingPattern()
 	default:
-		idx := this_.expect(token.Identifier)
+		idx := this_.expect("parseBindingTarget", token.Identifier)
 		this_.nextStatement()
 		target = &node.BadExpression{From: idx, To: this_.idx}
 	}
@@ -327,7 +327,7 @@ func (this_ *parser) parseObjectPropertyKey() (string, node.String, node.Express
 	if this_.token == token.LeftBracket {
 		this_.next()
 		expr := this_.parseAssignmentExpression()
-		this_.expect(token.RightBracket)
+		this_.expect("parseObjectPropertyKey", token.RightBracket)
 		return "", "", expr, token.Illegal
 	}
 	idx, tkn, literal, parsedLiteral := this_.idx, this_.token, this_.literal, this_.parsedLiteral
@@ -452,7 +452,7 @@ func (this_ *parser) parseObjectProperty() node.Property {
 		}
 	}
 
-	this_.expect(token.Colon)
+	this_.expect("parseObjectProperty", token.Colon)
 	return &node.PropertyKeyed{
 		Key:      value,
 		Kind:     node.PropertyKindValue,
@@ -499,19 +499,19 @@ func (this_ *parser) parseMethodDefinition(keyStartIdx int, kind node.PropertyKi
 
 func (this_ *parser) parseObjectLiteral() *node.ObjectLiteral {
 	var value []node.Property
-	idx0 := this_.expect(token.LeftBrace)
+	idx0 := this_.expect("parseObjectLiteral", token.LeftBrace)
 	for this_.token != token.RightBrace && this_.token != token.Eof {
 		property := this_.parseObjectProperty()
 		if property != nil {
 			value = append(value, property)
 		}
 		if this_.token != token.RightBrace {
-			this_.expect(token.Comma)
+			this_.expect("parseObjectLiteral", token.Comma)
 		} else {
 			break
 		}
 	}
-	idx1 := this_.expect(token.RightBrace)
+	idx1 := this_.expect("parseObjectLiteral", token.RightBrace)
 
 	return &node.ObjectLiteral{
 		LeftBrace:  idx0,
@@ -522,7 +522,7 @@ func (this_ *parser) parseObjectLiteral() *node.ObjectLiteral {
 
 func (this_ *parser) parseArrayLiteral() *node.ArrayLiteral {
 
-	idx0 := this_.expect(token.LeftBracket)
+	idx0 := this_.expect("parseArrayLiteral", token.LeftBracket)
 	var value []node.Expression
 	for this_.token != token.RightBracket && this_.token != token.Eof {
 		if this_.token == token.Comma {
@@ -539,10 +539,10 @@ func (this_ *parser) parseArrayLiteral() *node.ArrayLiteral {
 			value = append(value, this_.parseAssignmentExpression())
 		}
 		if this_.token != token.RightBracket {
-			this_.expect(token.Comma)
+			this_.expect("parseArrayLiteral", token.Comma)
 		}
 	}
-	idx1 := this_.expect(token.RightBracket)
+	idx1 := this_.expect("parseArrayLiteral", token.RightBracket)
 
 	return &node.ArrayLiteral{
 		LeftBracket:  idx0,
@@ -562,7 +562,7 @@ func (this_ *parser) parseTemplateLiteral(tagged bool) *node.TemplateLiteral {
 			_ = this_.error("parseTemplateLiteral parseTemplateCharacters err", this_.offset, err)
 		}
 		res.Elements = append(res.Elements, &node.TemplateElement{
-			Idx:     start,
+			Idx:     this_.idxOf(start),
 			Literal: literal,
 			Parsed:  parsed,
 			Valid:   parseErr == "",
@@ -573,7 +573,7 @@ func (this_ *parser) parseTemplateLiteral(tagged bool) *node.TemplateLiteral {
 		end := this_.chrOffset - 1
 		this_.next()
 		if finished {
-			res.CloseQuote = end
+			res.CloseQuote = this_.idxOf(end)
 			break
 		}
 		expr := this_.parseExpression()
@@ -592,7 +592,7 @@ func (this_ *parser) parseTaggedTemplateLiteral(tag node.Expression) *node.Templ
 }
 
 func (this_ *parser) parseArgumentList() (argumentList []node.Expression, idx0, idx1 int) {
-	idx0 = this_.expect(token.LeftParenthesis)
+	idx0 = this_.expect("parseArgumentList", token.LeftParenthesis)
 	for this_.token != token.RightParenthesis {
 		var item node.Expression
 		if this_.token == token.Ellipsis {
@@ -609,7 +609,7 @@ func (this_ *parser) parseArgumentList() (argumentList []node.Expression, idx0, 
 		}
 		this_.next()
 	}
-	idx1 = this_.expect(token.RightParenthesis)
+	idx1 = this_.expect("parseArgumentList", token.RightParenthesis)
 	return
 }
 
@@ -644,7 +644,7 @@ func (this_ *parser) parseDotMember(left node.Expression) node.Expression {
 	}
 
 	if !this_.IsIdentifierToken(this_.token) {
-		this_.expect(token.Identifier)
+		this_.expect("parseDotMember", token.Identifier)
 		this_.nextStatement()
 		return &node.BadExpression{From: period, To: this_.idx}
 	}
@@ -661,9 +661,9 @@ func (this_ *parser) parseDotMember(left node.Expression) node.Expression {
 }
 
 func (this_ *parser) parseBracketMember(left node.Expression) node.Expression {
-	idx0 := this_.expect(token.LeftBracket)
+	idx0 := this_.expect("parseBracketMember", token.LeftBracket)
 	member := this_.parseExpression()
-	idx1 := this_.expect(token.RightBracket)
+	idx1 := this_.expect("parseBracketMember", token.RightBracket)
 	return &node.BracketExpression{
 		LeftBracket:  idx0,
 		Left:         left,
@@ -673,7 +673,7 @@ func (this_ *parser) parseBracketMember(left node.Expression) node.Expression {
 }
 
 func (this_ *parser) parseNewExpression() node.Expression {
-	idx := this_.expect(token.New)
+	idx := this_.expect("parseNewExpression", token.New)
 	if this_.token == token.Period {
 		this_.next()
 		if this_.literal == "target" {
@@ -1154,7 +1154,7 @@ func (this_ *parser) parseConditionalExpression() node.Expression {
 		this_.scope.allowIn = true
 		consequent := this_.parseAssignmentExpression()
 		this_.scope.allowIn = allowIn
-		this_.expect(token.Colon)
+		this_.expect("parseConditionalExpression", token.Colon)
 		return &node.ConditionalExpression{
 			Test:       left,
 			Consequent: consequent,
@@ -1166,9 +1166,9 @@ func (this_ *parser) parseConditionalExpression() node.Expression {
 }
 
 func (this_ *parser) parseArrowFunction(start int, paramList *node.ParameterList, async bool) node.Expression {
-	this_.expect(token.Arrow)
+	this_.expect("parseArrowFunction", token.Arrow)
 	res := &node.ArrowFunctionLiteral{
-		Start_:        start,
+		Idx:           start,
 		ParameterList: paramList,
 		Async:         async,
 	}
@@ -1335,7 +1335,7 @@ func (this_ *parser) parseAssignmentExpression() node.Expression {
 }
 
 func (this_ *parser) parseYieldExpression() node.Expression {
-	idx := this_.expect(token.Yield)
+	idx := this_.expect("parseYieldExpression", token.Yield)
 
 	if this_.scope.inFuncParams {
 		_ = this_.error("parseYieldExpression this_.scope.inFuncParams:true", idx, "Yield expression not allowed in formal parameter")
@@ -1385,7 +1385,7 @@ func (this_ *parser) parseExpression() node.Expression {
 }
 
 func (this_ *parser) checkComma(from, to int) {
-	if pos := strings.IndexByte(this_.str[(from):(to)], ','); pos >= 0 {
+	if pos := strings.IndexByte(this_.str[(from)-this_.base:(to)-this_.base], ','); pos >= 0 {
 		_ = this_.error("checkComma", from+(pos), "Comma is not allowed here")
 	}
 }
