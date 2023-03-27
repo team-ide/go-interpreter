@@ -21,6 +21,7 @@ func (this_ *parser) expect(from string, value token.Token) int {
 	return idx
 }
 
+// 跳过单行注释
 func (this_ *parser) skipSingleLineComment() {
 	for this_.chr != -1 {
 		this_.read()
@@ -30,10 +31,12 @@ func (this_ *parser) skipSingleLineComment() {
 	}
 }
 
+// 跳过多行注释
 func (this_ *parser) skipMultiLineComment() (hasLineTerminator bool) {
 	this_.read()
 	for this_.chr >= 0 {
 		chr := this_.chr
+		// 换行符 /n、回车 \r、行分隔符、段落分隔符
 		if chr == '\r' || chr == '\n' || chr == '\u2028' || chr == '\u2029' {
 			hasLineTerminator = true
 			break
@@ -57,6 +60,7 @@ func (this_ *parser) skipMultiLineComment() (hasLineTerminator bool) {
 	return
 }
 
+// 跳过空白检查线路终止器
 func (this_ *parser) skipWhiteSpaceCheckLineTerminator() bool {
 	for {
 		switch this_.chr {
