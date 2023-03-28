@@ -2,24 +2,61 @@ package parser
 
 import (
 	"github.com/team-ide/go-interpreter/node"
-	"github.com/team-ide/go-interpreter/syntax"
 	"github.com/team-ide/go-interpreter/token"
 	"unicode/utf8"
 )
 
-func New(src string, syntax syntax.Syntax) (p *Parser) {
+func New(src string) (p *Parser) {
 	p = &Parser{
 		Chr:    ' ',
 		Str:    src,
 		Length: len(src),
-		Syntax: syntax,
 		Base:   1,
 	}
 	return
 }
 
+// TokenIndexOf 返回 某个值 在数组中的索引位置，未找到返回 -1
+func TokenIndexOf(array []token.Token, v token.Token) (index int) {
+	index = -1
+	size := len(array)
+	for i := 0; i < size; i++ {
+		if array[i] == v {
+			index = i
+			return
+		}
+	}
+	return
+}
+
+type Keyword struct {
+	Token token.Token
+	// 未来关键字
+	FutureKeyword bool
+	// 严格的
+	Strict bool
+}
+
+func (this_ *Parser) IsKeyword(literal string) (token.Token, bool) {
+	KeywordToken := this_.KeywordToken
+	if KeywordToken != nil {
+		if keyword, exists := KeywordToken[literal]; exists {
+			if keyword.FutureKeyword {
+				return token.Keyword, keyword.Strict
+			}
+			return keyword.Token, false
+		}
+	}
+	return "", false
+}
+func (this_ *Parser) IsIdentifierToken(tkn token.Token) bool {
+	return TokenIndexOf(this_.IdentifierTokens, tkn) >= 0
+}
+func (this_ *Parser) IsUnreservedWordToken(tkn token.Token) bool {
+	return TokenIndexOf(this_.UnreservedWordTokens, tkn) >= 0
+}
+
 type Parser struct {
-	syntax.Syntax
 	Str    string
 	Length int
 
@@ -45,6 +82,10 @@ type Parser struct {
 	}
 
 	Errors ErrorList
+
+	KeywordToken         map[string]Keyword
+	IdentifierTokens     []token.Token
+	UnreservedWordTokens []token.Token
 }
 
 // ImplicitRead 隐式读取下一个

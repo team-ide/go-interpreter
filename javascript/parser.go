@@ -3,7 +3,6 @@ package javascript
 import (
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/parser"
-	"github.com/team-ide/go-interpreter/syntax"
 	"github.com/team-ide/go-interpreter/token"
 )
 
@@ -11,10 +10,13 @@ type Parser struct {
 	*parser.Parser
 }
 
-func Parse(src string, syntax syntax.Syntax) (tree *node.Tree, err error) {
+func Parse(src string) (tree *node.Tree, err error) {
 	p := &Parser{
-		Parser: parser.New(src, syntax),
+		Parser: parser.New(src),
 	}
+	p.KeywordToken = KeywordToken
+	p.IdentifierTokens = IdentifierTokens
+	p.UnreservedWordTokens = UnreservedWordTokens
 	return p.Parse()
 }
 

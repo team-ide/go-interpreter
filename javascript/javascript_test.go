@@ -1,11 +1,7 @@
 package javascript
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/team-ide/go-interpreter/language"
 	"github.com/team-ide/go-interpreter/node"
-	"reflect"
 	"testing"
 )
 
@@ -13,12 +9,23 @@ const javaScriptCode = `
 
 var a = 1;
 var b = 1;
-var aFunc = function(){
-
-}
 a=1
 b=2
 aa=[1,2,3,""]
+s+=s
+s++
+s--
+b=j++;
+b=j--;
+s=s*s-1+4*s
+let a = ''
+let a = null
+a=a;
+;;
+a=[{a:1},[{s:1,b:2}]]
+var aFunc = function(){
+
+}
 
 aaa.each(()=>{
 
@@ -33,18 +40,6 @@ for(a=1;a<10;a++){
 for(a in aa){
 }
 
-s+=s
-s++
-s--
-b=j++;
-b=j--;
-s=s*s-1+4*s
-let a = ''
-let a = null
-
-a=a;
-;;
-a=[{a:1},[{s:1,b:2}]]
 try{
 }catch(e){
 }finally{
@@ -52,7 +47,7 @@ try{
 
 function a(a,b){
 
-return aaa;
+	return aaa;
 }
 for (element of iterable) {
     // body of for...of
@@ -60,7 +55,7 @@ for (element of iterable) {
 debugger;
 
 let aa = async (a,b)=>{
-await aa(a,c);
+	await aa(a,c);
 }
 
 function Cat(){
@@ -94,11 +89,11 @@ if (a==1 && a==2){
 }
 switch(aa){
 case "1":
-		break;
+	break;
 case "2":
-		break;
+	break;
 default:
-		break;
+	break;
 }
 while (i < 10) {
     text += "数字是 " + i;
@@ -107,7 +102,7 @@ while (i < 10) {
 do {
     text += "The number is " + i;
     i++;
- }
+}
 while (i < 10);
 
 let aa = /xx^/
@@ -177,12 +172,12 @@ if (x > 5) {
 }
 
 for (var i = 0; i < 10; i++) {
-  console.log(i);
+	console.log(i);
 	if(i==10){
-break;
-}else{
-continue;
-}
+		break;
+	}else{
+		continue;
+	}
 }
 
 while (x < 5) {
@@ -241,85 +236,61 @@ async function getData() {
     console.log(error);
   }
 }
+
+// Shape - superclass
+function Shape() {
+    this.x = 0;
+    this.y = 0;
+}
+
+// superclass method
+Shape.prototype.move = function(x, y) {
+    this.x += x;
+    this.y += y;
+};
+
+// Rectangle - subclass
+function Rectangle() {
+    Shape.call(this);
+}
+
+// subclass extends superclass
+Rectangle.prototype = Object.create(Shape.prototype);
+Rectangle.prototype.constructor = Rectangle;
+
+var rect = new Rectangle();
+
+// Shape - superclass
+function Shape() {
+    this.x = 0;
+    this.y = 0;
+	super()
+	super.x =1
+	super.x.s =1
+	super[0]
+}
+
+// superclass method
+Shape.prototype.move = function(x, y) {
+    this.x += x;
+    this.y += y;
+};
+
+// Rectangle - subclass
+function Rectangle() {
+    Shape.call(this);
+}
+
+// subclass extends superclass
+Rectangle.prototype = new Shape();
+
+var rect = new Rectangle();
 `
 
 func TestJavaScript(t *testing.T) {
-	tree, err := Parse(javaScriptCode, &language.JavaScriptSyntax{})
+	tree, err := Parse(javaScriptCode)
 	if err != nil {
 		panic("parser.Parse error:" + err.Error())
 	}
-	outTree(javaScriptCode, tree)
-
-}
-
-func outTree(code string, tree *node.Tree) {
-	for _, one := range tree.Children {
-		bs, _ := json.Marshal(one)
-		fmt.Println("tree one type:", reflect.TypeOf(one).String(), "start:", one.Start()-1, ",end:", one.End()-1, ",json:", string(bs))
-		fmt.Println(code[one.Start()-1 : one.End()-1])
-		outSub(code, 1, one)
-		fmt.Println("--------------------------------------------")
-	}
-}
-
-func outSub(code string, leven int, one interface{}) {
-
-	// 获取结构体实例的反射类型对象
-	oneVOf := reflect.ValueOf(one).Elem()
-	oneTOf := reflect.TypeOf(one).Elem()
-	// 遍历结构体所有成员
-	for i := 0; i < oneVOf.NumField(); i++ {
-		// 获取每个成员的结构体字段类型
-		fieldV := oneVOf.Field(i)
-		fieldT := oneTOf.Field(i)
-		v := fieldV.Interface()
-		if v == nil {
-			continue
-		}
-		switch fieldV.Kind() {
-		case reflect.Array, reflect.Slice:
-			size := fieldV.Len()
-			for n := 0; n < size; n++ {
-				iV := fieldV.Index(n)
-				outOne(code, fmt.Sprintf(fieldT.Name+"-%d", n), leven, iV.Interface())
-			}
-		default:
-			if fieldV.Kind() == reflect.Ptr {
-				if fieldV.IsNil() {
-					continue
-				}
-			}
-			outOne(code, fieldT.Name, leven, v)
-		}
-	}
-}
-
-func outOne(code string, name string, leven int, one interface{}) {
-	if one == nil {
-		return
-	}
-	var n node.Node = nil
-
-	s, ok := one.(node.Statement)
-	if ok && s != nil {
-		n = s
-	}
-	e, ok := one.(node.Expression)
-	if ok && e != nil {
-		n = e
-	}
-	c, ok := one.(node.ClassElement)
-	if ok && c != nil {
-		n = c
-	}
-	if n != nil {
-		for i := 0; i < leven; i++ {
-			fmt.Print("\t")
-		}
-		bs, _ := json.Marshal(one)
-		fmt.Print("field:", name, ",type:", reflect.TypeOf(n).String())
-		fmt.Println(",start:", n.Start()-1, ",end:", n.End()-1, ",json:", string(bs))
-		fmt.Println(code[n.Start()-1 : n.End()-1])
-		outSub(code, leven+1, one)
-	}
+	node.OutTree(javaScriptCode, tree)
 }

@@ -1,9 +1,4 @@
-package parser
-
-import (
-	"github.com/team-ide/go-interpreter/language"
-	"testing"
-)
+package java
 
 const javaCode = `
 // Importing required Java packages
@@ -274,11 +269,11 @@ public class AllJavaKeywords {
 }
 `
 
-func TestJava(t *testing.T) {
-	tree, err := Parse(javaCode, &language.JavaScriptSyntax{})
-	if err != nil {
-		panic("parser.Parse error:" + err.Error())
-	}
-	outTree(javaCode, tree)
-
-}
+//func TestJava(t *testing.T) {
+//	tree, err := Parse(javaCode)
+//	if err != nil {
+//		panic("parser.Parse error:" + err.Error())
+//	}
+//	outTree(javaCode, tree)
+//
+//}
