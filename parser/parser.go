@@ -7,103 +7,114 @@ import (
 	"unicode/utf8"
 )
 
-type parser struct {
-	syntax.Syntax
-	str    string
-	length int
-
-	chr       rune // 当前 字符
-	chrOffset int  // 当前 字符 偏移量
-	offset    int  // 当前 字符 偏移量
-
-	base int
-
-	idx           int         // The index of token
-	token         token.Token // The token
-	literal       string      // The literal of the token, if any
-	parsedLiteral node.String
-
-	scope             *_scope
-	insertSemicolon   bool // If we see a newline, then insert an implicit semicolon
-	implicitSemicolon bool // An implicit semicolon exists
-
-	recover struct {
-		// Scratch when trying to seek to the next statement, etc.
-		idx   int
-		count int
+func New(src string, syntax syntax.Syntax) (p *Parser) {
+	p = &Parser{
+		Chr:    ' ',
+		Str:    src,
+		Length: len(src),
+		Syntax: syntax,
+		Base:   1,
 	}
-
-	errors ErrorList
+	return
 }
 
-// 隐式读取下一个
-func (this_ *parser) implicitRead() rune {
-	if this_.offset < this_.length {
-		return rune(this_.str[this_.offset])
+type Parser struct {
+	syntax.Syntax
+	Str    string
+	Length int
+
+	Chr       rune // 当前 字符
+	ChrOffset int  // 当前 字符 偏移量
+	Offset    int  // 当前 字符 偏移量
+
+	Base int
+
+	Idx           int         // The index of token
+	Token         token.Token // The token
+	Literal       string      // The literal of the token, if any
+	ParsedLiteral node.String
+
+	Scope             *Scope
+	InsertSemicolon   bool // If we see a newline, then insert an implicit semicolon
+	ImplicitSemicolon bool // An implicit semicolon exists
+
+	Recover struct {
+		// Scratch when trying to seek to the next statement, etc.
+		Idx   int
+		Count int
+	}
+
+	Errors ErrorList
+}
+
+// ImplicitRead 隐式读取下一个
+func (this_ *Parser) ImplicitRead() rune {
+	if this_.Offset < this_.Length {
+		return rune(this_.Str[this_.Offset])
 	}
 	return -1
 }
 
-// 读取下一个 将重新设定偏移量
-func (this_ *parser) read() {
-	if this_.offset < this_.length {
-		this_.chrOffset = this_.offset
-		chr, width := rune(this_.str[this_.offset]), 1
+// Read 读取下一个 将重新设定偏移量
+func (this_ *Parser) Read() {
+	if this_.Offset < this_.Length {
+		this_.ChrOffset = this_.Offset
+		chr, width := rune(this_.Str[this_.Offset]), 1
 		// 检查 编码 是否 是 ASCII
 		if chr >= utf8.RuneSelf { // !ASCII
-			chr, width = utf8.DecodeRuneInString(this_.str[this_.offset:])
+			chr, width = utf8.DecodeRuneInString(this_.Str[this_.Offset:])
 			if chr == utf8.RuneError && width == 1 {
-				_ = this_.error("read char utf8.RuneError chr:"+string(chr), this_.chrOffset, "Invalid UTF-8 character")
+				_ = this_.Error("read char utf8.RuneError chr:"+string(chr), this_.ChrOffset, "Invalid UTF-8 character")
 			}
 		}
-		this_.offset += width
-		this_.chr = chr
+		this_.Offset += width
+		this_.Chr = chr
 	} else {
-		this_.chrOffset = this_.length
-		this_.chr = -1 // EOF 读取结束
+		this_.ChrOffset = this_.Length
+		this_.Chr = -1 // EOF 读取结束
 	}
 }
 
-type _scope struct {
-	outer           *_scope
-	allowIn         bool
-	allowLet        bool
-	inIteration     bool
-	inSwitch        bool
-	inFuncParams    bool
-	inFunction      bool
-	inAsync         bool
-	allowAwait      bool
-	allowYield      bool
-	declarationList []*node.VariableDeclaration
+type Scope struct {
+	Outer           *Scope
+	AllowIn         bool
+	AllowLet        bool
+	InIteration     bool
+	InSwitch        bool
+	InFuncParams    bool
+	InFunction      bool
+	InAsync         bool
+	AllowAwait      bool
+	AllowYield      bool
+	DeclarationList []*node.VariableDeclaration
 
-	labels []node.String
+	Labels []node.String
 }
 
-func (this_ *parser) openScope() {
-	this_.scope = &_scope{
-		outer:   this_.scope,
-		allowIn: true,
+func (this_ *Parser) OpenScope() {
+	this_.Scope = &Scope{
+		Outer:   this_.Scope,
+		AllowIn: true,
 	}
 }
 
-func (this_ *parser) closeScope() {
-	this_.scope = this_.scope.outer
+func (this_ *Parser) CloseScope() {
+	this_.Scope = this_.Scope.Outer
 }
 
-func (this_ *_scope) declare(declaration *node.VariableDeclaration) {
-	this_.declarationList = append(this_.declarationList, declaration)
+func (this_ *Scope) Declare(declaration *node.VariableDeclaration) {
+	this_.DeclarationList = append(this_.DeclarationList, declaration)
 }
 
-func (this_ *_scope) hasLabel(name node.String) bool {
-	for _, label := range this_.labels {
+func (this_ *Scope) HasLabel(name node.String) bool {
+	for _, label := range this_.Labels {
 		if label == name {
 			return true
 		}
 	}
-	if this_.outer != nil && !this_.inFunction {
+	if this_.Outer != nil && !this_.InFunction {
 		// Crossing a function boundary to look for a label is verboten
-		return this_.outer.hasLabel(name)
+		return this_.Outer.HasLabel(name)
 	}
 	return false
 }

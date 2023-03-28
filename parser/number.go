@@ -2,19 +2,19 @@ package parser
 
 import "github.com/team-ide/go-interpreter/token"
 
-func (this_ *parser) scanNumericLiteral(decimalPoint bool) (token.Token, string) {
+func (this_ *Parser) ScanNumericLiteral(decimalPoint bool) (token.Token, string) {
 
-	offset := this_.chrOffset
+	offset := this_.ChrOffset
 	tkn := token.Number
 
 	if decimalPoint {
 		offset--
-		this_.scanMantissa(10)
+		this_.ScanMantissa(10)
 	} else {
-		if this_.chr == '0' {
-			this_.read()
+		if this_.Chr == '0' {
+			this_.Read()
 			base := 0
-			switch this_.chr {
+			switch this_.Chr {
 			case 'x', 'X':
 				base = 16
 			case 'o', 'O':
@@ -25,48 +25,42 @@ func (this_ *parser) scanNumericLiteral(decimalPoint bool) (token.Token, string)
 				// no-op
 			default:
 				// legacy octal
-				this_.scanMantissa(8)
+				this_.ScanMantissa(8)
 				goto end
 			}
 			if base > 0 {
-				this_.read()
-				if !this_.IsDigit(this_.chr, base) {
-					return token.Illegal, this_.str[offset:this_.chrOffset]
+				this_.Read()
+				if !this_.IsDigit(this_.Chr, base) {
+					return token.Illegal, this_.Str[offset:this_.ChrOffset]
 				}
-				this_.scanMantissa(base)
+				this_.ScanMantissa(base)
 				goto end
 			}
 		} else {
-			this_.scanMantissa(10)
+			this_.ScanMantissa(10)
 		}
-		if this_.chr == '.' {
-			this_.read()
-			this_.scanMantissa(10)
+		if this_.Chr == '.' {
+			this_.Read()
+			this_.ScanMantissa(10)
 		}
 	}
 
-	if this_.chr == 'e' || this_.chr == 'E' {
-		this_.read()
-		if this_.chr == '-' || this_.chr == '+' {
-			this_.read()
+	if this_.Chr == 'e' || this_.Chr == 'E' {
+		this_.Read()
+		if this_.Chr == '-' || this_.Chr == '+' {
+			this_.Read()
 		}
-		if this_.IsDecimalDigit(this_.chr) {
-			this_.read()
-			this_.scanMantissa(10)
+		if this_.IsDecimalDigit(this_.Chr) {
+			this_.Read()
+			this_.ScanMantissa(10)
 		} else {
-			return token.Illegal, this_.str[offset:this_.chrOffset]
+			return token.Illegal, this_.Str[offset:this_.ChrOffset]
 		}
 	}
 end:
-	if this_.IsIdentifierStart(this_.chr) || this_.IsDecimalDigit(this_.chr) {
-		return token.Illegal, this_.str[offset:this_.chrOffset]
+	if this_.IsIdentifierStart(this_.Chr) || this_.IsDecimalDigit(this_.Chr) {
+		return token.Illegal, this_.Str[offset:this_.ChrOffset]
 	}
 
-	return tkn, this_.str[offset:this_.chrOffset]
-}
-
-func (this_ *parser) scanMantissa(base int) {
-	for this_.DigitValue(this_.chr) < base {
-		this_.read()
-	}
+	return tkn, this_.Str[offset:this_.ChrOffset]
 }

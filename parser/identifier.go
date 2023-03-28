@@ -6,31 +6,31 @@ import (
 	"unicode/utf8"
 )
 
-func (this_ *parser) scanIdentifier() (string, node.String, bool, string) {
-	offset := this_.chrOffset
+func (this_ *Parser) ScanIdentifier() (string, node.String, bool, string) {
+	offset := this_.ChrOffset
 	hasEscape := false
 	isUnicode := false
 	length := 0
-	for this_.IsIdentifierPart(this_.chr) {
-		r := this_.chr
+	for this_.IsIdentifierPart(this_.Chr) {
+		r := this_.Chr
 		length++
 		if r == '\\' {
 			hasEscape = true
-			distance := this_.chrOffset - offset
-			this_.read()
-			if this_.chr != 'u' {
-				return "", "", false, fmt.Sprintf("Invalid identifier escape character: %c (%s)", this_.chr, string(this_.chr))
+			distance := this_.ChrOffset - offset
+			this_.Read()
+			if this_.Chr != 'u' {
+				return "", "", false, fmt.Sprintf("Invalid identifier escape character: %c (%s)", this_.Chr, string(this_.Chr))
 			}
 			var value rune
-			if this_.implicitRead() == '{' {
-				this_.read()
+			if this_.ImplicitRead() == '{' {
+				this_.Read()
 				value = -1
 				for value <= utf8.MaxRune {
-					this_.read()
-					if this_.chr == '}' {
+					this_.Read()
+					if this_.Chr == '}' {
 						break
 					}
-					decimal, ok := hex2decimal(byte(this_.chr))
+					decimal, ok := hex2decimal(byte(this_.Chr))
 					if !ok {
 						return "", "", false, "Invalid Unicode escape sequence"
 					}
@@ -45,10 +45,10 @@ func (this_ *parser) scanIdentifier() (string, node.String, bool, string) {
 				}
 			} else {
 				for j := 0; j < 4; j++ {
-					this_.read()
-					decimal, ok := hex2decimal(byte(this_.chr))
+					this_.Read()
+					decimal, ok := hex2decimal(byte(this_.Chr))
 					if !ok {
-						return "", "", false, fmt.Sprintf("Invalid identifier escape character: %c (%s)", this_.chr, string(this_.chr))
+						return "", "", false, fmt.Sprintf("Invalid identifier escape character: %c (%s)", this_.Chr, string(this_.Chr))
 					}
 					value = value<<4 | decimal
 				}
@@ -72,10 +72,10 @@ func (this_ *parser) scanIdentifier() (string, node.String, bool, string) {
 				length++
 			}
 		}
-		this_.read()
+		this_.Read()
 	}
 
-	literal := this_.str[offset:this_.chrOffset]
+	literal := this_.Str[offset:this_.ChrOffset]
 	var parsed node.String
 	if hasEscape || isUnicode {
 		var err string

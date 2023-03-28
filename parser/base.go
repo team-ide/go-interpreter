@@ -7,98 +7,39 @@ import (
 	"github.com/team-ide/go-interpreter/token"
 	"strconv"
 	"strings"
-	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
 )
 
-func (this_ *parser) expect(from string, value token.Token) int {
-	idx := this_.idx
-	if this_.token != value {
-		_ = this_.errorUnexpectedToken("expect by "+from+" this_.token:"+this_.token.String()+",value:"+value.String(), this_.token)
+func (this_ *Parser) Expect(from string, value token.Token) int {
+	idx := this_.Idx
+	if this_.Token != value {
+		_ = this_.ErrorUnexpectedToken("expect by "+from+" this_.token:"+this_.Token.String()+",value:"+value.String(), this_.Token)
 	}
-	this_.next()
+	this_.Next()
 	return idx
 }
 
-// 跳过单行注释
-func (this_ *parser) skipSingleLineComment() {
-	for this_.chr != -1 {
-		this_.read()
-		if this_.IsLineTerminator(this_.chr) {
-			return
-		}
-	}
-}
-
-// 跳过多行注释
-func (this_ *parser) skipMultiLineComment() (hasLineTerminator bool) {
-	this_.read()
-	for this_.chr >= 0 {
-		chr := this_.chr
-		// 换行符 /n、回车 \r、行分隔符、段落分隔符
-		if chr == '\r' || chr == '\n' || chr == '\u2028' || chr == '\u2029' {
-			hasLineTerminator = true
-			break
-		}
-		this_.read()
-		if chr == '*' && this_.chr == '/' {
-			this_.read()
-			return
-		}
-	}
-	for this_.chr >= 0 {
-		chr := this_.chr
-		this_.read()
-		if chr == '*' && this_.chr == '/' {
-			this_.read()
-			return
-		}
-	}
-
-	_ = this_.errorUnexpected("skipMultiLineComment", 0, this_.chr)
-	return
-}
-
-// 跳过空白检查线路终止器
-func (this_ *parser) skipWhiteSpaceCheckLineTerminator() bool {
-	for {
-		switch this_.chr {
-		case ' ', '\t', '\f', '\v', '\u00a0', '\ufeff':
-			this_.read()
-			continue
-		case '\r':
-			if this_.implicitRead() == '\n' {
-				this_.read()
-			}
-			fallthrough
-		case '\u2028', '\u2029', '\n':
-			return true
-		}
-		if this_.chr >= utf8.RuneSelf {
-			if unicode.IsSpace(this_.chr) {
-				this_.read()
-				continue
-			}
-		}
-		break
-	}
-	return false
-}
-
-func (this_ *parser) isBindingId(tok token.Token) bool {
+func (this_ *Parser) IsBindingId(tok token.Token) bool {
 	if tok == token.Identifier {
 		return true
 	}
 
 	if tok == token.Await {
-		return !this_.scope.allowAwait
+		return !this_.Scope.AllowAwait
 	}
 	if tok == token.Yield {
-		return !this_.scope.allowYield
+		return !this_.Scope.AllowYield
 	}
 
 	if this_.IsUnreservedWordToken(tok) {
+		return true
+	}
+	return false
+}
+
+func (this_ *Parser) IsLogicalAndExpr(expr node.Expression) bool {
+	if exp, ok := expr.(*node.BinaryExpression); ok && exp.Operator == token.LogicalAnd {
 		return true
 	}
 	return false
@@ -135,7 +76,7 @@ func hex2decimal(chr byte) (value rune, ok bool) {
 	}
 }
 
-func (this_ *parser) parseNumberLiteral(literal string) (value interface{}, err error) {
+func (this_ *Parser) ParseNumberLiteral(literal string) (value interface{}, err error) {
 	// TODO Is Uint okay? What about -MAX_UINT
 	value, err = strconv.ParseInt(literal, 0, 64)
 	if err == nil {
@@ -174,7 +115,7 @@ error:
 	return nil, errors.New("illegal numeric literal")
 }
 
-func (this_ *parser) parseStringLiteral(literal string, length int, unicode, strict bool) (node.String, string) {
+func (this_ *Parser) parseStringLiteral(literal string, length int, unicode, strict bool) (node.String, string) {
 	var sb strings.Builder
 	var chars []uint16
 	if unicode {

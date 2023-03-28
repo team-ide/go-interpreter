@@ -1,41 +1,42 @@
-package parser
+package javascript
 
 import (
 	"fmt"
 	"github.com/team-ide/go-interpreter/node"
+	"github.com/team-ide/go-interpreter/parser"
 	"github.com/team-ide/go-interpreter/token"
 	"reflect"
 	"strings"
 )
 
-func (this_ *parser) parseIdentifier() *node.Identifier {
-	literal := this_.parsedLiteral
-	idx := this_.idx
-	this_.next()
+func (this_ *Parser) parseIdentifier() *node.Identifier {
+	literal := this_.ParsedLiteral
+	idx := this_.Idx
+	this_.Next()
 	return &node.Identifier{
 		Name: literal,
 		Idx:  idx,
 	}
 }
 
-func (this_ *parser) parsePrimaryExpression() node.Expression {
-	literal, parsedLiteral := this_.literal, this_.parsedLiteral
-	idx := this_.idx
-	switch this_.token {
+func (this_ *Parser) parsePrimaryExpression() node.Expression {
+	literal, parsedLiteral := this_.Literal, this_.ParsedLiteral
+	idx := this_.Idx
+	switch this_.Token {
 	case token.Identifier:
-		this_.next()
+		this_.Next()
 		return &node.Identifier{
 			Name: parsedLiteral,
 			Idx:  idx,
 		}
 	case token.Null:
-		this_.next()
+		this_.Next()
 		return &node.NullLiteral{
 			Idx:     idx,
 			Literal: literal,
 		}
 	case token.Boolean:
-		this_.next()
+		this_.Next()
 		value := false
 		switch parsedLiteral {
 		case "true":
@@ -43,7 +44,7 @@ func (this_ *parser) parsePrimaryExpression() node.Expression {
 		case "false":
 			value = false
 		default:
-			_ = this_.error("parsePrimaryExpression parsedLiteral:"+string(parsedLiteral), idx, "Illegal boolean literal")
+			_ = this_.Error("parsePrimaryExpression parsedLiteral:"+string(parsedLiteral), idx, "Illegal boolean literal")
 		}
 		return &node.BooleanLiteral{
 			Idx:     idx,
@@ -51,17 +52,17 @@ func (this_ *parser) parsePrimaryExpression() node.Expression {
 			Value:   value,
 		}
 	case token.String:
-		this_.next()
+		this_.Next()
 		return &node.StringLiteral{
 			Idx:     idx,
 			Literal: literal,
 			Value:   parsedLiteral,
 		}
 	case token.Number:
-		this_.next()
-		value, err := this_.parseNumberLiteral(literal)
+		this_.Next()
+		value, err := this_.ParseNumberLiteral(literal)
 		if err != nil {
-			_ = this_.error("parsePrimaryExpression parseNumberLiteral error literal:"+string(literal), idx, err.Error())
+			_ = this_.Error("parsePrimaryExpression parseNumberLiteral error literal:"+string(literal), idx, err.Error())
 			value = 0
 		}
 		return &node.NumberLiteral{
@@ -80,7 +81,7 @@ func (this_ *parser) parsePrimaryExpression() node.Expression {
 	case token.Backtick:
 		return this_.parseTemplateLiteral(false)
 	case token.This:
-		this_.next()
+		this_.Next()
 		return &node.ThisExpression{
 			Idx: idx,
 		}
@@ -96,33 +97,33 @@ func (this_ *parser) parsePrimaryExpression() node.Expression {
 		return this_.parseClass(false)
 	}
 
-	if this_.isBindingId(this_.token) {
-		this_.next()
+	if this_.IsBindingId(this_.Token) {
+		this_.Next()
 		return &node.Identifier{
 			Name: parsedLiteral,
 			Idx:  idx,
 		}
 	}
 
-	_ = this_.errorUnexpectedToken("parsePrimaryExpression", this_.token)
+	_ = this_.ErrorUnexpectedToken("parsePrimaryExpression", this_.Token)
 	this_.nextStatement()
-	return &node.BadExpression{From: idx, To: this_.idx}
+	return &node.BadExpression{From: idx, To: this_.Idx}
 }
 
-func (this_ *parser) parseSuperProperty() node.Expression {
-	idx := this_.idx
-	this_.next()
-	switch this_.token {
+func (this_ *Parser) parseSuperProperty() node.Expression {
+	idx := this_.Idx
+	this_.Next()
+	switch this_.Token {
 	case token.Period:
-		this_.next()
-		if !this_.IsIdentifierToken(this_.token) {
-			this_.expect("parseSuperProperty", token.Identifier)
+		this_.Next()
+		if !this_.IsIdentifierToken(this_.Token) {
+			this_.Expect("parseSuperProperty", token.Identifier)
 			this_.nextStatement()
-			return &node.BadExpression{From: idx, To: this_.idx}
+			return &node.BadExpression{From: idx, To: this_.Idx}
 		}
-		idIdx := this_.idx
-		parsedLiteral := this_.parsedLiteral
-		this_.next()
+		idIdx := this_.Idx
+		parsedLiteral := this_.ParsedLiteral
+		this_.Next()
 		return &node.DotExpression{
 			Left: &node.SuperExpression{
 				Idx: idx,
@@ -141,13 +142,13 @@ func (this_ *parser) parseSuperProperty() node.Expression {
 			Idx: idx,
 		})
 	default:
-		_ = this_.error("parseSuperProperty this_.token:"+this_.token.String(), idx, "'super' keyword unexpected here")
+		_ = this_.Error("parseSuperProperty this_.Token:"+this_.Token.String(), idx, "'super' keyword unexpected here")
 		this_.nextStatement()
-		return &node.BadExpression{From: idx, To: this_.idx}
+		return &node.BadExpression{From: idx, To: this_.Idx}
 	}
 }
 
-func (this_ *parser) reinterpretSequenceAsArrowFuncParams(list []node.Expression) *node.ParameterList {
+func (this_ *Parser) reinterpretSequenceAsArrowFuncParams(list []node.Expression) *node.ParameterList {
 	firstRestIdx := -1
 	params := make([]*node.Binding, 0, len(list))
 	for i, item := range list {
@@ -158,7 +159,7 @@ func (this_ *parser) reinterpretSequenceAsArrowFuncParams(list []node.Expression
 			}
 		}
 		if firstRestIdx != -1 {
-			_ = this_.error("reinterpretSequenceAsArrowFuncParams firstRestIdx != -1 firstRestIdx:"+fmt.Sprintf("%d", firstRestIdx), list[firstRestIdx].Start(), "Rest parameter must be last formal parameter")
+			_ = this_.Error("reinterpretSequenceAsArrowFuncParams firstRestIdx != -1 firstRestIdx:"+fmt.Sprintf("%d", firstRestIdx), list[firstRestIdx].Start(), "Rest parameter must be last formal parameter")
 			return &node.ParameterList{}
 		}
 		params = append(params, this_.reinterpretAsBinding(item))
@@ -173,16 +174,16 @@ func (this_ *parser) reinterpretSequenceAsArrowFuncParams(list []node.Expression
 	}
 }
 
-func (this_ *parser) parseParenthesisedExpression() node.Expression {
-	opening := this_.idx
-	this_.expect("parseParenthesisedExpression", token.LeftParenthesis)
+func (this_ *Parser) parseParenthesisedExpression() node.Expression {
+	opening := this_.Idx
+	this_.Expect("parseParenthesisedExpression", token.LeftParenthesis)
 	var list []node.Expression
-	if this_.token != token.RightParenthesis {
+	if this_.Token != token.RightParenthesis {
 		for {
-			if this_.token == token.Ellipsis {
-				start := this_.idx
-				_ = this_.errorUnexpectedToken("parseParenthesisedExpression", token.Ellipsis)
-				this_.next()
+			if this_.Token == token.Ellipsis {
+				start := this_.Idx
+				_ = this_.ErrorUnexpectedToken("parseParenthesisedExpression", token.Ellipsis)
+				this_.Next()
 				expr := this_.parseAssignmentExpression()
 				list = append(list, &node.BadExpression{
 					From: start,
@@ -191,25 +192,25 @@ func (this_ *parser) parseParenthesisedExpression() node.Expression {
 			} else {
 				list = append(list, this_.parseAssignmentExpression())
 			}
-			if this_.token != token.Comma {
+			if this_.Token != token.Comma {
 				break
 			}
-			this_.next()
-			if this_.token == token.RightParenthesis {
-				_ = this_.errorUnexpectedToken("parseParenthesisedExpression", token.RightParenthesis)
+			this_.Next()
+			if this_.Token == token.RightParenthesis {
+				_ = this_.ErrorUnexpectedToken("parseParenthesisedExpression", token.RightParenthesis)
 				break
 			}
 		}
 	}
-	this_.expect("parseParenthesisedExpression", token.RightParenthesis)
-	if len(list) == 1 && len(this_.errors) == 0 {
+	this_.Expect("parseParenthesisedExpression", token.RightParenthesis)
+	if len(list) == 1 && len(this_.Errors) == 0 {
 		return list[0]
 	}
 	if len(list) == 0 {
-		_ = this_.errorUnexpectedToken("parseParenthesisedExpression", token.RightParenthesis)
+		_ = this_.ErrorUnexpectedToken("parseParenthesisedExpression", token.RightParenthesis)
 		return &node.BadExpression{
 			From: opening,
-			To:   this_.idx,
+			To:   this_.Idx,
 		}
 	}
 	return &node.SequenceExpression{
@@ -217,36 +218,36 @@ func (this_ *parser) parseParenthesisedExpression() node.Expression {
 	}
 }
 
-func (this_ *parser) parseRegExpLiteral() *node.RegExpLiteral {
+func (this_ *Parser) parseRegExpLiteral() *node.RegExpLiteral {
 
-	offset := this_.chrOffset - 1 // Opening slash already gotten
-	if this_.token == token.QuotientAssign {
+	offset := this_.ChrOffset - 1 // Opening slash already gotten
+	if this_.Token == token.QuotientAssign {
 		offset -= 1 // =
 	}
-	idx := this_.idxOf(offset)
+	idx := this_.IdxOf(offset)
 
-	pattern, _, err := this_.scanString(offset, false)
-	endOffset := this_.chrOffset
+	pattern, _, err := this_.ScanString(offset, false)
+	endOffset := this_.ChrOffset
 
 	if err == "" {
 		pattern = pattern[1 : len(pattern)-1]
 	}
 
 	flags := ""
-	if !this_.IsLineTerminator(this_.chr) && !this_.IsLineWhiteSpace(this_.chr) {
-		this_.next()
+	if !this_.IsLineTerminator(this_.Chr) && !this_.IsLineWhiteSpace(this_.Chr) {
+		this_.Next()
 
-		if this_.token == token.Identifier { // gim
+		if this_.Token == token.Identifier { // gim
 
-			flags = this_.literal
-			this_.next()
-			endOffset = this_.chrOffset - 1
+			flags = this_.Literal
+			this_.Next()
+			endOffset = this_.ChrOffset - 1
 		}
 	} else {
-		this_.next()
+		this_.Next()
 	}
 
-	literal := this_.str[offset:endOffset]
+	literal := this_.Str[offset:endOffset]
 
 	return &node.RegExpLiteral{
 		Idx:     idx,
@@ -256,35 +257,35 @@ func (this_ *parser) parseRegExpLiteral() *node.RegExpLiteral {
 	}
 }
 
-func (this_ *parser) tokenToBindingId() {
-	if this_.isBindingId(this_.token) {
-		this_.token = token.Identifier
+func (this_ *Parser) TokenToBindingId() {
+	if this_.IsBindingId(this_.Token) {
+		this_.Token = token.Identifier
 	}
 }
 
-func (this_ *parser) parseBindingTarget() (target node.BindingTarget) {
-	this_.tokenToBindingId()
-	switch this_.token {
+func (this_ *Parser) parseBindingTarget() (target node.BindingTarget) {
+	this_.TokenToBindingId()
+	switch this_.Token {
 	case token.Identifier:
 		target = &node.Identifier{
-			Name: this_.parsedLiteral,
-			Idx:  this_.idx,
+			Name: this_.ParsedLiteral,
+			Idx:  this_.Idx,
 		}
-		this_.next()
+		this_.Next()
 	case token.LeftBracket:
 		target = this_.parseArrayBindingPattern()
 	case token.LeftBrace:
 		target = this_.parseObjectBindingPattern()
 	default:
-		idx := this_.expect("parseBindingTarget", token.Identifier)
+		idx := this_.Expect("parseBindingTarget", token.Identifier)
 		this_.nextStatement()
-		target = &node.BadExpression{From: idx, To: this_.idx}
+		target = &node.BadExpression{From: idx, To: this_.Idx}
 	}
 
 	return
 }
 
-func (this_ *parser) parseVariableDeclaration(declarationList *[]*node.Binding) *node.Binding {
+func (this_ *Parser) parseVariableDeclaration(declarationList *[]*node.Binding) *node.Binding {
 	res := &node.Binding{
 		Target: this_.parseBindingTarget(),
 	}
@@ -293,29 +294,29 @@ func (this_ *parser) parseVariableDeclaration(declarationList *[]*node.Binding) 
 		*declarationList = append(*declarationList, res)
 	}
 
-	if this_.token == token.Assign {
-		this_.next()
+	if this_.Token == token.Assign {
+		this_.Next()
 		res.Initializer = this_.parseAssignmentExpression()
 	}
 
 	return res
 }
 
-func (this_ *parser) parseVariableDeclarationList() (declarationList []*node.Binding) {
+func (this_ *Parser) parseVariableDeclarationList() (declarationList []*node.Binding) {
 	for {
 		this_.parseVariableDeclaration(&declarationList)
-		if this_.token != token.Comma {
+		if this_.Token != token.Comma {
 			break
 		}
-		this_.next()
+		this_.Next()
 	}
 	return
 }
 
-func (this_ *parser) parseVarDeclarationList(var_ int) []*node.Binding {
+func (this_ *Parser) parseVarDeclarationList(var_ int) []*node.Binding {
 	declarationList := this_.parseVariableDeclarationList()
 
-	this_.scope.declare(&node.VariableDeclaration{
+	this_.Scope.Declare(&node.VariableDeclaration{
 		Var:  var_,
 		List: declarationList,
 	})
@@ -323,16 +324,16 @@ func (this_ *parser) parseVarDeclarationList(var_ int) []*node.Binding {
 	return declarationList
 }
 
-func (this_ *parser) parseObjectPropertyKey() (string, node.String, node.Expression, token.Token) {
-	if this_.token == token.LeftBracket {
-		this_.next()
+func (this_ *Parser) parseObjectPropertyKey() (string, node.String, node.Expression, token.Token) {
+	if this_.Token == token.LeftBracket {
+		this_.Next()
 		expr := this_.parseAssignmentExpression()
-		this_.expect("parseObjectPropertyKey", token.RightBracket)
+		this_.Expect("parseObjectPropertyKey", token.RightBracket)
 		return "", "", expr, token.Illegal
 	}
-	idx, tkn, literal, parsedLiteral := this_.idx, this_.token, this_.literal, this_.parsedLiteral
+	idx, tkn, literal, parsedLiteral := this_.Idx, this_.Token, this_.Literal, this_.ParsedLiteral
 	var value node.Expression
-	this_.next()
+	this_.Next()
 	switch tkn {
 	case token.Identifier, token.String, token.Keyword, token.EscapedReservedWord:
 		value = &node.StringLiteral{
@@ -341,9 +342,9 @@ func (this_ *parser) parseObjectPropertyKey() (string, node.String, node.Express
 			Value:   parsedLiteral,
 		}
 	case token.Number:
-		num, err := this_.parseNumberLiteral(literal)
+		num, err := this_.ParseNumberLiteral(literal)
 		if err != nil {
-			_ = this_.error("parseObjectPropertyKey parseNumberLiteral literal:"+string(literal), idx, err.Error())
+			_ = this_.Error("parseObjectPropertyKey parseNumberLiteral literal:"+string(literal), idx, err.Error())
 		} else {
 			value = &node.NumberLiteral{
 				Idx:     idx,
@@ -367,24 +368,24 @@ func (this_ *parser) parseObjectPropertyKey() (string, node.String, node.Express
 				Value:   node.String(literal),
 			}
 		} else {
-			_ = this_.errorUnexpectedToken("parseObjectPropertyKey not IsIdentifierToken:"+tkn.String(), tkn)
+			_ = this_.ErrorUnexpectedToken("parseObjectPropertyKey not IsIdentifierToken:"+tkn.String(), tkn)
 		}
 	}
 	return literal, parsedLiteral, value, tkn
 }
 
-func (this_ *parser) parseObjectProperty() node.Property {
-	if this_.token == token.Ellipsis {
-		this_.next()
+func (this_ *Parser) parseObjectProperty() node.Property {
+	if this_.Token == token.Ellipsis {
+		this_.Next()
 		return &node.SpreadElement{
 			Expression: this_.parseAssignmentExpression(),
 		}
 	}
-	keyStartIdx := this_.idx
+	keyStartIdx := this_.Idx
 	generator := false
-	if this_.token == token.Multiply {
+	if this_.Token == token.Multiply {
 		generator = true
-		this_.next()
+		this_.Next()
 	}
 	literal, parsedLiteral, value, tkn := this_.parseObjectPropertyKey()
 	if value == nil {
@@ -400,20 +401,20 @@ func (this_ *parser) parseObjectProperty() node.Property {
 			}
 		}
 		switch {
-		case this_.token == token.LeftParenthesis:
+		case this_.Token == token.LeftParenthesis:
 			return &node.PropertyKeyed{
 				Key:      value,
 				Kind:     node.PropertyKindMethod,
 				Value:    this_.parseMethodDefinition(keyStartIdx, node.PropertyKindMethod, false, false),
 				Computed: tkn == token.Illegal,
 			}
-		case this_.token == token.Comma || this_.token == token.RightBrace || this_.token == token.Assign: // shorthand property
-			if this_.isBindingId(tkn) {
+		case this_.Token == token.Comma || this_.Token == token.RightBrace || this_.Token == token.Assign: // shorthand property
+			if this_.IsBindingId(tkn) {
 				var initializer node.Expression
-				if this_.token == token.Assign {
+				if this_.Token == token.Assign {
 					// allow the initializer syntax here in case the object literal
 					// needs to be reinterpreted as an assignment pattern, enforce later if it doesn't.
-					this_.next()
+					this_.Next()
 					initializer = this_.parseAssignmentExpression()
 				}
 				return &node.PropertyShort{
@@ -424,9 +425,9 @@ func (this_ *parser) parseObjectProperty() node.Property {
 					Initializer: initializer,
 				}
 			} else {
-				_ = this_.errorUnexpectedToken("parseObjectProperty not this_.isBindingId:"+tkn.String(), this_.token)
+				_ = this_.ErrorUnexpectedToken("parseObjectProperty not this_.isBindingId:"+tkn.String(), this_.Token)
 			}
-		case (literal == "get" || literal == "set" || tkn == token.Async) && this_.token != token.Colon:
+		case (literal == "get" || literal == "set" || tkn == token.Async) && this_.Token != token.Colon:
 			_, _, keyValue, tkn1 := this_.parseObjectPropertyKey()
 			if keyValue == nil {
 				return nil
@@ -452,7 +453,7 @@ func (this_ *parser) parseObjectProperty() node.Property {
 		}
 	}
 
-	this_.expect("parseObjectProperty", token.Colon)
+	this_.Expect("parseObjectProperty", token.Colon)
 	return &node.PropertyKeyed{
 		Key:      value,
 		Kind:     node.PropertyKindValue,
@@ -461,29 +462,29 @@ func (this_ *parser) parseObjectProperty() node.Property {
 	}
 }
 
-func (this_ *parser) parseMethodDefinition(keyStartIdx int, kind node.PropertyKind, generator, async bool) *node.FunctionLiteral {
-	idx1 := this_.idx
-	if generator != this_.scope.allowYield {
-		this_.scope.allowYield = generator
+func (this_ *Parser) parseMethodDefinition(keyStartIdx int, kind node.PropertyKind, generator, async bool) *node.FunctionLiteral {
+	idx1 := this_.Idx
+	if generator != this_.Scope.AllowYield {
+		this_.Scope.AllowYield = generator
 		defer func() {
-			this_.scope.allowYield = !generator
+			this_.Scope.AllowYield = !generator
 		}()
 	}
-	if async != this_.scope.allowAwait {
-		this_.scope.allowAwait = async
+	if async != this_.Scope.AllowAwait {
+		this_.Scope.AllowAwait = async
 		defer func() {
-			this_.scope.allowAwait = !async
+			this_.Scope.AllowAwait = !async
 		}()
 	}
 	parameterList := this_.parseFunctionParameterList()
 	switch kind {
 	case node.PropertyKindGet:
 		if len(parameterList.List) > 0 || parameterList.Rest != nil {
-			_ = this_.error("parseMethodDefinition node.PropertyKindGet", idx1, "Getter must not have any formal parameters.")
+			_ = this_.Error("parseMethodDefinition node.PropertyKindGet", idx1, "Getter must not have any formal parameters.")
 		}
 	case node.PropertyKindSet:
 		if len(parameterList.List) != 1 || parameterList.Rest != nil {
-			_ = this_.error("parseMethodDefinition node.PropertyKindSet", idx1, "Setter must have exactly one formal parameter.")
+			_ = this_.Error("parseMethodDefinition node.PropertyKindSet", idx1, "Setter must have exactly one formal parameter.")
 		}
 	}
 	res := &node.FunctionLiteral{
@@ -493,25 +494,25 @@ func (this_ *parser) parseMethodDefinition(keyStartIdx int, kind node.PropertyKi
 		Async:         async,
 	}
 	res.Body, res.DeclarationList = this_.parseFunctionBlock(async, async, generator)
-	res.Source = this_.slice(keyStartIdx, res.Body.End())
+	res.Source = this_.Slice(keyStartIdx, res.Body.End())
 	return res
 }
 
-func (this_ *parser) parseObjectLiteral() *node.ObjectLiteral {
+func (this_ *Parser) parseObjectLiteral() *node.ObjectLiteral {
 	var value []node.Property
-	idx0 := this_.expect("parseObjectLiteral", token.LeftBrace)
-	for this_.token != token.RightBrace && this_.token != token.Eof {
+	idx0 := this_.Expect("parseObjectLiteral", token.LeftBrace)
+	for this_.Token != token.RightBrace && this_.Token != token.Eof {
 		property := this_.parseObjectProperty()
 		if property != nil {
 			value = append(value, property)
 		}
-		if this_.token != token.RightBrace {
-			this_.expect("parseObjectLiteral", token.Comma)
+		if this_.Token != token.RightBrace {
+			this_.Expect("parseObjectLiteral", token.Comma)
 		} else {
 			break
 		}
 	}
-	idx1 := this_.expect("parseObjectLiteral", token.RightBrace)
+	idx1 := this_.Expect("parseObjectLiteral", token.RightBrace)
 
 	return &node.ObjectLiteral{
 		LeftBrace:  idx0,
@@ -520,29 +521,29 @@ func (this_ *parser) parseObjectLiteral() *node.ObjectLiteral {
 	}
 }
 
-func (this_ *parser) parseArrayLiteral() *node.ArrayLiteral {
+func (this_ *Parser) parseArrayLiteral() *node.ArrayLiteral {
 
-	idx0 := this_.expect("parseArrayLiteral", token.LeftBracket)
+	idx0 := this_.Expect("parseArrayLiteral", token.LeftBracket)
 	var value []node.Expression
-	for this_.token != token.RightBracket && this_.token != token.Eof {
-		if this_.token == token.Comma {
-			this_.next()
+	for this_.Token != token.RightBracket && this_.Token != token.Eof {
+		if this_.Token == token.Comma {
+			this_.Next()
 			value = append(value, nil)
 			continue
 		}
-		if this_.token == token.Ellipsis {
-			this_.next()
+		if this_.Token == token.Ellipsis {
+			this_.Next()
 			value = append(value, &node.SpreadElement{
 				Expression: this_.parseAssignmentExpression(),
 			})
 		} else {
 			value = append(value, this_.parseAssignmentExpression())
 		}
-		if this_.token != token.RightBracket {
-			this_.expect("parseArrayLiteral", token.Comma)
+		if this_.Token != token.RightBracket {
+			this_.Expect("parseArrayLiteral", token.Comma)
 		}
 	}
-	idx1 := this_.expect("parseArrayLiteral", token.RightBracket)
+	idx1 := this_.Expect("parseArrayLiteral", token.RightBracket)
 
 	return &node.ArrayLiteral{
 		LeftBracket:  idx0,
@@ -551,52 +552,52 @@ func (this_ *parser) parseArrayLiteral() *node.ArrayLiteral {
 	}
 }
 
-func (this_ *parser) parseTemplateLiteral(tagged bool) *node.TemplateLiteral {
+func (this_ *Parser) parseTemplateLiteral(tagged bool) *node.TemplateLiteral {
 	res := &node.TemplateLiteral{
-		OpenQuote: this_.idx,
+		OpenQuote: this_.Idx,
 	}
 	for {
-		start := this_.offset
-		literal, parsed, finished, parseErr, err := this_.parseTemplateCharacters()
+		start := this_.Offset
+		literal, parsed, finished, parseErr, err := this_.ParseTemplateCharacters()
 		if err != "" {
-			_ = this_.error("parseTemplateLiteral parseTemplateCharacters err", this_.offset, err)
+			_ = this_.Error("parseTemplateLiteral parseTemplateCharacters err", this_.Offset, err)
 		}
 		res.Elements = append(res.Elements, &node.TemplateElement{
-			Idx:     this_.idxOf(start),
+			Idx:     this_.IdxOf(start),
 			Literal: literal,
 			Parsed:  parsed,
 			Valid:   parseErr == "",
 		})
 		if !tagged && parseErr != "" {
-			_ = this_.error("parseTemplateLiteral parseTemplateCharacters parseErr", this_.offset, parseErr)
+			_ = this_.Error("parseTemplateLiteral parseTemplateCharacters parseErr", this_.Offset, parseErr)
 		}
-		end := this_.chrOffset - 1
-		this_.next()
+		end := this_.ChrOffset - 1
+		this_.Next()
 		if finished {
-			res.CloseQuote = this_.idxOf(end)
+			res.CloseQuote = this_.IdxOf(end)
 			break
 		}
 		expr := this_.parseExpression()
 		res.Expressions = append(res.Expressions, expr)
-		if this_.token != token.RightBrace {
-			_ = this_.errorUnexpectedToken("parseTemplateLiteral this_.token:"+this_.token.String()+" is not token.RightBrace:"+token.RightBrace.String(), this_.token)
+		if this_.Token != token.RightBrace {
+			_ = this_.ErrorUnexpectedToken("parseTemplateLiteral this_.Token:"+this_.Token.String()+" is not token.RightBrace:"+token.RightBrace.String(), this_.Token)
 		}
 	}
 	return res
 }
 
-func (this_ *parser) parseTaggedTemplateLiteral(tag node.Expression) *node.TemplateLiteral {
+func (this_ *Parser) parseTaggedTemplateLiteral(tag node.Expression) *node.TemplateLiteral {
 	l := this_.parseTemplateLiteral(true)
 	l.Tag = tag
 	return l
 }
 
-func (this_ *parser) parseArgumentList() (argumentList []node.Expression, idx0, idx1 int) {
-	idx0 = this_.expect("parseArgumentList", token.LeftParenthesis)
-	for this_.token != token.RightParenthesis {
+func (this_ *Parser) parseArgumentList() (argumentList []node.Expression, idx0, idx1 int) {
+	idx0 = this_.Expect("parseArgumentList", token.LeftParenthesis)
+	for this_.Token != token.RightParenthesis {
 		var item node.Expression
-		if this_.token == token.Ellipsis {
-			this_.next()
+		if this_.Token == token.Ellipsis {
+			this_.Next()
 			item = &node.SpreadElement{
 				Expression: this_.parseAssignmentExpression(),
 			}
@@ -604,16 +605,16 @@ func (this_ *parser) parseArgumentList() (argumentList []node.Expression, idx0, 
 			item = this_.parseAssignmentExpression()
 		}
 		argumentList = append(argumentList, item)
-		if this_.token != token.Comma {
+		if this_.Token != token.Comma {
 			break
 		}
-		this_.next()
+		this_.Next()
 	}
-	idx1 = this_.expect("parseArgumentList", token.RightParenthesis)
+	idx1 = this_.Expect("parseArgumentList", token.RightParenthesis)
 	return
 }
 
-func (this_ *parser) parseCallExpression(left node.Expression) node.Expression {
+func (this_ *Parser) parseCallExpression(left node.Expression) node.Expression {
 	argumentList, idx0, idx1 := this_.parseArgumentList()
 	return &node.CallExpression{
 		Callee:           left,
@@ -623,15 +624,15 @@ func (this_ *parser) parseCallExpression(left node.Expression) node.Expression {
 	}
 }
 
-func (this_ *parser) parseDotMember(left node.Expression) node.Expression {
-	period := this_.idx
-	this_.next()
+func (this_ *Parser) parseDotMember(left node.Expression) node.Expression {
+	period := this_.Idx
+	this_.Next()
 
-	literal := this_.parsedLiteral
-	idx := this_.idx
+	literal := this_.ParsedLiteral
+	idx := this_.Idx
 
-	if this_.token == token.PrivateIdentifier {
-		this_.next()
+	if this_.Token == token.PrivateIdentifier {
+		this_.Next()
 		return &node.PrivateDotExpression{
 			Left: left,
 			Identifier: node.PrivateIdentifier{
@@ -643,13 +644,13 @@ func (this_ *parser) parseDotMember(left node.Expression) node.Expression {
 		}
 	}
 
-	if !this_.IsIdentifierToken(this_.token) {
-		this_.expect("parseDotMember", token.Identifier)
+	if !this_.IsIdentifierToken(this_.Token) {
+		this_.Expect("parseDotMember", token.Identifier)
 		this_.nextStatement()
-		return &node.BadExpression{From: period, To: this_.idx}
+		return &node.BadExpression{From: period, To: this_.Idx}
 	}
 
-	this_.next()
+	this_.Next()
 
 	return &node.DotExpression{
 		Left: left,
@@ -660,10 +661,10 @@ func (this_ *parser) parseDotMember(left node.Expression) node.Expression {
 	}
 }
 
-func (this_ *parser) parseBracketMember(left node.Expression) node.Expression {
-	idx0 := this_.expect("parseBracketMember", token.LeftBracket)
+func (this_ *Parser) parseBracketMember(left node.Expression) node.Expression {
+	idx0 := this_.Expect("parseBracketMember", token.LeftBracket)
 	member := this_.parseExpression()
-	idx1 := this_.expect("parseBracketMember", token.RightBracket)
+	idx1 := this_.Expect("parseBracketMember", token.RightBracket)
 	return &node.BracketExpression{
 		LeftBracket:  idx0,
 		Left:         left,
@@ -672,11 +673,11 @@ func (this_ *parser) parseBracketMember(left node.Expression) node.Expression {
 	}
 }
 
-func (this_ *parser) parseNewExpression() node.Expression {
-	idx := this_.expect("parseNewExpression", token.New)
-	if this_.token == token.Period {
-		this_.next()
-		if this_.literal == "target" {
+func (this_ *Parser) parseNewExpression() node.Expression {
+	idx := this_.Expect("parseNewExpression", token.New)
+	if this_.Token == token.Period {
+		this_.Next()
+		if this_.Literal == "target" {
 			return &node.MetaProperty{
 				Meta: &node.Identifier{
 					Name: node.String(token.New.String()),
@@ -685,7 +686,7 @@ func (this_ *parser) parseNewExpression() node.Expression {
 				Property: this_.parseIdentifier(),
 			}
 		}
-		_ = this_.errorUnexpectedToken("parseNewExpression", token.Identifier)
+		_ = this_.ErrorUnexpectedToken("parseNewExpression", token.Identifier)
 	}
 	callee := this_.parseLeftHandSideExpression()
 	if bad, ok := callee.(*node.BadExpression); ok {
@@ -696,7 +697,7 @@ func (this_ *parser) parseNewExpression() node.Expression {
 		New:    idx,
 		Callee: callee,
 	}
-	if this_.token == token.LeftParenthesis {
+	if this_.Token == token.LeftParenthesis {
 		argumentList, idx0, idx1 := this_.parseArgumentList()
 		res.ArgumentList = argumentList
 		res.LeftParenthesis = idx0
@@ -705,17 +706,17 @@ func (this_ *parser) parseNewExpression() node.Expression {
 	return res
 }
 
-func (this_ *parser) parseLeftHandSideExpression() node.Expression {
+func (this_ *Parser) parseLeftHandSideExpression() node.Expression {
 
 	var left node.Expression
-	if this_.token == token.New {
+	if this_.Token == token.New {
 		left = this_.parseNewExpression()
 	} else {
 		left = this_.parsePrimaryExpression()
 	}
 L:
 	for {
-		switch this_.token {
+		switch this_.Token {
 		case token.Period:
 			left = this_.parseDotMember(left)
 		case token.LeftBracket:
@@ -730,17 +731,17 @@ L:
 	return left
 }
 
-func (this_ *parser) parseLeftHandSideExpressionAllowCall() node.Expression {
+func (this_ *Parser) parseLeftHandSideExpressionAllowCall() node.Expression {
 
-	allowIn := this_.scope.allowIn
-	this_.scope.allowIn = true
+	allowIn := this_.Scope.AllowIn
+	this_.Scope.AllowIn = true
 	defer func() {
-		this_.scope.allowIn = allowIn
+		this_.Scope.AllowIn = allowIn
 	}()
 
 	var left node.Expression
-	start := this_.idx
-	if this_.token == token.New {
+	start := this_.Idx
+	if this_.Token == token.New {
 		left = this_.parseNewExpression()
 	} else {
 		left = this_.parsePrimaryExpression()
@@ -749,7 +750,7 @@ func (this_ *parser) parseLeftHandSideExpressionAllowCall() node.Expression {
 	optionalChain := false
 L:
 	for {
-		switch this_.token {
+		switch this_.Token {
 		case token.Period:
 			left = this_.parseDotMember(left)
 		case token.LeftBracket:
@@ -758,18 +759,18 @@ L:
 			left = this_.parseCallExpression(left)
 		case token.Backtick:
 			if optionalChain {
-				_ = this_.error("parseLeftHandSideExpressionAllowCall token.Backtick optionalChain:true", this_.idx, "Invalid template literal on optional chain")
+				_ = this_.Error("parseLeftHandSideExpressionAllowCall token.Backtick optionalChain:true", this_.Idx, "Invalid template literal on optional chain")
 				this_.nextStatement()
-				return &node.BadExpression{From: start, To: this_.idx}
+				return &node.BadExpression{From: start, To: this_.Idx}
 			}
 			left = this_.parseTaggedTemplateLiteral(left)
 		case token.QuestionDot:
 			optionalChain = true
 			left = &node.Optional{Expression: left}
 
-			switch this_.peek() {
+			switch this_.Peek() {
 			case token.LeftBracket, token.LeftParenthesis, token.Backtick:
-				this_.next()
+				this_.Next()
 			default:
 				left = this_.parseDotMember(left)
 			}
@@ -784,25 +785,25 @@ L:
 	return left
 }
 
-func (this_ *parser) parsePostfixExpression() node.Expression {
+func (this_ *Parser) parsePostfixExpression() node.Expression {
 	operand := this_.parseLeftHandSideExpressionAllowCall()
 
 	//fmt.Println("parsePostfixExpression start:", operand.Start(), ",end:", operand.End(), ",operand:", this_.slice(operand.Start(), operand.End()))
-	switch this_.token {
+	switch this_.Token {
 	case token.Increment, token.Decrement:
 		// Make sure there is no line terminator here
-		if this_.implicitSemicolon {
+		if this_.ImplicitSemicolon {
 			break
 		}
-		tkn := this_.token
-		idx := this_.idx
-		this_.next()
+		tkn := this_.Token
+		idx := this_.Idx
+		this_.Next()
 		switch operand.(type) {
 		case *node.Identifier, *node.DotExpression, *node.PrivateDotExpression, *node.BracketExpression:
 		default:
-			_ = this_.error("parsePostfixExpression operand type:"+reflect.TypeOf(operand).String(), idx, "Invalid left-hand side in assignment")
+			_ = this_.Error("parsePostfixExpression operand type:"+reflect.TypeOf(operand).String(), idx, "Invalid left-hand side in assignment")
 			this_.nextStatement()
-			return &node.BadExpression{From: idx, To: this_.idx}
+			return &node.BadExpression{From: idx, To: this_.Idx}
 		}
 		return &node.UnaryExpression{
 			Operator: tkn,
@@ -815,31 +816,31 @@ func (this_ *parser) parsePostfixExpression() node.Expression {
 	return operand
 }
 
-func (this_ *parser) parseUnaryExpression() node.Expression {
+func (this_ *Parser) parseUnaryExpression() node.Expression {
 
-	switch this_.token {
+	switch this_.Token {
 	case token.Plus, token.Minus, token.Not, token.BitwiseNot:
 		fallthrough
 	case token.Delete, token.Void, token.Typeof:
-		tkn := this_.token
-		idx := this_.idx
-		this_.next()
+		tkn := this_.Token
+		idx := this_.Idx
+		this_.Next()
 		return &node.UnaryExpression{
 			Operator: tkn,
 			Idx:      idx,
 			Operand:  this_.parseUnaryExpression(),
 		}
 	case token.Increment, token.Decrement:
-		tkn := this_.token
-		idx := this_.idx
-		this_.next()
+		tkn := this_.Token
+		idx := this_.Idx
+		this_.Next()
 		operand := this_.parseUnaryExpression()
 		switch operand.(type) {
 		case *node.Identifier, *node.DotExpression, *node.PrivateDotExpression, *node.BracketExpression:
 		default:
-			_ = this_.error("parseUnaryExpression operand type:"+reflect.TypeOf(operand).String(), idx, "Invalid left-hand side in assignment")
+			_ = this_.Error("parseUnaryExpression operand type:"+reflect.TypeOf(operand).String(), idx, "Invalid left-hand side in assignment")
 			this_.nextStatement()
-			return &node.BadExpression{From: idx, To: this_.idx}
+			return &node.BadExpression{From: idx, To: this_.Idx}
 		}
 		return &node.UnaryExpression{
 			Operator: tkn,
@@ -847,18 +848,18 @@ func (this_ *parser) parseUnaryExpression() node.Expression {
 			Operand:  operand,
 		}
 	case token.Await:
-		if this_.scope.allowAwait {
-			idx := this_.idx
-			this_.next()
-			if !this_.scope.inAsync {
-				_ = this_.errorUnexpectedToken("parseUnaryExpression is not this_.scope.inAsync", token.Await)
+		if this_.Scope.AllowAwait {
+			idx := this_.Idx
+			this_.Next()
+			if !this_.Scope.InAsync {
+				_ = this_.ErrorUnexpectedToken("parseUnaryExpression is not this_.scope.inAsync", token.Await)
 				return &node.BadExpression{
 					From: idx,
-					To:   this_.idx,
+					To:   this_.Idx,
 				}
 			}
-			if this_.scope.inFuncParams {
-				_ = this_.error("parseUnaryExpression this_.scope.inFuncParams", idx, "Illegal await-expression in formal parameters of async function")
+			if this_.Scope.InFuncParams {
+				_ = this_.Error("parseUnaryExpression this_.scope.inFuncParams", idx, "Illegal await-expression in formal parameters of async function")
 			}
 			return &node.AwaitExpression{
 				Await:    idx,
@@ -877,11 +878,11 @@ func isUpdateExpression(expr node.Expression) bool {
 	return true
 }
 
-func (this_ *parser) parseExponentiationExpression() node.Expression {
+func (this_ *Parser) parseExponentiationExpression() node.Expression {
 	left := this_.parseUnaryExpression()
 
-	for this_.token == token.Exponent && isUpdateExpression(left) {
-		this_.next()
+	for this_.Token == token.Exponent && isUpdateExpression(left) {
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: token.Exponent,
 			Left:     left,
@@ -892,13 +893,13 @@ func (this_ *parser) parseExponentiationExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseMultiplicativeExpression() node.Expression {
+func (this_ *Parser) parseMultiplicativeExpression() node.Expression {
 	left := this_.parseExponentiationExpression()
 
-	for this_.token == token.Multiply || this_.token == token.Slash ||
-		this_.token == token.Remainder {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.Multiply || this_.Token == token.Slash ||
+		this_.Token == token.Remainder {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -909,12 +910,12 @@ func (this_ *parser) parseMultiplicativeExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseAdditiveExpression() node.Expression {
+func (this_ *Parser) parseAdditiveExpression() node.Expression {
 	left := this_.parseMultiplicativeExpression()
 
-	for this_.token == token.Plus || this_.token == token.Minus {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.Plus || this_.Token == token.Minus {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -925,13 +926,13 @@ func (this_ *parser) parseAdditiveExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseShiftExpression() node.Expression {
+func (this_ *Parser) parseShiftExpression() node.Expression {
 	left := this_.parseAdditiveExpression()
 
-	for this_.token == token.ShiftLeft || this_.token == token.ShiftRight ||
-		this_.token == token.UnsignedShiftRight {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.ShiftLeft || this_.Token == token.ShiftRight ||
+		this_.Token == token.UnsignedShiftRight {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -942,19 +943,19 @@ func (this_ *parser) parseShiftExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseRelationalExpression() node.Expression {
-	if this_.scope.allowIn && this_.token == token.PrivateIdentifier {
+func (this_ *Parser) parseRelationalExpression() node.Expression {
+	if this_.Scope.AllowIn && this_.Token == token.PrivateIdentifier {
 		left := &node.PrivateIdentifier{
 			Identifier: node.Identifier{
-				Idx:  this_.idx,
-				Name: this_.parsedLiteral,
+				Idx:  this_.Idx,
+				Name: this_.ParsedLiteral,
 			},
 		}
-		this_.next()
-		if this_.token == token.In {
-			this_.next()
+		this_.Next()
+		if this_.Token == token.In {
+			this_.Next()
 			return &node.BinaryExpression{
-				Operator: this_.token,
+				Operator: this_.Token,
 				Left:     left,
 				Right:    this_.parseShiftExpression(),
 			}
@@ -963,16 +964,16 @@ func (this_ *parser) parseRelationalExpression() node.Expression {
 	}
 	left := this_.parseShiftExpression()
 
-	allowIn := this_.scope.allowIn
-	this_.scope.allowIn = true
+	allowIn := this_.Scope.AllowIn
+	this_.Scope.AllowIn = true
 	defer func() {
-		this_.scope.allowIn = allowIn
+		this_.Scope.AllowIn = allowIn
 	}()
 
-	switch this_.token {
+	switch this_.Token {
 	case token.Less, token.LessOrEqual, token.Greater, token.GreaterOrEqual:
-		tkn := this_.token
-		this_.next()
+		tkn := this_.Token
+		this_.Next()
 		return &node.BinaryExpression{
 			Operator:   tkn,
 			Left:       left,
@@ -980,8 +981,8 @@ func (this_ *parser) parseRelationalExpression() node.Expression {
 			Comparison: true,
 		}
 	case token.Instanceof:
-		tkn := this_.token
-		this_.next()
+		tkn := this_.Token
+		this_.Next()
 		return &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -991,8 +992,8 @@ func (this_ *parser) parseRelationalExpression() node.Expression {
 		if !allowIn {
 			return left
 		}
-		tkn := this_.token
-		this_.next()
+		tkn := this_.Token
+		this_.Next()
 		return &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -1003,13 +1004,13 @@ func (this_ *parser) parseRelationalExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseEqualityExpression() node.Expression {
+func (this_ *Parser) parseEqualityExpression() node.Expression {
 	left := this_.parseRelationalExpression()
 
-	for this_.token == token.Equal || this_.token == token.NotEqual ||
-		this_.token == token.StrictEqual || this_.token == token.StrictNotEqual {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.Equal || this_.Token == token.NotEqual ||
+		this_.Token == token.StrictEqual || this_.Token == token.StrictNotEqual {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator:   tkn,
 			Left:       left,
@@ -1021,12 +1022,12 @@ func (this_ *parser) parseEqualityExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseBitwiseAndExpression() node.Expression {
+func (this_ *Parser) parseBitwiseAndExpression() node.Expression {
 	left := this_.parseEqualityExpression()
 
-	for this_.token == token.And {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.And {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -1037,12 +1038,12 @@ func (this_ *parser) parseBitwiseAndExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseBitwiseExclusiveOrExpression() node.Expression {
+func (this_ *Parser) parseBitwiseExclusiveOrExpression() node.Expression {
 	left := this_.parseBitwiseAndExpression()
 
-	for this_.token == token.ExclusiveOr {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.ExclusiveOr {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -1053,12 +1054,12 @@ func (this_ *parser) parseBitwiseExclusiveOrExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseBitwiseOrExpression() node.Expression {
+func (this_ *Parser) parseBitwiseOrExpression() node.Expression {
 	left := this_.parseBitwiseExclusiveOrExpression()
 
-	for this_.token == token.Or {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.Or {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -1069,12 +1070,12 @@ func (this_ *parser) parseBitwiseOrExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseLogicalAndExpression() node.Expression {
+func (this_ *Parser) parseLogicalAndExpression() node.Expression {
 	left := this_.parseBitwiseOrExpression()
 
-	for this_.token == token.LogicalAnd {
-		tkn := this_.token
-		this_.next()
+	for this_.Token == token.LogicalAnd {
+		tkn := this_.Token
+		this_.Next()
 		left = &node.BinaryExpression{
 			Operator: tkn,
 			Left:     left,
@@ -1085,30 +1086,23 @@ func (this_ *parser) parseLogicalAndExpression() node.Expression {
 	return left
 }
 
-func isLogicalAndExpr(expr node.Expression) bool {
-	if exp, ok := expr.(*node.BinaryExpression); ok && exp.Operator == token.LogicalAnd {
-		return true
-	}
-	return false
-}
-
-func (this_ *parser) parseLogicalOrExpression() node.Expression {
+func (this_ *Parser) parseLogicalOrExpression() node.Expression {
 	var idx int
-	parenthesis := this_.token == token.LeftParenthesis
+	parenthesis := this_.Token == token.LeftParenthesis
 	left := this_.parseLogicalAndExpression()
 
-	if this_.token == token.LogicalOr || !parenthesis && isLogicalAndExpr(left) {
+	if this_.Token == token.LogicalOr || !parenthesis && this_.IsLogicalAndExpr(left) {
 		for {
-			switch this_.token {
+			switch this_.Token {
 			case token.LogicalOr:
-				this_.next()
+				this_.Next()
 				left = &node.BinaryExpression{
 					Operator: token.LogicalOr,
 					Left:     left,
 					Right:    this_.parseLogicalAndExpression(),
 				}
 			case token.Coalesce:
-				idx = this_.idx
+				idx = this_.Idx
 				goto mixed
 			default:
 				return left
@@ -1116,14 +1110,14 @@ func (this_ *parser) parseLogicalOrExpression() node.Expression {
 		}
 	} else {
 		for {
-			switch this_.token {
+			switch this_.Token {
 			case token.Coalesce:
-				idx = this_.idx
-				this_.next()
+				idx = this_.Idx
+				this_.Next()
 
-				parenthesis := this_.token == token.LeftParenthesis
+				parenthesis := this_.Token == token.LeftParenthesis
 				right := this_.parseLogicalAndExpression()
-				if !parenthesis && isLogicalAndExpr(right) {
+				if !parenthesis && this_.IsLogicalAndExpr(right) {
 					goto mixed
 				}
 
@@ -1133,7 +1127,7 @@ func (this_ *parser) parseLogicalOrExpression() node.Expression {
 					Right:    right,
 				}
 			case token.LogicalOr:
-				idx = this_.idx
+				idx = this_.Idx
 				goto mixed
 			default:
 				return left
@@ -1142,20 +1136,20 @@ func (this_ *parser) parseLogicalOrExpression() node.Expression {
 	}
 
 mixed:
-	_ = this_.error("parseLogicalOrExpression", idx, "Logical expressions and coalesce expressions cannot be mixed. Wrap either by parentheses")
+	_ = this_.Error("parseLogicalOrExpression", idx, "Logical expressions and coalesce expressions cannot be mixed. Wrap either by parentheses")
 	return left
 }
 
-func (this_ *parser) parseConditionalExpression() node.Expression {
+func (this_ *Parser) parseConditionalExpression() node.Expression {
 	left := this_.parseLogicalOrExpression()
 
-	if this_.token == token.QuestionMark {
-		this_.next()
-		allowIn := this_.scope.allowIn
-		this_.scope.allowIn = true
+	if this_.Token == token.QuestionMark {
+		this_.Next()
+		allowIn := this_.Scope.AllowIn
+		this_.Scope.AllowIn = true
 		consequent := this_.parseAssignmentExpression()
-		this_.scope.allowIn = allowIn
-		this_.expect("parseConditionalExpression", token.Colon)
+		this_.Scope.AllowIn = allowIn
+		this_.Expect("parseConditionalExpression", token.Colon)
 		return &node.ConditionalExpression{
 			Test:       left,
 			Consequent: consequent,
@@ -1166,32 +1160,32 @@ func (this_ *parser) parseConditionalExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) parseArrowFunction(start int, paramList *node.ParameterList, async bool) node.Expression {
-	this_.expect("parseArrowFunction", token.Arrow)
+func (this_ *Parser) parseArrowFunction(start int, paramList *node.ParameterList, async bool) node.Expression {
+	this_.Expect("parseArrowFunction", token.Arrow)
 	res := &node.ArrowFunctionLiteral{
 		Idx:           start,
 		ParameterList: paramList,
 		Async:         async,
 	}
 	res.Body, res.DeclarationList = this_.parseArrowFunctionBody(async)
-	res.Source = this_.slice(start, res.Body.End())
+	res.Source = this_.Slice(start, res.Body.End())
 	return res
 }
 
-func (this_ *parser) parseSingleArgArrowFunction(start int, async bool) node.Expression {
-	if async != this_.scope.allowAwait {
-		this_.scope.allowAwait = async
+func (this_ *Parser) parseSingleArgArrowFunction(start int, async bool) node.Expression {
+	if async != this_.Scope.AllowAwait {
+		this_.Scope.AllowAwait = async
 		defer func() {
-			this_.scope.allowAwait = !async
+			this_.Scope.AllowAwait = !async
 		}()
 	}
-	this_.tokenToBindingId()
-	if this_.token != token.Identifier {
-		_ = this_.errorUnexpectedToken("parseSingleArgArrowFunction this_.token:"+this_.token.String()+" not token.Identifier:"+token.Identifier.String(), this_.token)
-		this_.next()
+	this_.TokenToBindingId()
+	if this_.Token != token.Identifier {
+		_ = this_.ErrorUnexpectedToken("parseSingleArgArrowFunction this_.Token:"+this_.Token.String()+" not token.Identifier:"+token.Identifier.String(), this_.Token)
+		this_.Next()
 		return &node.BadExpression{
 			From: start,
-			To:   this_.idx,
+			To:   this_.Idx,
 		}
 	}
 
@@ -1208,38 +1202,38 @@ func (this_ *parser) parseSingleArgArrowFunction(start int, async bool) node.Exp
 	return this_.parseArrowFunction(start, paramList, async)
 }
 
-func (this_ *parser) parseAssignmentExpression() node.Expression {
-	start := this_.idx
+func (this_ *Parser) parseAssignmentExpression() node.Expression {
+	start := this_.Idx
 	parenthesis := false
 	async := false
-	var state parserState
-	switch this_.token {
+	var state parser.State
+	switch this_.Token {
 	case token.LeftParenthesis:
-		this_.mark(&state)
+		this_.Mark(&state)
 		parenthesis = true
 	case token.Async:
-		tok := this_.peek()
-		if this_.isBindingId(tok) {
+		tok := this_.Peek()
+		if this_.IsBindingId(tok) {
 			// async x => ...
-			this_.next()
+			this_.Next()
 			return this_.parseSingleArgArrowFunction(start, true)
 		} else if tok == token.LeftParenthesis {
-			this_.mark(&state)
+			this_.Mark(&state)
 			async = true
 		}
 	case token.Yield:
-		if this_.scope.allowYield {
+		if this_.Scope.AllowYield {
 			return this_.parseYieldExpression()
 		}
 		fallthrough
 	default:
-		this_.tokenToBindingId()
+		this_.TokenToBindingId()
 	}
 	left := this_.parseConditionalExpression()
 	var operator token.Token
-	switch this_.token {
+	switch this_.Token {
 	case token.Assign:
-		operator = this_.token
+		operator = this_.Token
 	case token.AddAssign:
 		operator = token.Plus
 	case token.SubtractAssign:
@@ -1275,36 +1269,36 @@ func (this_ *parser) parseAssignmentExpression() node.Expression {
 				}},
 			}
 		} else if parenthesis {
-			if seq, ok := left.(*node.SequenceExpression); ok && len(this_.errors) == 0 {
+			if seq, ok := left.(*node.SequenceExpression); ok && len(this_.Errors) == 0 {
 				paramList = this_.reinterpretSequenceAsArrowFuncParams(seq.Sequence)
 			} else {
-				this_.restore(&state)
+				this_.Restore(&state)
 				paramList = this_.parseFunctionParameterList()
 			}
 		} else if async {
 			// async (x, y) => ...
-			if !this_.scope.allowAwait {
-				this_.scope.allowAwait = true
+			if !this_.Scope.AllowAwait {
+				this_.Scope.AllowAwait = true
 				defer func() {
-					this_.scope.allowAwait = false
+					this_.Scope.AllowAwait = false
 				}()
 			}
 			if _, ok := left.(*node.CallExpression); ok {
-				this_.restore(&state)
-				this_.next() // skip "async"
+				this_.Restore(&state)
+				this_.Next() // skip "async"
 				paramList = this_.parseFunctionParameterList()
 			}
 		}
 		if paramList == nil {
-			_ = this_.error("parseAssignmentExpression paramList is empty ", left.Start(), "Malformed arrow function parameter list")
+			_ = this_.Error("parseAssignmentExpression paramList is empty ", left.Start(), "Malformed arrow function parameter list")
 			return &node.BadExpression{From: left.Start(), To: left.End()}
 		}
 		return this_.parseArrowFunction(start, paramList, async)
 	}
 
 	if operator != "" {
-		idx := this_.idx
-		this_.next()
+		idx := this_.Idx
+		this_.Next()
 		ok := false
 		switch l := left.(type) {
 		case *node.Identifier, *node.DotExpression, *node.PrivateDotExpression, *node.BracketExpression:
@@ -1327,37 +1321,37 @@ func (this_ *parser) parseAssignmentExpression() node.Expression {
 				Right:    this_.parseAssignmentExpression(),
 			}
 		}
-		_ = this_.error("parseAssignmentExpression", left.Start(), "Invalid left-hand side in assignment")
+		_ = this_.Error("parseAssignmentExpression", left.Start(), "Invalid left-hand side in assignment")
 		this_.nextStatement()
-		return &node.BadExpression{From: idx, To: this_.idx}
+		return &node.BadExpression{From: idx, To: this_.Idx}
 	}
 
 	return left
 }
 
-func (this_ *parser) parseYieldExpression() node.Expression {
-	idx := this_.expect("parseYieldExpression", token.Yield)
+func (this_ *Parser) parseYieldExpression() node.Expression {
+	idx := this_.Expect("parseYieldExpression", token.Yield)
 
-	if this_.scope.inFuncParams {
-		_ = this_.error("parseYieldExpression this_.scope.inFuncParams:true", idx, "Yield expression not allowed in formal parameter")
+	if this_.Scope.InFuncParams {
+		_ = this_.Error("parseYieldExpression this_.scope.inFuncParams:true", idx, "Yield expression not allowed in formal parameter")
 	}
 
 	res := &node.YieldExpression{
 		Yield: idx,
 	}
 
-	if !this_.implicitSemicolon && this_.token == token.Multiply {
+	if !this_.ImplicitSemicolon && this_.Token == token.Multiply {
 		res.Delegate = true
-		this_.next()
+		this_.Next()
 	}
 
-	if !this_.implicitSemicolon && this_.token != token.Semicolon && this_.token != token.RightBrace && this_.token != token.Eof {
-		var state parserState
-		this_.mark(&state)
+	if !this_.ImplicitSemicolon && this_.Token != token.Semicolon && this_.Token != token.RightBrace && this_.Token != token.Eof {
+		var state parser.State
+		this_.Mark(&state)
 		expr := this_.parseAssignmentExpression()
 		if _, bad := expr.(*node.BadExpression); bad {
 			expr = nil
-			this_.restore(&state)
+			this_.Restore(&state)
 		}
 		res.Argument = expr
 	}
@@ -1365,16 +1359,16 @@ func (this_ *parser) parseYieldExpression() node.Expression {
 	return res
 }
 
-func (this_ *parser) parseExpression() node.Expression {
+func (this_ *Parser) parseExpression() node.Expression {
 	left := this_.parseAssignmentExpression()
 
-	if this_.token == token.Comma {
+	if this_.Token == token.Comma {
 		sequence := []node.Expression{left}
 		for {
-			if this_.token != token.Comma {
+			if this_.Token != token.Comma {
 				break
 			}
-			this_.next()
+			this_.Next()
 			sequence = append(sequence, this_.parseAssignmentExpression())
 		}
 		return &node.SequenceExpression{
@@ -1385,19 +1379,19 @@ func (this_ *parser) parseExpression() node.Expression {
 	return left
 }
 
-func (this_ *parser) checkComma(from, to int) {
-	if pos := strings.IndexByte(this_.str[(from)-this_.base:(to)-this_.base], ','); pos >= 0 {
-		_ = this_.error("checkComma", from+(pos), "Comma is not allowed here")
+func (this_ *Parser) checkComma(from, to int) {
+	if pos := strings.IndexByte(this_.Str[(from)-this_.Base:(to)-this_.Base], ','); pos >= 0 {
+		_ = this_.Error("checkComma", from+(pos), "Comma is not allowed here")
 	}
 }
 
-func (this_ *parser) reinterpretAsArrayAssignmentPattern(left *node.ArrayLiteral) node.Expression {
+func (this_ *Parser) reinterpretAsArrayAssignmentPattern(left *node.ArrayLiteral) node.Expression {
 	value := left.Value
 	var rest node.Expression
 	for i, item := range value {
 		if spread, ok := item.(*node.SpreadElement); ok {
 			if i != len(value)-1 {
-				_ = this_.error("reinterpretAsArrayAssignmentPattern", item.Start(), "Rest element must be last element")
+				_ = this_.Error("reinterpretAsArrayAssignmentPattern", item.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: left.Start(), To: left.End()}
 			}
 			this_.checkComma(spread.Expression.End(), left.RightBracket)
@@ -1415,7 +1409,7 @@ func (this_ *parser) reinterpretAsArrayAssignmentPattern(left *node.ArrayLiteral
 	}
 }
 
-func (this_ *parser) reinterpretArrayAssignPatternAsBinding(pattern *node.ArrayPattern) *node.ArrayPattern {
+func (this_ *Parser) reinterpretArrayAssignPatternAsBinding(pattern *node.ArrayPattern) *node.ArrayPattern {
 	for i, item := range pattern.Elements {
 		pattern.Elements[i] = this_.reinterpretAsDestructBindingTarget(item)
 	}
@@ -1425,13 +1419,13 @@ func (this_ *parser) reinterpretArrayAssignPatternAsBinding(pattern *node.ArrayP
 	return pattern
 }
 
-func (this_ *parser) reinterpretAsArrayBindingPattern(left *node.ArrayLiteral) node.BindingTarget {
+func (this_ *Parser) reinterpretAsArrayBindingPattern(left *node.ArrayLiteral) node.BindingTarget {
 	value := left.Value
 	var rest node.Expression
 	for i, item := range value {
 		if spread, ok := item.(*node.SpreadElement); ok {
 			if i != len(value)-1 {
-				_ = this_.error("reinterpretAsArrayBindingPattern", item.Start(), "Rest element must be last element")
+				_ = this_.Error("reinterpretAsArrayBindingPattern", item.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: left.Start(), To: left.End()}
 			}
 			this_.checkComma(spread.Expression.End(), left.RightBracket)
@@ -1449,15 +1443,15 @@ func (this_ *parser) reinterpretAsArrayBindingPattern(left *node.ArrayLiteral) n
 	}
 }
 
-func (this_ *parser) parseArrayBindingPattern() node.BindingTarget {
+func (this_ *Parser) parseArrayBindingPattern() node.BindingTarget {
 	return this_.reinterpretAsArrayBindingPattern(this_.parseArrayLiteral())
 }
 
-func (this_ *parser) parseObjectBindingPattern() node.BindingTarget {
+func (this_ *Parser) parseObjectBindingPattern() node.BindingTarget {
 	return this_.reinterpretAsObjectBindingPattern(this_.parseObjectLiteral())
 }
 
-func (this_ *parser) reinterpretArrayObjectPatternAsBinding(pattern *node.ObjectPattern) *node.ObjectPattern {
+func (this_ *Parser) reinterpretArrayObjectPatternAsBinding(pattern *node.ObjectPattern) *node.ObjectPattern {
 	for _, prop := range pattern.Properties {
 		if keyed, ok := prop.(*node.PropertyKeyed); ok {
 			keyed.Value = this_.reinterpretAsBindingElement(keyed.Value)
@@ -1469,7 +1463,7 @@ func (this_ *parser) reinterpretArrayObjectPatternAsBinding(pattern *node.Object
 	return pattern
 }
 
-func (this_ *parser) reinterpretAsObjectBindingPattern(expr *node.ObjectLiteral) node.BindingTarget {
+func (this_ *Parser) reinterpretAsObjectBindingPattern(expr *node.ObjectLiteral) node.BindingTarget {
 	var rest node.Expression
 	value := expr.Value
 	for i, prop := range value {
@@ -1484,7 +1478,7 @@ func (this_ *parser) reinterpretAsObjectBindingPattern(expr *node.ObjectLiteral)
 			ok = true
 		case *node.SpreadElement:
 			if i != len(expr.Value)-1 {
-				_ = this_.error("reinterpretAsObjectBindingPattern", prop.Start(), "Rest element must be last element")
+				_ = this_.Error("reinterpretAsObjectBindingPattern", prop.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: expr.Start(), To: expr.End()}
 			}
 			// TODO make sure there is no trailing Comma
@@ -1493,7 +1487,7 @@ func (this_ *parser) reinterpretAsObjectBindingPattern(expr *node.ObjectLiteral)
 			ok = true
 		}
 		if !ok {
-			_ = this_.error("reinterpretAsObjectBindingPattern", prop.Start(), "Invalid destructuring binding target")
+			_ = this_.Error("reinterpretAsObjectBindingPattern", prop.Start(), "Invalid destructuring binding target")
 			return &node.BadExpression{From: expr.Start(), To: expr.End()}
 		}
 	}
@@ -1505,7 +1499,7 @@ func (this_ *parser) reinterpretAsObjectBindingPattern(expr *node.ObjectLiteral)
 	}
 }
 
-func (this_ *parser) reinterpretAsObjectAssignmentPattern(l *node.ObjectLiteral) node.Expression {
+func (this_ *Parser) reinterpretAsObjectAssignmentPattern(l *node.ObjectLiteral) node.Expression {
 	var rest node.Expression
 	value := l.Value
 	for i, prop := range value {
@@ -1520,7 +1514,7 @@ func (this_ *parser) reinterpretAsObjectAssignmentPattern(l *node.ObjectLiteral)
 			ok = true
 		case *node.SpreadElement:
 			if i != len(l.Value)-1 {
-				_ = this_.error("reinterpretAsObjectAssignmentPattern", prop.Start(), "Rest element must be last element")
+				_ = this_.Error("reinterpretAsObjectAssignmentPattern", prop.Start(), "Rest element must be last element")
 				return &node.BadExpression{From: l.Start(), To: l.End()}
 			}
 			// TODO make sure there is no trailing Comma
@@ -1529,7 +1523,7 @@ func (this_ *parser) reinterpretAsObjectAssignmentPattern(l *node.ObjectLiteral)
 			ok = true
 		}
 		if !ok {
-			_ = this_.error("reinterpretAsObjectAssignmentPattern", prop.Start(), "Invalid destructuring assignment target")
+			_ = this_.Error("reinterpretAsObjectAssignmentPattern", prop.Start(), "Invalid destructuring assignment target")
 			return &node.BadExpression{From: l.Start(), To: l.End()}
 		}
 	}
@@ -1541,14 +1535,14 @@ func (this_ *parser) reinterpretAsObjectAssignmentPattern(l *node.ObjectLiteral)
 	}
 }
 
-func (this_ *parser) reinterpretAsAssignmentElement(expr node.Expression) node.Expression {
+func (this_ *Parser) reinterpretAsAssignmentElement(expr node.Expression) node.Expression {
 	switch expr := expr.(type) {
 	case *node.AssignExpression:
 		if expr.Operator == token.Assign {
 			expr.Left = this_.reinterpretAsDestructAssignTarget(expr.Left)
 			return expr
 		} else {
-			_ = this_.error("reinterpretAsAssignmentElement", expr.Start(), "Invalid destructuring assignment target")
+			_ = this_.Error("reinterpretAsAssignmentElement", expr.Start(), "Invalid destructuring assignment target")
 			return &node.BadExpression{From: expr.Start(), To: expr.End()}
 		}
 	default:
@@ -1556,14 +1550,14 @@ func (this_ *parser) reinterpretAsAssignmentElement(expr node.Expression) node.E
 	}
 }
 
-func (this_ *parser) reinterpretAsBindingElement(expr node.Expression) node.Expression {
+func (this_ *Parser) reinterpretAsBindingElement(expr node.Expression) node.Expression {
 	switch expr := expr.(type) {
 	case *node.AssignExpression:
 		if expr.Operator == token.Assign {
 			expr.Left = this_.reinterpretAsDestructBindingTarget(expr.Left)
 			return expr
 		} else {
-			_ = this_.error("reinterpretAsBindingElement", expr.Start(), "Invalid destructuring assignment target")
+			_ = this_.Error("reinterpretAsBindingElement", expr.Start(), "Invalid destructuring assignment target")
 			return &node.BadExpression{From: expr.Start(), To: expr.End()}
 		}
 	default:
@@ -1571,7 +1565,7 @@ func (this_ *parser) reinterpretAsBindingElement(expr node.Expression) node.Expr
 	}
 }
 
-func (this_ *parser) reinterpretAsBinding(expr node.Expression) *node.Binding {
+func (this_ *Parser) reinterpretAsBinding(expr node.Expression) *node.Binding {
 	switch expr := expr.(type) {
 	case *node.AssignExpression:
 		if expr.Operator == token.Assign {
@@ -1580,7 +1574,7 @@ func (this_ *parser) reinterpretAsBinding(expr node.Expression) *node.Binding {
 				Initializer: expr.Right,
 			}
 		} else {
-			_ = this_.error("reinterpretAsBinding", expr.Start(), "Invalid destructuring assignment target")
+			_ = this_.Error("reinterpretAsBinding", expr.Start(), "Invalid destructuring assignment target")
 			return &node.Binding{
 				Target: &node.BadExpression{From: expr.Start(), To: expr.End()},
 			}
@@ -1592,7 +1586,7 @@ func (this_ *parser) reinterpretAsBinding(expr node.Expression) *node.Binding {
 	}
 }
 
-func (this_ *parser) reinterpretAsDestructAssignTarget(item node.Expression) node.Expression {
+func (this_ *Parser) reinterpretAsDestructAssignTarget(item node.Expression) node.Expression {
 	switch item := item.(type) {
 	case nil:
 		return nil
@@ -1603,11 +1597,11 @@ func (this_ *parser) reinterpretAsDestructAssignTarget(item node.Expression) nod
 	case node.Pattern, *node.Identifier, *node.DotExpression, *node.PrivateDotExpression, *node.BracketExpression:
 		return item
 	}
-	_ = this_.error("reinterpretAsDestructAssignTarget", item.Start(), "Invalid destructuring assignment target")
+	_ = this_.Error("reinterpretAsDestructAssignTarget", item.Start(), "Invalid destructuring assignment target")
 	return &node.BadExpression{From: item.Start(), To: item.End()}
 }
 
-func (this_ *parser) reinterpretAsDestructBindingTarget(item node.Expression) node.BindingTarget {
+func (this_ *Parser) reinterpretAsDestructBindingTarget(item node.Expression) node.BindingTarget {
 	switch item := item.(type) {
 	case nil:
 		return nil
@@ -1620,18 +1614,18 @@ func (this_ *parser) reinterpretAsDestructBindingTarget(item node.Expression) no
 	case *node.ObjectLiteral:
 		return this_.reinterpretAsObjectBindingPattern(item)
 	case *node.Identifier:
-		if !this_.scope.allowAwait || item.Name != "await" {
+		if !this_.Scope.AllowAwait || item.Name != "await" {
 			return item
 		}
 	}
-	_ = this_.error("reinterpretAsDestructBindingTarget", item.Start(), "Invalid destructuring binding target")
+	_ = this_.Error("reinterpretAsDestructBindingTarget", item.Start(), "Invalid destructuring binding target")
 	return &node.BadExpression{From: item.Start(), To: item.End()}
 }
 
-func (this_ *parser) reinterpretAsBindingRestElement(expr node.Expression) node.Expression {
+func (this_ *Parser) reinterpretAsBindingRestElement(expr node.Expression) node.Expression {
 	if _, ok := expr.(*node.Identifier); ok {
 		return expr
 	}
-	_ = this_.error("reinterpretAsBindingRestElement", expr.Start(), "Invalid binding rest")
+	_ = this_.Error("reinterpretAsBindingRestElement", expr.Start(), "Invalid binding rest")
 	return &node.BadExpression{From: expr.Start(), To: expr.End()}
 }

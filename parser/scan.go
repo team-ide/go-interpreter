@@ -3,53 +3,23 @@ package parser
 import (
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
-	"unicode"
-	"unicode/utf8"
 )
 
-func (this_ *parser) skipWhiteSpace() {
-	for {
-		switch this_.chr {
-		case ' ', '\t', '\f', '\v', '\u00a0', '\ufeff':
-			this_.read()
-			continue
-		case '\r':
-			if this_.implicitRead() == '\n' {
-				this_.read()
-			}
-			fallthrough
-		case '\u2028', '\u2029', '\n':
-			if this_.insertSemicolon {
-				return
-			}
-			this_.read()
-			continue
-		}
-		if this_.chr >= utf8.RuneSelf {
-			if unicode.IsSpace(this_.chr) {
-				this_.read()
-				continue
-			}
-		}
-		break
-	}
-}
+func (this_ *Parser) Scan() (tkn token.Token, literal string, parsedLiteral node.String, idx int) {
 
-func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node.String, idx int) {
-
-	this_.implicitSemicolon = false
+	this_.ImplicitSemicolon = false
 
 	for {
-		this_.skipWhiteSpace()
+		this_.SkipWhiteSpace()
 
-		idx = this_.idxOf(this_.chrOffset)
-		insertSemicolon := false
+		idx = this_.IdxOf(this_.ChrOffset)
+		InsertSemicolon := false
 
-		switch chr := this_.chr; {
+		switch chr := this_.Chr; {
 		case this_.IsIdentifierStart(chr):
 			var err string
 			var hasEscape bool
-			literal, parsedLiteral, hasEscape, err = this_.scanIdentifier()
+			literal, parsedLiteral, hasEscape, err = this_.ScanIdentifier()
 			if err != "" {
 				tkn = token.Illegal
 				break
@@ -59,8 +29,8 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 				var strict bool
 				tkn, strict = this_.IsKeyword(string(parsedLiteral))
 				if hasEscape {
-					this_.insertSemicolon = true
-					if tkn == "" || this_.isBindingId(tkn) {
+					this_.InsertSemicolon = true
+					if tkn == "" || this_.IsBindingId(tkn) {
 						tkn = token.Identifier
 					} else {
 						tkn = token.EscapedReservedWord
@@ -88,13 +58,13 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 					token.Return,
 					token.Continue,
 					token.Debugger:
-					this_.insertSemicolon = true
+					this_.InsertSemicolon = true
 					return
 
 				case token.Async:
 					// async only has special meaning if not followed by a LineTerminator
-					if this_.skipWhiteSpaceCheckLineTerminator() {
-						this_.insertSemicolon = true
+					if this_.SkipWhiteSpaceCheckLineTerminator() {
+						this_.InsertSemicolon = true
 						tkn = token.Identifier
 					}
 					return
@@ -103,40 +73,40 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 
 				}
 			}
-			this_.insertSemicolon = true
+			this_.InsertSemicolon = true
 			tkn = token.Identifier
 			return
 		case '0' <= chr && chr <= '9':
-			this_.insertSemicolon = true
-			tkn, literal = this_.scanNumericLiteral(false)
+			this_.InsertSemicolon = true
+			tkn, literal = this_.ScanNumericLiteral(false)
 			return
 		//case chr == '\n' || chr == '\r' || chr == '\t' || chr == ' ':
 		//	tkn = token.BlankSpace
 		//	return
 		default:
-			this_.read()
+			this_.Read()
 			switch chr {
 			case -1:
-				if this_.insertSemicolon {
-					this_.insertSemicolon = false
-					this_.implicitSemicolon = true
+				if this_.InsertSemicolon {
+					this_.InsertSemicolon = false
+					this_.ImplicitSemicolon = true
 				}
 				tkn = token.Eof
 			case '\r', '\n', '\u2028', '\u2029':
-				this_.insertSemicolon = false
-				this_.implicitSemicolon = true
+				this_.InsertSemicolon = false
+				this_.ImplicitSemicolon = true
 				continue
 			case ':':
 				tkn = token.Colon
 			case '.':
-				if this_.DigitValue(this_.chr) < 10 {
-					insertSemicolon = true
-					tkn, literal = this_.scanNumericLiteral(true)
+				if this_.DigitValue(this_.Chr) < 10 {
+					InsertSemicolon = true
+					tkn, literal = this_.ScanNumericLiteral(true)
 				} else {
-					if this_.chr == '.' {
-						this_.read()
-						if this_.chr == '.' {
-							this_.read()
+					if this_.Chr == '.' {
+						this_.Read()
+						if this_.Chr == '.' {
+							this_.Read()
 							tkn = token.Ellipsis
 						} else {
 							tkn = token.Illegal
@@ -153,125 +123,131 @@ func (this_ *parser) scan() (tkn token.Token, literal string, parsedLiteral node
 				tkn = token.LeftParenthesis
 			case ')':
 				tkn = token.RightParenthesis
-				insertSemicolon = true
+				InsertSemicolon = true
 			case '[':
 				tkn = token.LeftBracket
 			case ']':
 				tkn = token.RightBracket
-				insertSemicolon = true
+				InsertSemicolon = true
 			case '{':
 				tkn = token.LeftBrace
 			case '}':
 				tkn = token.RightBrace
-				insertSemicolon = true
+				InsertSemicolon = true
 			case '+':
-				tkn = this_.switch3(token.Plus, token.AddAssign, '+', token.Increment)
+				tkn = this_.Switch3(token.Plus, token.AddAssign, '+', token.Increment)
 				if tkn == token.Increment {
-					insertSemicolon = true
+					InsertSemicolon = true
 				}
 			case '-':
-				tkn = this_.switch3(token.Minus, token.SubtractAssign, '-', token.Decrement)
+				tkn = this_.Switch3(token.Minus, token.SubtractAssign, '-', token.Decrement)
 				if tkn == token.Decrement {
-					insertSemicolon = true
+					InsertSemicolon = true
 				}
 			case '*':
-				if this_.chr == '*' {
-					this_.read()
-					tkn = this_.switch2(token.Exponent, token.ExponentAssign)
+				if this_.Chr == '*' {
+					this_.Read()
+					tkn = this_.Switch2(token.Exponent, token.ExponentAssign)
 				} else {
-					tkn = this_.switch2(token.Multiply, token.MultiplyAssign)
+					tkn = this_.Switch2(token.Multiply, token.MultiplyAssign)
 				}
 			case '/':
-				if this_.chr == '/' {
-					this_.skipSingleLineComment()
+				if this_.Chr == '/' {
+					this_.SkipSingleLineComment()
 					continue
-				} else if this_.chr == '*' {
-					if this_.skipMultiLineComment() {
-						this_.insertSemicolon = false
-						this_.implicitSemicolon = true
+				} else if this_.Chr == '*' {
+					if this_.SkipMultiLineComment() {
+						this_.InsertSemicolon = false
+						this_.ImplicitSemicolon = true
 					}
 					continue
 				} else {
 					// Could be division, could be RegExp literal
-					tkn = this_.switch2(token.Slash, token.QuotientAssign)
-					insertSemicolon = true
+					tkn = this_.Switch2(token.Slash, token.QuotientAssign)
+					InsertSemicolon = true
 				}
 			case '%':
-				tkn = this_.switch2(token.Remainder, token.RemainderAssign)
+				tkn = this_.Switch2(token.Remainder, token.RemainderAssign)
 			case '^':
-				tkn = this_.switch2(token.ExclusiveOr, token.ExclusiveOrAssign)
+				tkn = this_.Switch2(token.ExclusiveOr, token.ExclusiveOrAssign)
 			case '<':
-				tkn = this_.switch4(token.Less, token.LessOrEqual, '<', token.ShiftLeft, token.ShiftLeftAssign)
+				tkn = this_.Switch4(token.Less, token.LessOrEqual, '<', token.ShiftLeft, token.ShiftLeftAssign)
 			case '>':
-				tkn = this_.switch6(token.Greater, token.GreaterOrEqual, '>', token.ShiftRight, token.ShiftRightAssign, '>', token.UnsignedShiftRight, token.UnsignedShiftRightAssign)
+				tkn = this_.Switch6(token.Greater, token.GreaterOrEqual, '>', token.ShiftRight, token.ShiftRightAssign, '>', token.UnsignedShiftRight, token.UnsignedShiftRightAssign)
 			case '=':
-				if this_.chr == '>' {
-					this_.read()
-					if this_.implicitSemicolon {
+				if this_.Chr == '>' {
+					this_.Read()
+					if this_.ImplicitSemicolon {
 						tkn = token.Illegal
 					} else {
 						tkn = token.Arrow
 					}
 				} else {
-					tkn = this_.switch2(token.Assign, token.Equal)
-					if tkn == token.Equal && this_.chr == '=' {
-						this_.read()
+					tkn = this_.Switch2(token.Assign, token.Equal)
+					if tkn == token.Equal && this_.Chr == '=' {
+						this_.Read()
 						tkn = token.StrictEqual
 					}
 				}
 			case '!':
-				tkn = this_.switch2(token.Not, token.NotEqual)
-				if tkn == token.NotEqual && this_.chr == '=' {
-					this_.read()
+				tkn = this_.Switch2(token.Not, token.NotEqual)
+				if tkn == token.NotEqual && this_.Chr == '=' {
+					this_.Read()
 					tkn = token.StrictNotEqual
 				}
 			case '&':
-				tkn = this_.switch3(token.And, token.AndAssign, '&', token.LogicalAnd)
+				tkn = this_.Switch3(token.And, token.AndAssign, '&', token.LogicalAnd)
 			case '|':
-				tkn = this_.switch3(token.Or, token.OrAssign, '|', token.LogicalOr)
+				tkn = this_.Switch3(token.Or, token.OrAssign, '|', token.LogicalOr)
 			case '~':
 				tkn = token.BitwiseNot
 			case '?':
-				if this_.chr == '.' && !this_.IsDecimalDigit(this_.implicitRead()) {
-					this_.read()
+				if this_.Chr == '.' && !this_.IsDecimalDigit(this_.ImplicitRead()) {
+					this_.Read()
 					tkn = token.QuestionDot
-				} else if this_.chr == '?' {
-					this_.read()
+				} else if this_.Chr == '?' {
+					this_.Read()
 					tkn = token.Coalesce
 				} else {
 					tkn = token.QuestionMark
 				}
 			case '"', '\'':
-				insertSemicolon = true
+				InsertSemicolon = true
 				tkn = token.String
 				var err string
-				literal, parsedLiteral, err = this_.scanString(this_.chrOffset-1, true)
+				literal, parsedLiteral, err = this_.ScanString(this_.ChrOffset-1, true)
 				if err != "" {
 					tkn = token.Illegal
 				}
 			case '`':
 				tkn = token.Backtick
 			case '#':
-				if this_.chrOffset == 1 && this_.chr == '!' {
-					this_.skipSingleLineComment()
+				if this_.ChrOffset == 1 && this_.Chr == '!' {
+					this_.SkipSingleLineComment()
 					continue
 				}
 
 				var err string
-				literal, parsedLiteral, _, err = this_.scanIdentifier()
+				literal, parsedLiteral, _, err = this_.ScanIdentifier()
 				if err != "" || literal == "" {
 					tkn = token.Illegal
 					break
 				}
-				this_.insertSemicolon = true
+				this_.InsertSemicolon = true
 				tkn = token.PrivateIdentifier
 				return
 			default:
-				_ = this_.errorUnexpected("scan chr:"+string(chr), idx, chr)
+				_ = this_.ErrorUnexpected("scan chr:"+string(chr), idx, chr)
 				tkn = token.Illegal
 			}
 		}
-		this_.insertSemicolon = insertSemicolon
+		this_.InsertSemicolon = InsertSemicolon
 		return
+	}
+}
+
+func (this_ *Parser) ScanMantissa(base int) {
+	for this_.DigitValue(this_.Chr) < base {
+		this_.Read()
 	}
 }
