@@ -66,8 +66,8 @@ type DoWhileStatement struct {
 	Body   Statement
 }
 
-// EmptyStatement 空语句
-type EmptyStatement struct {
+// SemicolonStatement 分号语句
+type SemicolonStatement struct {
 	Semicolon int
 }
 
@@ -190,7 +190,7 @@ func (*CaseStatement) isStatement()       {}
 func (*CatchStatement) isStatement()      {}
 func (*DebuggerStatement) isStatement()   {}
 func (*DoWhileStatement) isStatement()    {}
-func (*EmptyStatement) isStatement()      {}
+func (*SemicolonStatement) isStatement()  {}
 func (*ExpressionStatement) isStatement() {}
 func (*ForInStatement) isStatement()      {}
 func (*ForOfStatement) isStatement()      {}
@@ -218,7 +218,7 @@ func (this_ *CaseStatement) Start() int       { return this_.Case }
 func (this_ *CatchStatement) Start() int      { return this_.Catch }
 func (this_ *DebuggerStatement) Start() int   { return this_.Debugger }
 func (this_ *DoWhileStatement) Start() int    { return this_.Do }
-func (this_ *EmptyStatement) Start() int      { return this_.Semicolon }
+func (this_ *SemicolonStatement) Start() int  { return this_.Semicolon }
 func (this_ *ExpressionStatement) Start() int { return this_.Expression.Start() }
 func (this_ *ForInStatement) Start() int      { return this_.For }
 func (this_ *ForOfStatement) Start() int      { return this_.For }
@@ -249,7 +249,7 @@ func (this_ *CaseStatement) End() int       { return this_.Consequent[len(this_.
 func (this_ *CatchStatement) End() int      { return this_.Body.End() }
 func (this_ *DebuggerStatement) End() int   { return this_.Debugger + (8) }
 func (this_ *DoWhileStatement) End() int    { return this_.EndIdx }
-func (this_ *EmptyStatement) End() int      { return this_.Semicolon + (1) }
+func (this_ *SemicolonStatement) End() int  { return this_.Semicolon + (1) }
 func (this_ *ExpressionStatement) End() int { return this_.Expression.End() }
 func (this_ *ForInStatement) End() int      { return this_.Body.End() }
 func (this_ *ForOfStatement) End() int      { return this_.Body.End() }

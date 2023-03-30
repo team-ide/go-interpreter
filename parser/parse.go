@@ -5,6 +5,70 @@ import (
 	"github.com/team-ide/go-interpreter/token"
 )
 
+// Parse 解析
+func (this_ *Parser) Parse() (tree *node.Tree, err error) {
+	tree = this_.parseTree()
+	//this_.errors.Sort()
+	err = this_.Errors.Err()
+	return
+}
+
+func (this_ *Parser) parseTree() (tree *node.Tree) {
+	this_.OpenScope()
+	defer this_.CloseScope()
+
+	var statements []node.Statement
+	this_.Next()
+	for this_.Token != token.Eof {
+		this_.Scope.AllowLet = true
+		statements = append(statements, this_.ParseStatement())
+	}
+
+	tree = &node.Tree{
+		Children:        statements,
+		DeclarationList: this_.Scope.DeclarationList,
+	}
+	//this_.file.SetSourceMap(this_.parseSourceMap())
+	return
+}
+
+// ParseBlockStatement 解析 {} 子 语句
+func (this_ *Parser) ParseBlockStatement() *node.BlockStatement {
+	res := &node.BlockStatement{}
+	res.LeftBrace = this_.ExpectAndNext("ParseBlockStatement", token.LeftBrace)
+	res.List = this_.ParseStatementList()
+	res.RightBrace = this_.ExpectAndNext("ParseBlockStatement", token.RightBrace)
+
+	return res
+}
+
+// ParseSemicolonStatement 分号 ; 语句
+func (this_ *Parser) ParseSemicolonStatement() node.Statement {
+	idx := this_.ExpectAndNext("ParseSemicolonStatement", token.Semicolon)
+	return &node.SemicolonStatement{Semicolon: idx}
+}
+
+// ParseStatementList 解析 子语句
+func (this_ *Parser) ParseStatementList() (list []node.Statement) {
+	for this_.Token != token.RightBrace && this_.Token != token.Eof {
+		this_.Scope.AllowLet = true
+		list = append(list, this_.ParseStatement())
+	}
+
+	return
+}
+
+// ParseIdentifier 解析 标识符
+func (this_ *Parser) ParseIdentifier() *node.Identifier {
+	literal := this_.ParsedLiteral
+	idx := this_.Idx
+	this_.Next()
+	return &node.Identifier{
+		Name: literal,
+		Idx:  idx,
+	}
+}
+
 func (this_ *Parser) Position(offset int) (position *node.Position) {
 	position = &node.Position{
 		Idx: offset - this_.Base,
@@ -41,7 +105,7 @@ func (this_ *Parser) OptionalSemicolon() {
 	}
 
 	if this_.Token != token.Eof && this_.Token != token.RightBrace {
-		this_.Expect("optionalSemicolon", token.Semicolon)
+		this_.ExpectAndNext("optionalSemicolon", token.Semicolon)
 	}
 }
 
@@ -52,7 +116,7 @@ func (this_ *Parser) Semicolon(from string) {
 			return
 		}
 
-		this_.Expect("semicolon from "+from, token.Semicolon)
+		this_.ExpectAndNext("semicolon from "+from, token.Semicolon)
 	}
 }
 

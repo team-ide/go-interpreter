@@ -83,6 +83,8 @@ type Parser struct {
 
 	Errors ErrorList
 
+	ParseStatement func() node.Statement
+
 	KeywordToken         map[string]Keyword
 	IdentifierTokens     []token.Token
 	UnreservedWordTokens []token.Token

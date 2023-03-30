@@ -27,7 +27,7 @@ func (this_ *Parser) ErrorUnexpected(from string, offset int, chr rune) error {
 func (this_ *Parser) ErrorUnexpectedToken(from string, tkn token.Token) error {
 	switch tkn {
 	case token.Eof:
-		return this_.Error(from, 0, errUnexpectedEndOfInput)
+		return this_.Error(from, this_.Idx, errUnexpectedEndOfInput)
 	}
 	value := tkn.String()
 	switch tkn {
@@ -63,8 +63,9 @@ func (this_ *Error) Error() string {
 	if filename == "" {
 		filename = "(anonymous)"
 	}
-	return fmt.Sprintf("%s: Line %d:%d %s",
+	return fmt.Sprintf("%s: Idx:%d Line %d:%d %s",
 		filename,
+		this_.idx,
 		this_.line,
 		this_.column,
 		this_.msg,

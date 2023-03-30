@@ -131,7 +131,8 @@ func (this_ *Parser) IsLineTerminator(chr rune) bool {
 	return false
 }
 
-func (this_ *Parser) Expect(from string, value token.Token) int {
+// ExpectAndNext 判断 当前 Token 是否是预期，并且 执行 Next 读取下一个 Token
+func (this_ *Parser) ExpectAndNext(from string, value token.Token) int {
 	idx := this_.Idx
 	if this_.Token != value {
 		_ = this_.ErrorUnexpectedToken("expect by "+from+" this_.token:"+this_.Token.String()+",value:"+value.String(), this_.Token)
@@ -140,7 +141,7 @@ func (this_ *Parser) Expect(from string, value token.Token) int {
 	return idx
 }
 
-func (this_ *Parser) IsBindingId(tok token.Token) bool {
+func (this_ *Parser) IsBindingIdentifier(tok token.Token) bool {
 	if tok == token.Identifier {
 		return true
 	}

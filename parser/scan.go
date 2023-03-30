@@ -30,7 +30,7 @@ func (this_ *Parser) Scan() (tkn token.Token, literal string, parsedLiteral node
 				tkn, strict = this_.IsKeyword(string(parsedLiteral))
 				if hasEscape {
 					this_.InsertSemicolon = true
-					if tkn == "" || this_.IsBindingId(tkn) {
+					if tkn == "" || this_.IsBindingIdentifier(tkn) {
 						tkn = token.Identifier
 					} else {
 						tkn = token.EscapedReservedWord
