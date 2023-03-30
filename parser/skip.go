@@ -7,13 +7,32 @@ import (
 
 // SkipWhiteSpace 跳过 空白
 func (this_ *Parser) SkipWhiteSpace() {
+	startIdx := -1
+	endIdx := -1
+	defer func() {
+		if startIdx != -1 {
+			//str := this_.Slice(startIdx, endIdx)
+			//fmt.Println("SkipWhiteSpace start:", startIdx, ",end:", endIdx, ",str:"+str)
+
+		}
+	}()
+	setIdx := func() {
+		if startIdx == -1 {
+			startIdx = this_.ChrOffset
+		}
+		if endIdx < this_.Offset {
+			endIdx = this_.Offset
+		}
+	}
 	for {
 		switch this_.Chr {
 		case ' ', '\t', '\f', '\v', '\u00a0', '\ufeff':
+			setIdx()
 			this_.Read()
 			continue
 		case '\r':
 			if this_.ImplicitRead() == '\n' {
+				setIdx()
 				this_.Read()
 			}
 			fallthrough
@@ -21,17 +40,20 @@ func (this_ *Parser) SkipWhiteSpace() {
 			if this_.InsertSemicolon {
 				return
 			}
+			setIdx()
 			this_.Read()
 			continue
 		}
 		if this_.Chr >= utf8.RuneSelf {
 			if unicode.IsSpace(this_.Chr) {
+				setIdx()
 				this_.Read()
 				continue
 			}
 		}
 		break
 	}
+	return
 }
 
 // SkipSingleLineComment 跳过单行注释

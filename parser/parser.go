@@ -8,10 +8,10 @@ import (
 
 func New(src string) (p *Parser) {
 	p = &Parser{
-		Chr:    ' ',
+		//Chr:    ' ',
 		Str:    src,
 		Length: len(src),
-		Base:   1,
+		Base:   0,
 	}
 	return
 }
@@ -72,8 +72,8 @@ type Parser struct {
 	ParsedLiteral node.String
 
 	Scope             *Scope
-	InsertSemicolon   bool // If we see a newline, then insert an implicit semicolon
-	ImplicitSemicolon bool // An implicit semicolon exists
+	InsertSemicolon   bool // 如果我们看到一个换行符，那么插入一个隐式分号
+	ImplicitSemicolon bool // 存在隐式分号
 
 	Recover struct {
 		// Scratch when trying to seek to the next statement, etc.
@@ -88,6 +88,9 @@ type Parser struct {
 	KeywordToken         map[string]Keyword
 	IdentifierTokens     []token.Token
 	UnreservedWordTokens []token.Token
+
+	BlankSpaceFrom int
+	BlankSpaceTo   int
 }
 
 // ImplicitRead 隐式读取下一个

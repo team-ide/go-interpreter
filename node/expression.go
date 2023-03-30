@@ -412,11 +412,11 @@ func (this_ *ClassLiteral) End() int          { return this_.RightBrace + (+1) }
 func (this_ *ArrowFunctionLiteral) End() int  { return this_.Body.End() }
 func (this_ *Identifier) End() int            { return this_.Idx + (len(this_.Name)) }
 func (this_ *NewExpression) End() int {
-	if this_.ArgumentList != nil {
-		return this_.RightParenthesis + (+1)
-	} else {
-		return this_.Callee.End()
+	end := this_.RightParenthesis + (+1)
+	if end < this_.Callee.End() {
+		end = this_.Callee.End()
 	}
+	return end
 }
 func (this_ *NullLiteral) End() int        { return this_.Idx + (+4) } // "null"
 func (this_ *NumberLiteral) End() int      { return this_.Idx + (len(this_.Literal)) }

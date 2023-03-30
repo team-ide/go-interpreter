@@ -283,9 +283,9 @@ function Rectangle() {
 }
 
 // subclass extends superclass
-Rectangle.prototype = new Shape();
+Rectangle.prototype = new Shape(ss);
 
-var rect = new Rectangle();
+var rect = new Rectangle( );
 `
 
 func TestJavaScript(t *testing.T) {

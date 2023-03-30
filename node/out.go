@@ -11,7 +11,7 @@ func OutTree(code string, tree *Tree) {
 	for _, one := range tree.Children {
 		bs, _ := json.Marshal(one)
 		fmt.Println("tree one type:", reflect.TypeOf(one).String(), "start:", one.Start()-1, ",end:", one.End()-1, ",json:", string(bs))
-		fmt.Println(code[one.Start()-1 : one.End()-1])
+		fmt.Println(code[one.Start():one.End()])
 		outSub(code, 1, one)
 		fmt.Println("--------------------------------------------")
 	}
@@ -74,8 +74,8 @@ func outOne(code string, name string, leven int, one interface{}) {
 		}
 		bs, _ := json.Marshal(one)
 		fmt.Print(bef+"field:", name, ",type:", reflect.TypeOf(n).String())
-		fmt.Println(",start:", n.Start()-1, ",end:", n.End()-1, ",json:", string(bs))
-		str := code[n.Start()-1 : n.End()-1]
+		fmt.Println(",start:", n.Start(), ",end:", n.End(), ",json:", string(bs))
+		str := code[n.Start():n.End()]
 		str = strings.ReplaceAll(str, "\n", "\n"+bef)
 		fmt.Println(bef + str)
 		outSub(code, leven+1, one)

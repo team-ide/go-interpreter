@@ -18,6 +18,7 @@ func (this_ *Parser) parseTree() (tree *node.Tree) {
 	defer this_.CloseScope()
 
 	var statements []node.Statement
+	this_.Read()
 	this_.Next()
 	for this_.Token != token.Eof {
 		this_.Scope.AllowLet = true
@@ -46,6 +47,12 @@ func (this_ *Parser) ParseBlockStatement() *node.BlockStatement {
 func (this_ *Parser) ParseSemicolonStatement() node.Statement {
 	idx := this_.ExpectAndNext("ParseSemicolonStatement", token.Semicolon)
 	return &node.SemicolonStatement{Semicolon: idx}
+}
+
+// ParseBlankSpaceStatement 空白 语句
+func (this_ *Parser) ParseBlankSpaceStatement() node.Statement {
+	this_.ExpectAndNext("ParseBlankSpaceStatement", token.BlankSpace)
+	return &node.BlankSpaceStatement{From: this_.BlankSpaceFrom, To: this_.BlankSpaceTo}
 }
 
 // ParseStatementList 解析 子语句
