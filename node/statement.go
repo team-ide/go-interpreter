@@ -31,6 +31,13 @@ type BlockStatement struct {
 	RightBrace int
 }
 
+// ImportStatement 导入
+type ImportStatement struct {
+	From   int
+	To     int
+	Import string
+}
+
 // BranchStatement branch语句
 type BranchStatement struct {
 	Idx    int
@@ -183,6 +190,7 @@ type ClassDeclaration struct {
 
 /* 实现 Statement 接口 */
 func (*BadStatement) isStatement()        {}
+func (*ImportStatement) isStatement()     {}
 func (*BlankSpaceStatement) isStatement() {}
 func (*BlockStatement) isStatement()      {}
 func (*BranchStatement) isStatement()     {}
@@ -211,6 +219,7 @@ func (*ClassDeclaration) isStatement()    {}
 /* 实现 Node Start 接口 */
 
 func (this_ *BadStatement) Start() int        { return this_.From }
+func (this_ *ImportStatement) Start() int     { return this_.From }
 func (this_ *BlankSpaceStatement) Start() int { return this_.From }
 func (this_ *BlockStatement) Start() int      { return this_.LeftBrace }
 func (this_ *BranchStatement) Start() int     { return this_.Idx }
@@ -240,6 +249,7 @@ func (this_ *Binding) Start() int             { return this_.Target.Start() }
 /* 实现 Node End 接口 */
 
 func (this_ *BadStatement) End() int        { return this_.To }
+func (this_ *ImportStatement) End() int     { return this_.To }
 func (this_ *BlankSpaceStatement) End() int { return this_.To }
 func (this_ *BlockStatement) End() int      { return this_.RightBrace + (1) }
 func (this_ *BranchStatement) End() int {

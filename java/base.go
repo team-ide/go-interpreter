@@ -7,6 +7,9 @@ import (
 
 var (
 	KeywordToken = map[string]parser.Keyword{
+		"import": {
+			Token: token.Import,
+		},
 		"if": {
 			Token: token.If,
 		},
@@ -15,9 +18,6 @@ var (
 		},
 		"do": {
 			Token: token.Do,
-		},
-		"var": {
-			Token: token.Var,
 		},
 		"for": {
 			Token: token.For,
@@ -40,12 +40,6 @@ var (
 		"void": {
 			Token: token.Void,
 		},
-		"with": {
-			Token: token.With,
-		},
-		"async": {
-			Token: token.Async,
-		},
 		"while": {
 			Token: token.While,
 		},
@@ -61,12 +55,6 @@ var (
 		"return": {
 			Token: token.Return,
 		},
-		"typeof": {
-			Token: token.Typeof,
-		},
-		"delete": {
-			Token: token.Delete,
-		},
 		"switch": {
 			Token: token.Switch,
 		},
@@ -76,38 +64,17 @@ var (
 		"finally": {
 			Token: token.Finally,
 		},
-		"function": {
-			Token: token.Function,
-		},
 		"continue": {
 			Token: token.Continue,
 		},
-		"debugger": {
-			Token: token.Debugger,
-		},
 		"instanceof": {
 			Token: token.Instanceof,
-		},
-		"const": {
-			Token: token.Const,
 		},
 		"class": {
 			Token: token.Class,
 		},
 		"enum": {
-			Token:         token.Keyword,
-			FutureKeyword: true,
-		},
-		"export": {
-			Token:         token.Keyword,
-			FutureKeyword: true,
-		},
-		"extends": {
-			Token: token.Extends,
-		},
-		"import": {
-			Token:         token.Keyword,
-			FutureKeyword: true,
+			Token: token.Enum,
 		},
 		"super": {
 			Token: token.Super,
