@@ -1,4 +1,4 @@
-package language
+package javascript
 
 /**
 符号

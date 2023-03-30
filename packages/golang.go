@@ -1,4 +1,4 @@
-package golang_all
+package packages
 
 import (
 )

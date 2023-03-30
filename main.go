@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	_ "github.com/team-ide/go-interpreter/golang_all"
+	_ "github.com/team-ide/go-interpreter/packages"
 )
 
 func main() {

@@ -46,7 +46,7 @@ func genGoSrc(srcDirPath string) {
 	loadGoSrc(srcDirPath, "", &funcInfoList, &structInfoList)
 	fmt.Println("all funcInfoList:", len(funcInfoList))
 	fmt.Println("all structInfoList:", len(structInfoList))
-	_ = os.MkdirAll("./golang_all", os.ModePerm)
+	_ = os.MkdirAll("./packages", os.ModePerm)
 
 	var imports []string
 	var modelPathName = map[string]string{}
@@ -80,7 +80,7 @@ func genGoSrc(srcDirPath string) {
 		one.ModelName = name
 	}
 
-	genContent := `package golang_all
+	genContent := `package packages
 
 import (
 `
@@ -114,7 +114,7 @@ import (
 	//}
 	genContent += `}` + "\n"
 
-	f, err := os.Create("./golang_all/golang_all.go")
+	f, err := os.Create("./packages/golang.go")
 	if err != nil {
 		panic("os.Create error:" + err.Error())
 	}

@@ -1,4 +1,4 @@
-package java
+package golang
 
 import (
 	"github.com/team-ide/go-interpreter/javascript"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const javaCode = `
+const golangCode = `
 // Importing required Java packages
 import java.util.*;
 import java.io.*;
@@ -275,11 +275,11 @@ public class AllJavaKeywords {
 }
 `
 
-func TestJava(t *testing.T) {
-	tree, err := javascript.Parse(javaCode)
+func TestGolang(t *testing.T) {
+	tree, err := javascript.Parse(golangCode)
 	if err != nil {
 		panic("parser.Parse error:" + err.Error())
 	}
-	node.OutTree(javaCode, tree)
+	node.OutTree(golangCode, tree)
 
 }
