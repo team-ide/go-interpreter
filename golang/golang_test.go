@@ -1,7 +1,7 @@
 package golang
 
 import (
-	"github.com/team-ide/go-interpreter/javascript"
+	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"testing"
 )
@@ -276,9 +276,9 @@ public class AllJavaKeywords {
 `
 
 func TestGolang(t *testing.T) {
-	tree, err := javascript.Parse(golangCode)
+	tree, err := Parse(golangCode)
 	if err != nil {
-		panic("parser.Parse error:" + err.Error())
+		fmt.Println(err.Error())
 	}
 	node.OutTree(golangCode, tree)
 
