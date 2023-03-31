@@ -55,6 +55,9 @@ func (this_ *Parser) IsIdentifierToken(tkn token.Token) bool {
 func (this_ *Parser) IsUnreservedWordToken(tkn token.Token) bool {
 	return TokenIndexOf(this_.UnreservedWordTokens, tkn) >= 0
 }
+func (this_ *Parser) IsModifierToken(tkn token.Token) bool {
+	return TokenIndexOf(this_.ModifierTokens, tkn) >= 0
+}
 
 type Parser struct {
 	Str    string
@@ -88,9 +91,22 @@ type Parser struct {
 	KeywordToken         map[string]Keyword
 	IdentifierTokens     []token.Token
 	UnreservedWordTokens []token.Token
+	ModifierTokens       []token.Token // 修饰符
 
 	BlankSpaceFrom int
 	BlankSpaceTo   int
+
+	Modifiers []token.Token // 修饰符 临时存放
+}
+
+func (this_ *Parser) AddModifier(modifier token.Token) {
+	this_.Modifiers = append(this_.Modifiers, modifier)
+}
+
+func (this_ *Parser) GetAndClearModifiers() (modifiers []token.Token) {
+	modifiers = this_.Modifiers
+	this_.Modifiers = []token.Token{}
+	return
 }
 
 // ImplicitRead 隐式读取下一个

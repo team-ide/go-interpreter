@@ -37,6 +37,10 @@ func (this_ *Parser) Scan() (tkn token.Token, literal string, parsedLiteral node
 					}
 					return
 				}
+				if this_.IsModifierToken(tkn) {
+					this_.AddModifier(tkn)
+					continue
+				}
 				switch tkn {
 				case "": // Not a keyword
 					// no-op

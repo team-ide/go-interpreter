@@ -19,6 +19,7 @@ func Parse(src string) (tree *node.Tree, err error) {
 	p.KeywordToken = KeywordToken
 	p.IdentifierTokens = IdentifierTokens
 	p.UnreservedWordTokens = UnreservedWordTokens
+	p.ModifierTokens = ModifierTokens
 	return p.Parse()
 }
 

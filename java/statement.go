@@ -1,7 +1,6 @@
 package java
 
 import (
-	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
 )
@@ -35,7 +34,7 @@ func (this_ *Parser) parseImportStatement() *node.ImportStatement {
 		res.To++
 	}
 	this_.ExpectAndNext("parseImportStatement", token.Semicolon)
-	fmt.Println("parseImportStatement ", "imp:", imp, ",Next token:", this_.Token)
+	//fmt.Println("parseImportStatement ", "imp:", imp, ",Next token:", this_.Token)
 
 	return res
 }

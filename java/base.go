@@ -98,22 +98,19 @@ var (
 			Token:         KEYWORD,
 			FutureKeyword: true,
 			Strict:        true,
-		},
+		},*/
 		"private": {
-			Token:         KEYWORD,
-			FutureKeyword: true,
-			Strict:        true,
+			Token: token.Private,
 		},
 		"protected": {
-			Token:         KEYWORD,
-			FutureKeyword: true,
-			Strict:        true,
+			Token: token.Protected,
 		},
 		"public": {
-			Token:         KEYWORD,
-			FutureKeyword: true,
-			Strict:        true,
-		},*/
+			Token: token.Public,
+		},
+		"final": {
+			Token: token.Final,
+		},
 		"static": {
 			Token:  token.Static,
 			Strict: true,
@@ -196,5 +193,12 @@ var (
 		token.Async,
 		token.Await,
 		token.Yield,
+	}
+
+	ModifierTokens = []token.Token{
+		token.Public,
+		token.Private,
+		token.Protected,
+		token.Final,
 	}
 )
