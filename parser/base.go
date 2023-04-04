@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/team-ide/go-interpreter/node"
@@ -12,6 +13,15 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 )
+
+// ToJSON 对象转JSON字符串
+func (this_ *Parser) ToJSON(obj interface{}) string {
+	bs, err := json.Marshal(obj)
+	if err != nil {
+		return err.Error()
+	}
+	return string(bs)
+}
 
 // IsDecimalDigit 是十进制数字
 func (this_ *Parser) IsDecimalDigit(chr rune) bool {

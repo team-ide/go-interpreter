@@ -60,9 +60,9 @@ func (this_ *Parser) parseStatement() node.Statement {
 		//	Function: this_.parseFunction(true, false, this_.Idx),
 		//}
 	case token.Class:
-		//return &node.ClassDeclaration{
-		//	Class: this_.parseClass(true),
-		//}
+		return &node.ClassDeclaration{
+			Class: this_.parseClassLiteral(),
+		}
 	case token.Switch:
 		//return this_.parseSwitchStatement()
 	case token.Return:

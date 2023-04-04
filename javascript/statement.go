@@ -199,7 +199,7 @@ func (this_ *Parser) parseClass(declaration bool) *node.ClassLiteral {
 
 	if this_.Token != token.LeftBrace {
 		this_.ExpectAndNext("parseClass", token.Extends)
-		res.SuperClass = this_.parseLeftHandSideExpressionAllowCall()
+		res.Extend = this_.parseLeftHandSideExpressionAllowCall()
 	}
 
 	this_.ExpectAndNext("parseClass", token.LeftBrace)

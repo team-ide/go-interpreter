@@ -149,8 +149,9 @@ type ClassLiteral struct {
 	Class      int
 	RightBrace int
 	Name       *Identifier
-	SuperClass Expression
+	Extend     Expression
 	Body       []ClassElement
+	Implements []Expression // 实现的接口
 	Source     string
 }
 

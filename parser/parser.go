@@ -96,16 +96,24 @@ type Parser struct {
 	BlankSpaceFrom int
 	BlankSpaceTo   int
 
-	Modifiers []token.Token // 修饰符 临时存放
+	Modifiers []*Modifier // 修饰符 临时存放
+}
+
+type Modifier struct {
+	Idx  int
+	Name token.Token
 }
 
 func (this_ *Parser) AddModifier(modifier token.Token) {
-	this_.Modifiers = append(this_.Modifiers, modifier)
+	this_.Modifiers = append(this_.Modifiers, &Modifier{
+		Idx:  this_.Idx,
+		Name: modifier,
+	})
 }
 
-func (this_ *Parser) GetAndClearModifiers() (modifiers []token.Token) {
+func (this_ *Parser) GetAndClearModifiers() (modifiers []*Modifier) {
 	modifiers = this_.Modifiers
-	this_.Modifiers = []token.Token{}
+	this_.Modifiers = []*Modifier{}
 	return
 }
 
