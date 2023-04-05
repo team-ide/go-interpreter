@@ -87,6 +87,18 @@ func (this_ *Parser) parseClassLiteral() *node.ClassLiteral {
 			identifierCache = append(identifierCache, this_.ParseIdentifier())
 			continue
 		}
+		// 分号 结尾 表示字段 = 号 表示 字段赋值 表示 class 字段属性
+		if this_.Token == token.Semicolon || this_.Token == token.Assign {
+			for this_.Token != token.Semicolon && this_.Token != token.Eof {
+				fmt.Println("class field token:", this_.Token)
+				this_.Next()
+			}
+			this_.ExpectAndNext("parseClassLiteral", token.Semicolon)
+			fmt.Println("class field:", this_.ToJSON(identifierCache))
+			// 清空缓存
+			identifierCache = []*node.Identifier{}
+			continue
+		}
 
 		// 如果是左括号，则表示 方法开始
 		if this_.Token == token.LeftParenthesis {
@@ -100,23 +112,22 @@ func (this_ *Parser) parseClassLiteral() *node.ClassLiteral {
 
 			// 解析参数 到 ) 结束
 			for this_.Token != token.RightParenthesis && this_.Token != token.Eof {
+				fmt.Println("class method param token:", this_.Token)
 				this_.Next()
 			}
-			this_.Next()
+			this_.ExpectAndNext("parseClassLiteral", token.RightParenthesis)
 			// 解析参数 到 } 结束
 			for this_.Token != token.RightBrace && this_.Token != token.Eof {
+				fmt.Println("class method body token:", this_.Token)
 				this_.Next()
 			}
+			this_.ExpectAndNext("parseClassLiteral", token.RightBrace)
 			md := &node.MethodDefinition{
 				Idx: start,
 			}
 			res.Body = append(res.Body, md)
 
 			continue
-		}
-
-		if this_.Token == token.Assign {
-
 		}
 
 		fmt.Println("this token:", this_.Token)
