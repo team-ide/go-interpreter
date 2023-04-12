@@ -166,4 +166,11 @@ const (
 
 	Yield Token = "yield" // yield
 
+	// Thrift中出现的补充
+
+	Include   Token = "include"   // include
+	Namespace Token = "namespace" // namespace
+	Exception Token = "exception" // exception
+	Service   Token = "service"   // service
+
 )

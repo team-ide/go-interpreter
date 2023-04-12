@@ -1,8 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/team-ide/go-tool/util"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -52,7 +53,7 @@ func genGoSrc(srcDirPath string) {
 	var modelPathName = map[string]string{}
 	var importNames []string
 	addImport := func(modelPath string) (name string) {
-		if util.StringIndexOf(imports, modelPath) >= 0 {
+		if StringIndexOf(imports, modelPath) >= 0 {
 			name = modelPathName[modelPath]
 			return
 		}
@@ -63,7 +64,7 @@ func genGoSrc(srcDirPath string) {
 		}
 		var name_ = name
 		var index int
-		for util.StringIndexOf(importNames, name) >= 0 {
+		for StringIndexOf(importNames, name) >= 0 {
 			index++
 			name = fmt.Sprintf("%s%d", name_, index)
 		}
@@ -164,7 +165,7 @@ func loadGoSrc(srcDirPath string, modelPath string, funcInfoList *[]*FuncInfo, s
 }
 func loadGoSrcFile(filePath string, modelPath string) (funcInfoList []*FuncInfo, structInfoList []*StructInfo) {
 	var lines []string
-	lines, err := util.ReadLine(filePath)
+	lines, err := ReadLine(filePath)
 	if err != nil {
 		panic("genGoFile " + filePath + " ReadLine error:" + err.Error())
 	}
@@ -258,5 +259,41 @@ func loadGoSrcFile(filePath string, modelPath string) (funcInfoList []*FuncInfo,
 
 	}
 
+	return
+}
+
+// StringIndexOf 返回 某个值 在数组中的索引位置，未找到返回 -1
+func StringIndexOf(array []string, v string) (index int) {
+	index = -1
+	size := len(array)
+	for i := 0; i < size; i++ {
+		if array[i] == v {
+			index = i
+			return
+		}
+	}
+	return
+}
+
+// ReadLine 逐行读取文件
+func ReadLine(filename string) (lines []string, err error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return
+	}
+	buf := bufio.NewReader(f)
+	var line string
+	for {
+		line, err = buf.ReadString('\n')
+		line = strings.TrimSpace(line)
+		if err != nil {
+			if err == io.EOF { //读取结束，会报EOF
+				err = nil
+				return
+			}
+			return nil, err
+		}
+		lines = append(lines, line)
+	}
 	return
 }

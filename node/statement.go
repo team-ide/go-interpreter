@@ -38,6 +38,73 @@ type ImportStatement struct {
 	Import string
 }
 
+// IncludeStatement 导入
+type IncludeStatement struct {
+	From    int
+	To      int
+	Include string
+}
+
+func (*IncludeStatement) isStatement()     {}
+func (this_ *IncludeStatement) Start() int { return this_.From }
+func (this_ *IncludeStatement) End() int   { return this_.To }
+
+// NamespaceStatement 导入
+type NamespaceStatement struct {
+	From      int
+	To        int
+	Language  string
+	Namespace string
+}
+
+func (*NamespaceStatement) isStatement()     {}
+func (this_ *NamespaceStatement) Start() int { return this_.From }
+func (this_ *NamespaceStatement) End() int   { return this_.To }
+
+// ExceptionStatement 导入
+type ExceptionStatement struct {
+	From int
+	To   int
+	Name string
+}
+
+func (*ExceptionStatement) isStatement()     {}
+func (this_ *ExceptionStatement) Start() int { return this_.From }
+func (this_ *ExceptionStatement) End() int   { return this_.To }
+
+// StructStatement 导入
+type StructStatement struct {
+	From int
+	To   int
+	Name string
+}
+
+func (*StructStatement) isStatement()     {}
+func (this_ *StructStatement) Start() int { return this_.From }
+func (this_ *StructStatement) End() int   { return this_.To }
+
+// EnumStatement 导入
+type EnumStatement struct {
+	From int
+	To   int
+	Name string
+}
+
+func (*EnumStatement) isStatement()     {}
+func (this_ *EnumStatement) Start() int { return this_.From }
+func (this_ *EnumStatement) End() int   { return this_.To }
+
+// ServiceStatement 导入
+type ServiceStatement struct {
+	From int
+	To   int
+	Name string
+}
+
+func (*ServiceStatement) isStatement()     {}
+func (this_ *ServiceStatement) Start() int { return this_.From }
+func (this_ *ServiceStatement) End() int   { return this_.To }
+
 // BranchStatement branch语句
 type BranchStatement struct {
 	Idx    int
