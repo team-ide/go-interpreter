@@ -16,14 +16,10 @@ func (this_ *Parser) parseIncludeStatement() *node.IncludeStatement {
 	toIdx := this_.Idx
 
 	inc := ""
-	for {
-		if this_.Token == token.String {
-			inc = string(this_.ParsedLiteral)
-			toIdx += len(this_.Literal)
-			this_.ExpectAndNext("parseIncludeStatement", token.String)
-		} else {
-			break
-		}
+	if this_.Token == token.String {
+		inc = string(this_.ParsedLiteral)
+		toIdx += len(this_.Literal)
+		this_.ExpectAndNext("parseIncludeStatement", token.String)
 	}
 	res.Include = inc
 	res.To = toIdx
@@ -39,36 +35,53 @@ func (this_ *Parser) parseNamespaceStatement() *node.NamespaceStatement {
 	res := &node.NamespaceStatement{
 		From: idx,
 	}
-	toIdx := this_.Idx
 
 	if this_.Token == token.Identifier {
 		identifier := this_.ParseIdentifier()
 		res.Language = string(identifier.Name)
 	}
+	toIdx := this_.Idx
 	namespace := ""
 	for {
 		if this_.Token == token.Identifier {
 			identifier := this_.ParseIdentifier()
 			namespace += string(identifier.Name)
-			continue
+			if this_.Token != token.Period {
+				break
+			}
+		} else if this_.Token == token.Service {
+			namespace += "service"
+			this_.Next()
+			if this_.Token != token.Period {
+				break
+			}
+		} else if this_.Token == token.Struct {
+			namespace += "struct"
+			this_.Next()
+			if this_.Token != token.Period {
+				break
+			}
+		} else if this_.Token == token.Enum {
+			namespace += "enum"
+			this_.Next()
+			if this_.Token != token.Period {
+				break
+			}
+		} else if this_.Token == token.Exception {
+			namespace += "exception"
+			this_.Next()
+			if this_.Token != token.Period {
+				break
+			}
 		} else if this_.Token == token.Period {
 			namespace += "."
 			this_.Next()
-			continue
 		} else {
-			namespace += this_.Literal
-			s := this_.ImplicitRead()
-			if s == '\n' || s == ';' {
-				toIdx = this_.Idx
-				this_.Next()
-				this_.Next()
-				break
-			}
-			this_.Next()
+			break
 		}
 	}
 	res.Namespace = namespace
-	res.To = toIdx
+	res.To = toIdx + len(namespace)
 	fmt.Println("parseNamespaceStatement ", res, ",Next token:", this_.Token)
 
 	return res
