@@ -1,7 +1,6 @@
 package thrift
 
 import (
-	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"testing"
 )
@@ -749,9 +748,11 @@ service LoginService {
 
 func TestThrift(t *testing.T) {
 	tree, err := Parse(thriftCode)
-	if err != nil {
-		fmt.Println(err.Error())
+	if tree != nil {
+		node.OutTree(thriftCode, tree)
 	}
-	node.OutTree(thriftCode, tree)
+	if err != nil {
+		panic(err)
+	}
 
 }

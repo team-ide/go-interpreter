@@ -1,7 +1,6 @@
 package java
 
 import (
-	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"testing"
 )
@@ -277,9 +276,11 @@ public class AllJavaKeywords {
 
 func TestJava(t *testing.T) {
 	tree, err := Parse(javaCode)
-	if err != nil {
-		fmt.Println(err.Error())
+	if tree != nil {
+		node.OutTree(javaCode, tree)
 	}
-	node.OutTree(javaCode, tree)
+	if err != nil {
+		panic(err)
+	}
 
 }

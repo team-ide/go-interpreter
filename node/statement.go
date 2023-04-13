@@ -102,7 +102,7 @@ type ServiceStatement struct {
 	From    int
 	To      int
 	Name    string
-	Methods []*IFaceDefinition
+	Methods []*IFaceMethodDefinition
 }
 
 func (*ServiceStatement) isStatement()     {}

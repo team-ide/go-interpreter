@@ -171,7 +171,7 @@ func (this_ *Parser) parseServiceStatement() *node.ServiceStatement {
 			this_.Next()
 			continue
 		}
-		method := this_.parseIFaceDefinition()
+		method := this_.parseIFaceMethodDefinition()
 		res.Methods = append(res.Methods, method)
 	}
 	res.To = this_.Idx
@@ -183,13 +183,13 @@ func (this_ *Parser) parseServiceStatement() *node.ServiceStatement {
 	return res
 }
 
-func (this_ *Parser) parseIFaceDefinition() *node.IFaceDefinition {
+func (this_ *Parser) parseIFaceMethodDefinition() *node.IFaceMethodDefinition {
 	idx := this_.Idx
 
-	res := &node.IFaceDefinition{
+	res := &node.IFaceMethodDefinition{
 		From: idx,
 	}
-	fmt.Println("parseIFaceDefinition token:", this_.Token)
+	//fmt.Println("parseIFaceDefinition token:", this_.Token)
 
 	str, keyName, value, tkn := this_.parseFieldName()
 	if str == "" && keyName == "" && tkn == "" {
@@ -352,7 +352,7 @@ func (this_ *Parser) parseFieldName() (string, node.String, node.Expression, tok
 		}
 	}
 	if this_.Token == token.Period {
-		fmt.Println("parseFieldName Period")
+		//fmt.Println("parseFieldName Period")
 		this_.Next()
 		this_.parseFieldName()
 	}

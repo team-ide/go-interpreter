@@ -8,13 +8,16 @@ import (
 )
 
 func OutTree(code string, tree *Tree) {
+	fmt.Println("-------------------out code tree start-------------------------")
 	for _, one := range tree.Children {
+		fmt.Println("-----------------------out code tree one start---------------------")
 		bs, _ := json.Marshal(one)
 		fmt.Println("tree one type:", reflect.TypeOf(one).String(), "start:", one.Start()-1, ",end:", one.End()-1, ",json:", string(bs))
 		fmt.Println(code[one.Start():one.End()])
 		outSub(code, 1, one)
-		fmt.Println("--------------------------------------------")
+		fmt.Println("-----------------------out code tree one end---------------------")
 	}
+	fmt.Println("-------------------out code tree end-------------------------")
 }
 
 func outSub(code string, leven int, one interface{}) {

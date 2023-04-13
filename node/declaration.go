@@ -25,8 +25,8 @@ type FieldDefinition struct {
 	Static      bool
 }
 
-// IFaceDefinition 字段定义
-type IFaceDefinition struct {
+// IFaceMethodDefinition 字段定义
+type IFaceMethodDefinition struct {
 	From   int
 	To     int
 	Return Expression
@@ -34,10 +34,10 @@ type IFaceDefinition struct {
 	Params []*FieldDefinition
 }
 
-func (*IFaceDefinition) isExpression()    {}
-func (*IFaceDefinition) isDefinition()    {}
-func (this_ *IFaceDefinition) Start() int { return this_.From }
-func (this_ *IFaceDefinition) End() int   { return this_.To }
+func (*IFaceMethodDefinition) isExpression()    {}
+func (*IFaceMethodDefinition) isDefinition()    {}
+func (this_ *IFaceMethodDefinition) Start() int { return this_.From }
+func (this_ *IFaceMethodDefinition) End() int   { return this_.To }
 
 // PropertyKind 属性类型
 type PropertyKind string
