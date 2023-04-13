@@ -63,9 +63,10 @@ func (this_ *NamespaceStatement) End() int   { return this_.To }
 
 // ExceptionStatement 导入
 type ExceptionStatement struct {
-	From int
-	To   int
-	Name string
+	From   int
+	To     int
+	Name   string
+	Fields []*FieldDefinition
 }
 
 func (*ExceptionStatement) isStatement()     {}
@@ -74,9 +75,10 @@ func (this_ *ExceptionStatement) End() int   { return this_.To }
 
 // StructStatement 导入
 type StructStatement struct {
-	From int
-	To   int
-	Name string
+	From   int
+	To     int
+	Name   string
+	Fields []*FieldDefinition
 }
 
 func (*StructStatement) isStatement()     {}
@@ -85,9 +87,10 @@ func (this_ *StructStatement) End() int   { return this_.To }
 
 // EnumStatement 导入
 type EnumStatement struct {
-	From int
-	To   int
-	Name string
+	From   int
+	To     int
+	Name   string
+	Fields []*FieldDefinition
 }
 
 func (*EnumStatement) isStatement()     {}
@@ -96,9 +99,10 @@ func (this_ *EnumStatement) End() int   { return this_.To }
 
 // ServiceStatement 导入
 type ServiceStatement struct {
-	From int
-	To   int
-	Name string
+	From    int
+	To      int
+	Name    string
+	Methods []*IFaceDefinition
 }
 
 func (*ServiceStatement) isStatement()     {}

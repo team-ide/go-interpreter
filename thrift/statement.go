@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
+	"strconv"
 )
 
 func (this_ *Parser) parseIncludeStatement() *node.IncludeStatement {
@@ -43,39 +44,16 @@ func (this_ *Parser) parseNamespaceStatement() *node.NamespaceStatement {
 	toIdx := this_.Idx
 	namespace := ""
 	for {
-		if this_.Token == token.Identifier {
-			identifier := this_.ParseIdentifier()
-			namespace += string(identifier.Name)
-			if this_.Token != token.Period {
-				break
-			}
-		} else if this_.Token == token.Service {
-			namespace += "service"
-			this_.Next()
-			if this_.Token != token.Period {
-				break
-			}
-		} else if this_.Token == token.Struct {
-			namespace += "struct"
-			this_.Next()
-			if this_.Token != token.Period {
-				break
-			}
-		} else if this_.Token == token.Enum {
-			namespace += "enum"
-			this_.Next()
-			if this_.Token != token.Period {
-				break
-			}
-		} else if this_.Token == token.Exception {
-			namespace += "exception"
-			this_.Next()
-			if this_.Token != token.Period {
-				break
-			}
-		} else if this_.Token == token.Period {
+		if this_.Token == token.Period {
 			namespace += "."
 			this_.Next()
+			continue
+		} else if this_.ParsedLiteral != "" {
+			namespace += string(this_.ParsedLiteral)
+			this_.Next()
+			if this_.Token != token.Period {
+				break
+			}
 		} else {
 			break
 		}
@@ -100,7 +78,12 @@ func (this_ *Parser) parseStructStatement() *node.StructStatement {
 		res.Name = string(identifier.Name)
 	}
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
-		this_.Next()
+		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon {
+			this_.Next()
+			continue
+		}
+		field := this_.parseFieldDefinition()
+		res.Fields = append(res.Fields, field)
 	}
 	res.To = this_.Idx
 	if this_.Token == token.RightBrace {
@@ -125,7 +108,12 @@ func (this_ *Parser) parseExceptionStatement() *node.ExceptionStatement {
 		res.Name = string(identifier.Name)
 	}
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
-		this_.Next()
+		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon {
+			this_.Next()
+			continue
+		}
+		field := this_.parseFieldDefinition()
+		res.Fields = append(res.Fields, field)
 	}
 	res.To = this_.Idx
 	if this_.Token == token.RightBrace {
@@ -150,7 +138,12 @@ func (this_ *Parser) parseEnumStatement() *node.EnumStatement {
 		res.Name = string(identifier.Name)
 	}
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
-		this_.Next()
+		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
+			this_.Next()
+			continue
+		}
+		field := this_.parseEnumFieldDefinition()
+		res.Fields = append(res.Fields, field)
 	}
 	res.To = this_.Idx
 	if this_.Token == token.RightBrace {
@@ -174,7 +167,12 @@ func (this_ *Parser) parseServiceStatement() *node.ServiceStatement {
 		res.Name = string(identifier.Name)
 	}
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
-		this_.Next()
+		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
+			this_.Next()
+			continue
+		}
+		method := this_.parseIFaceDefinition()
+		res.Methods = append(res.Methods, method)
 	}
 	res.To = this_.Idx
 	if this_.Token == token.RightBrace {
@@ -183,4 +181,180 @@ func (this_ *Parser) parseServiceStatement() *node.ServiceStatement {
 	this_.ExpectAndNext("parseServiceStatement", token.RightBrace)
 	fmt.Println("parseServiceStatement ", res, ",Next token:", this_.Token)
 	return res
+}
+
+func (this_ *Parser) parseIFaceDefinition() *node.IFaceDefinition {
+	idx := this_.Idx
+
+	res := &node.IFaceDefinition{
+		From: idx,
+	}
+	fmt.Println("parseIFaceDefinition token:", this_.Token)
+
+	str, keyName, value, tkn := this_.parseFieldName()
+	if str == "" && keyName == "" && tkn == "" {
+
+	}
+	res.Return = value
+
+	if this_.Token == token.Less {
+		this_.Next()
+		str, keyName, value, tkn = this_.parseFieldName()
+		//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+		if this_.Token == token.Comma {
+			this_.Next()
+			str, keyName, value, tkn = this_.parseFieldName()
+			//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+		}
+		if this_.Token == token.Greater {
+			this_.Next()
+		}
+	}
+
+	str, keyName, value, tkn = this_.parseFieldName()
+	res.Name = value
+
+	for this_.Token != token.RightParenthesis && this_.Token != token.Eof {
+
+		if this_.Token == token.LeftParenthesis || this_.Token == token.Semicolon || this_.Token == token.Comma {
+			this_.Next()
+			continue
+		}
+
+		field := this_.parseFieldDefinition()
+		res.Params = append(res.Params, field)
+	}
+
+	res.To = this_.Idx
+	if this_.Token == token.RightParenthesis {
+		res.To = this_.ExpectAndNext("parseIFaceDefinition", token.RightParenthesis) + 1
+	}
+	return res
+}
+
+func (this_ *Parser) parseFieldDefinition() *node.FieldDefinition {
+	idx := this_.Idx
+
+	res := &node.FieldDefinition{
+		Idx: idx,
+	}
+	num := ""
+	//fmt.Println("parseFieldDefinition token:", this_.Token)
+	for {
+		if this_.Token == token.Colon {
+			this_.Next()
+			break
+		} else if this_.ParsedLiteral != "" {
+			num += string(this_.ParsedLiteral)
+			this_.Next()
+		} else if this_.Literal != "" {
+			num += this_.Literal
+			this_.Next()
+		} else {
+			break
+		}
+	}
+	if this_.Token == token.Optional {
+		this_.Next()
+	}
+	str, keyName, value, tkn := this_.parseFieldName()
+	if str == "" && keyName == "" && tkn == "" {
+
+	}
+	res.Type = value
+	res.FieldNum, _ = strconv.Atoi(num)
+	//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+	if this_.Token == token.Less {
+		this_.Next()
+		str, keyName, value, tkn = this_.parseFieldName()
+		//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+		if this_.Token == token.Comma {
+			this_.Next()
+			str, keyName, value, tkn = this_.parseFieldName()
+			//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+		}
+		if this_.Token == token.Greater {
+			this_.Next()
+		}
+	}
+	str, keyName, value, tkn = this_.parseFieldName()
+	res.Key = value
+	//fmt.Println("parseFieldDefinition name ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+	if this_.Token == token.Assign {
+		this_.Next()
+		str, keyName, value, tkn = this_.parseFieldName()
+		res.Initializer = value
+		//fmt.Println("parseFieldDefinition value ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+	}
+	return res
+}
+
+func (this_ *Parser) parseEnumFieldDefinition() *node.FieldDefinition {
+	idx := this_.Idx
+
+	res := &node.FieldDefinition{
+		Idx: idx,
+	}
+	str, keyName, value, tkn := this_.parseFieldName()
+	if str == "" && keyName == "" && tkn == "" {
+
+	}
+	res.Key = value
+	//fmt.Println("parseFieldDefinition name ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+	if this_.Token == token.Assign {
+		this_.Next()
+		str, keyName, value, tkn = this_.parseFieldName()
+		res.Initializer = value
+		//fmt.Println("parseFieldDefinition value ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+	}
+	return res
+}
+
+func (this_ *Parser) parseFieldName() (string, node.String, node.Expression, token.Token) {
+	idx, tkn, literal, parsedLiteral := this_.Idx, this_.Token, this_.Literal, this_.ParsedLiteral
+	var value node.Expression
+	this_.Next()
+	switch tkn {
+	case token.Identifier, token.String, token.Keyword, token.EscapedReservedWord:
+		value = &node.StringLiteral{
+			Idx:     idx,
+			Literal: literal,
+			Value:   parsedLiteral,
+		}
+	case token.Number:
+		num, err := this_.ParseNumberLiteral(literal)
+		if err != nil {
+			_ = this_.Error("parseObjectPropertyKey parseNumberLiteral literal:"+string(literal), idx, err.Error())
+		} else {
+			value = &node.NumberLiteral{
+				Idx:     idx,
+				Literal: literal,
+				Value:   num,
+			}
+		}
+	case token.PrivateIdentifier:
+		value = &node.PrivateIdentifier{
+			Identifier: node.Identifier{
+				Idx:  idx,
+				Name: parsedLiteral,
+			},
+		}
+	default:
+		// null, false, class, etc.
+		if this_.IsIdentifierToken(tkn) {
+			value = &node.StringLiteral{
+				Idx:     idx,
+				Literal: literal,
+				Value:   node.String(literal),
+			}
+		} else {
+			_ = this_.ErrorUnexpectedToken("parseObjectPropertyKey not IsIdentifierToken:"+tkn.String(), tkn)
+		}
+	}
+	if this_.Token == token.Period {
+		fmt.Println("parseFieldName Period")
+		this_.Next()
+		this_.parseFieldName()
+	}
+	return literal, parsedLiteral, value, tkn
 }

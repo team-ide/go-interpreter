@@ -172,5 +172,6 @@ const (
 	Namespace Token = "namespace" // namespace
 	Exception Token = "exception" // exception
 	Service   Token = "service"   // service
+	Optional  Token = "optional"  // optional
 
 )

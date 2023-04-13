@@ -17,11 +17,27 @@ type ClassElement interface {
 // FieldDefinition 字段定义
 type FieldDefinition struct {
 	Idx         int
+	FieldNum    int
+	Type        Expression
 	Key         Expression
 	Initializer Expression
 	Computed    bool
 	Static      bool
 }
+
+// IFaceDefinition 字段定义
+type IFaceDefinition struct {
+	From   int
+	To     int
+	Return Expression
+	Name   Expression
+	Params []*FieldDefinition
+}
+
+func (*IFaceDefinition) isExpression()    {}
+func (*IFaceDefinition) isDefinition()    {}
+func (this_ *IFaceDefinition) Start() int { return this_.From }
+func (this_ *IFaceDefinition) End() int   { return this_.To }
 
 // PropertyKind 属性类型
 type PropertyKind string
@@ -189,7 +205,10 @@ func (this_ *FieldDefinition) End() int {
 	if this_.Initializer != nil {
 		return this_.Initializer.End()
 	}
-	return this_.Key.End()
+	if this_.Key != nil {
+		return this_.Key.End()
+	}
+	return this_.Idx
 }
 
 func (this_ *MethodDefinition) End() int {

@@ -26,6 +26,9 @@ var (
 		"service": {
 			Token: token.Service,
 		},
+		"optional": {
+			Token: token.Optional,
+		},
 	}
 
 	IdentifierTokens = []token.Token{
@@ -37,6 +40,7 @@ var (
 		token.Exception,
 		token.Enum,
 		token.Service,
+		token.Optional,
 	}
 
 	UnreservedWordTokens = []token.Token{}
