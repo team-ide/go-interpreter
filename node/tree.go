@@ -4,6 +4,11 @@ package node
 type Tree struct {
 	Children        []Statement
 	DeclarationList []*VariableDeclaration
+	OffsetPosition  map[int]*Position
+}
+
+func (this_ *Tree) GetPosition(offset int) *Position {
+	return this_.OffsetPosition[offset]
 }
 
 func (this_ *Tree) Start() int {

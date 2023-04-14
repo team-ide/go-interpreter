@@ -28,6 +28,7 @@ func (this_ *Parser) parseTree() (tree *node.Tree) {
 	tree = &node.Tree{
 		Children:        statements,
 		DeclarationList: this_.Scope.DeclarationList,
+		OffsetPosition:  this_.OffsetPosition,
 	}
 	//this_.file.SetSourceMap(this_.parseSourceMap())
 	return
@@ -74,13 +75,6 @@ func (this_ *Parser) ParseIdentifier() *node.Identifier {
 		Name: literal,
 		Idx:  idx,
 	}
-}
-
-func (this_ *Parser) Position(offset int) (position *node.Position) {
-	position = &node.Position{
-		Idx: offset - this_.Base,
-	}
-	return
 }
 
 func (this_ *Parser) Next() {

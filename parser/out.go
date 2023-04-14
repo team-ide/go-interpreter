@@ -1,26 +1,30 @@
-package node
+package parser
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/team-ide/go-interpreter/node"
 	"reflect"
 	"strings"
 )
 
-func OutTree(code string, tree *Tree) {
+func toJSON(obj interface{}) string {
+	bs, _ := json.Marshal(obj)
+	return string(bs)
+}
+func OutTree(code string, tree *node.Tree) {
 	fmt.Println("-------------------out code tree start-------------------------")
 	for _, one := range tree.Children {
 		fmt.Println("-----------------------out code tree one start---------------------")
-		bs, _ := json.Marshal(one)
-		fmt.Println("tree one type:", reflect.TypeOf(one).String(), "start:", one.Start()-1, ",end:", one.End()-1, ",json:", string(bs))
+		fmt.Println("tree one type:", reflect.TypeOf(one).String(), "start:", toJSON(tree.GetPosition(one.Start())), ",end:", toJSON(tree.GetPosition(one.End())), ",json:", toJSON(one))
 		fmt.Println(code[one.Start():one.End()])
-		outSub(code, 1, one)
+		outSub(tree, code, 1, one)
 		fmt.Println("-----------------------out code tree one end---------------------")
 	}
 	fmt.Println("-------------------out code tree end-------------------------")
 }
 
-func outSub(code string, leven int, one interface{}) {
+func outSub(tree *node.Tree, code string, leven int, one interface{}) {
 
 	// 获取结构体实例的反射类型对象
 	oneVOf := reflect.ValueOf(one).Elem()
@@ -39,7 +43,7 @@ func outSub(code string, leven int, one interface{}) {
 			size := fieldV.Len()
 			for n := 0; n < size; n++ {
 				iV := fieldV.Index(n)
-				outOne(code, fmt.Sprintf(fieldT.Name+"-%d", n), leven, iV.Interface())
+				outOne(tree, code, fmt.Sprintf(fieldT.Name+"-%d", n), leven, iV.Interface())
 			}
 		default:
 			if fieldV.Kind() == reflect.Ptr {
@@ -47,26 +51,26 @@ func outSub(code string, leven int, one interface{}) {
 					continue
 				}
 			}
-			outOne(code, fieldT.Name, leven, v)
+			outOne(tree, code, fieldT.Name, leven, v)
 		}
 	}
 }
 
-func outOne(code string, name string, leven int, one interface{}) {
+func outOne(tree *node.Tree, code string, name string, leven int, one interface{}) {
 	if one == nil {
 		return
 	}
-	var n Node = nil
+	var n node.Node = nil
 
-	s, ok := one.(Statement)
+	s, ok := one.(node.Statement)
 	if ok && s != nil {
 		n = s
 	}
-	e, ok := one.(Expression)
+	e, ok := one.(node.Expression)
 	if ok && e != nil {
 		n = e
 	}
-	c, ok := one.(ClassElement)
+	c, ok := one.(node.ClassElement)
 	if ok && c != nil {
 		n = c
 	}
@@ -75,12 +79,12 @@ func outOne(code string, name string, leven int, one interface{}) {
 		for i := 0; i < leven; i++ {
 			bef += "\t"
 		}
-		bs, _ := json.Marshal(one)
 		fmt.Print(bef+"field:", name, ",type:", reflect.TypeOf(n).String())
-		fmt.Println(",start:", n.Start(), ",end:", n.End(), ",json:", string(bs))
+		fmt.Println(",start:", toJSON(tree.GetPosition(n.Start())), ",end:", toJSON(tree.GetPosition(n.End())), ",json:", toJSON(one))
 		str := code[n.Start():n.End()]
+		str = strings.ReplaceAll(str, "\r\n", "\n")
 		str = strings.ReplaceAll(str, "\n", "\n"+bef)
 		fmt.Println(bef + str)
-		outSub(code, leven+1, one)
+		outSub(tree, code, leven+1, one)
 	}
 }

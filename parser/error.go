@@ -13,16 +13,14 @@ const (
 
 func (this_ *Parser) Error(from string, place int, msg string) *Error {
 	idx := place
-	start := place
-	end := idx
-	if start >= 10 {
-		start = start - 10
+	err := &Error{msg: "from:" + from + ",msg:" + msg, idx: idx}
+	po := this_.GetPosition(place)
+	if po != nil {
+		err.line = po.Line
+		err.column = po.Column
 	}
-	if end > len(this_.Str)+10 {
-		end = end + 10
-	}
-	str := this_.Slice(start, end)
-	this_.Errors.Add(&Error{msg: "from:" + from + ",msg:" + msg, idx: idx, str: str})
+
+	this_.Errors.Add(err)
 	return (this_.Errors)[len(this_.Errors)-1]
 }
 func (this_ *Parser) ErrorUnexpected(from string, offset int, chr rune) error {
@@ -62,7 +60,6 @@ type Error struct {
 	line     int
 	column   int
 	msg      string
-	str      string
 }
 
 // FIXME Should this be "SyntaxError"?
@@ -72,12 +69,11 @@ func (this_ *Error) Error() string {
 	if filename == "" {
 		filename = "(anonymous)"
 	}
-	return fmt.Sprintf("%s: Idx:%d Line %d:%d Text:%s %s",
+	return fmt.Sprintf("%s: Idx:%d Line %d:%d %s",
 		filename,
 		this_.idx,
 		this_.line,
 		this_.column,
-		this_.str,
 		this_.msg,
 	)
 }

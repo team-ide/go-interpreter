@@ -1,7 +1,7 @@
 package javascript
 
 import (
-	"github.com/team-ide/go-interpreter/node"
+	"github.com/team-ide/go-interpreter/parser"
 	"testing"
 )
 
@@ -290,7 +290,7 @@ var rect = new Rectangle( );
 func TestJavaScript(t *testing.T) {
 	tree, err := Parse(javaScriptCode)
 	if tree != nil {
-		node.OutTree(javaScriptCode, tree)
+		parser.OutTree(javaScriptCode, tree)
 	}
 	if err != nil {
 		panic(err)

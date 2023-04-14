@@ -9,9 +9,10 @@ import (
 func New(src string) (p *Parser) {
 	p = &Parser{
 		//Chr:    ' ',
-		Str:    src,
-		Length: len(src),
-		Base:   0,
+		Str:            src,
+		Length:         len(src),
+		Base:           0,
+		OffsetPosition: map[int]*node.Position{},
 	}
 	return
 }
@@ -97,6 +98,10 @@ type Parser struct {
 	BlankSpaceTo   int
 
 	Modifiers []*Modifier // 修饰符 临时存放
+
+	OffsetPosition map[int]*node.Position
+	Line           int
+	Column         int
 }
 
 type Modifier struct {
@@ -125,9 +130,22 @@ func (this_ *Parser) ImplicitRead() rune {
 	return -1
 }
 
+func (this_ *Parser) GetPosition(offset int) *node.Position {
+	return this_.OffsetPosition[offset]
+}
+
 // Read 读取下一个 将重新设定偏移量
 func (this_ *Parser) Read() {
 	if this_.Offset < this_.Length {
+
+		// 当前索引
+		position := &node.Position{
+			Line:   this_.Line + 1,
+			Column: this_.Column + 1,
+			Offset: this_.Offset,
+		}
+		this_.OffsetPosition[this_.Offset] = position
+
 		this_.ChrOffset = this_.Offset
 		chr, width := rune(this_.Str[this_.Offset]), 1
 		// 检查 编码 是否 是 ASCII
@@ -136,6 +154,13 @@ func (this_ *Parser) Read() {
 			if chr == utf8.RuneError && width == 1 {
 				_ = this_.Error("read char utf8.RuneError chr:"+string(chr), this_.ChrOffset, "Invalid UTF-8 character")
 			}
+		}
+		// 如果是换行
+		if chr == '\n' {
+			this_.Line++
+			this_.Column = 0
+		} else {
+			this_.Column += width
 		}
 		this_.Offset += width
 		this_.Chr = chr
