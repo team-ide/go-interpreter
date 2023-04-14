@@ -89,20 +89,20 @@ func (this_ *IFaceMethodDefinition) End() int    { return this_.To }
 
 // FieldDefinition 字段定义
 type FieldDefinition struct {
-	Idx         int
-	FieldNum    int
-	Type        node.Expression
-	Key         node.Expression
-	Initializer node.Expression
-	Computed    bool
-	Static      bool
+	Idx      int
+	FieldNum int
+	Type     *node.StringLiteral
+	Key      *node.StringLiteral
+	Value    *node.StringLiteral
+	Computed bool
+	Static   bool
 }
 
 func (*FieldDefinition) IsClassElementNode() {}
 func (this_ *FieldDefinition) Start() int    { return this_.Idx }
 func (this_ *FieldDefinition) End() int {
-	if this_.Initializer != nil {
-		return this_.Initializer.End()
+	if this_.Value != nil {
+		return this_.Value.End()
 	}
 	if this_.Key != nil {
 		return this_.Key.End()
