@@ -335,7 +335,7 @@ func (this_ *Parser) parseClass(declaration bool) *node.ClassLiteral {
 func (this_ *Parser) parseDebuggerStatement() node.Statement {
 	idx := this_.ExpectAndNext("parseDebuggerStatement", token.Debugger)
 
-	res := &node.DebuggerStatement{
+	res := &DebuggerStatement{
 		Debugger: idx,
 	}
 
@@ -778,10 +778,9 @@ func (this_ *Parser) parseBreakStatement() node.Statement {
 		if !this_.Scope.InIteration && !this_.Scope.InSwitch {
 			goto illegal
 		}
-		return &node.BranchStatement{
-			Idx:    idx,
-			EndIdx: this_.Idx + 1,
-			Token:  token.Break,
+		return &node.BreakStatement{
+			From: idx,
+			To:   this_.Idx + 1,
 		}
 	}
 
@@ -793,11 +792,10 @@ func (this_ *Parser) parseBreakStatement() node.Statement {
 			return &node.BadStatement{From: idx, To: identifier.End()}
 		}
 		this_.Semicolon("parseBreakStatement")
-		return &node.BranchStatement{
-			Idx:    idx,
-			EndIdx: identifier.End(),
-			Token:  token.Break,
-			Label:  identifier,
+		return &node.BreakStatement{
+			From:  idx,
+			To:    identifier.End(),
+			Label: identifier,
 		}
 	}
 
@@ -822,10 +820,9 @@ func (this_ *Parser) parseContinueStatement() node.Statement {
 		if !this_.Scope.InIteration {
 			goto illegal
 		}
-		return &node.BranchStatement{
-			Idx:    idx,
-			EndIdx: this_.Idx + 1,
-			Token:  token.Continue,
+		return &node.ContinueStatement{
+			From: idx,
+			To:   this_.Idx + 1,
 		}
 	}
 
@@ -840,11 +837,10 @@ func (this_ *Parser) parseContinueStatement() node.Statement {
 			goto illegal
 		}
 		this_.Semicolon("parseContinueStatement")
-		return &node.BranchStatement{
-			Idx:    idx,
-			EndIdx: identifier.End(),
-			Token:  token.Continue,
-			Label:  identifier,
+		return &node.ContinueStatement{
+			From:  idx,
+			To:    identifier.End(),
+			Label: identifier,
 		}
 	}
 

@@ -72,7 +72,7 @@ func (this_ *Parser) parsePrimaryExpression() node.Expression {
 		return this_.parseTemplateLiteral(false)
 	case token.This:
 		this_.Next()
-		return &node.ThisExpression{
+		return &node.ThIsExpressionNode{
 			Idx: idx,
 		}
 	case token.Super:

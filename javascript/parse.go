@@ -105,7 +105,7 @@ func (this_ *Parser) parseStatement() node.Statement {
 		this_.Scope.AllowLet = false
 		statement := this_.parseStatement()
 		this_.Scope.Labels = this_.Scope.Labels[:len(this_.Scope.Labels)-1] // Pop the label
-		return &node.LabelledStatement{
+		return &LabelledStatement{
 			Label:     identifier,
 			Colon:     colon,
 			Statement: statement,

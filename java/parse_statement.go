@@ -6,11 +6,11 @@ import (
 	"github.com/team-ide/go-interpreter/token"
 )
 
-func (this_ *Parser) parseImportStatement() *node.ImportStatement {
+func (this_ *Parser) parseImportStatement() *ImportStatement {
 
 	idx := this_.ExpectAndNext("parseImportStatement", token.Import)
 
-	res := &node.ImportStatement{
+	res := &ImportStatement{
 		From: idx,
 	}
 

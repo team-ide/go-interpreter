@@ -7,11 +7,11 @@ import (
 	"strconv"
 )
 
-func (this_ *Parser) parseIncludeStatement() *node.IncludeStatement {
+func (this_ *Parser) parseIncludeStatement() *IncludeStatement {
 
 	idx := this_.ExpectAndNext("parseIncludeStatement", token.Include)
 
-	res := &node.IncludeStatement{
+	res := &IncludeStatement{
 		From: idx,
 	}
 	toIdx := this_.Idx
@@ -29,11 +29,11 @@ func (this_ *Parser) parseIncludeStatement() *node.IncludeStatement {
 	return res
 }
 
-func (this_ *Parser) parseNamespaceStatement() *node.NamespaceStatement {
+func (this_ *Parser) parseNamespaceStatement() *NamespaceStatement {
 
 	idx := this_.ExpectAndNext("parseNamespaceStatement", token.Namespace)
 
-	res := &node.NamespaceStatement{
+	res := &NamespaceStatement{
 		From: idx,
 	}
 
@@ -65,11 +65,11 @@ func (this_ *Parser) parseNamespaceStatement() *node.NamespaceStatement {
 	return res
 }
 
-func (this_ *Parser) parseStructStatement() *node.StructStatement {
+func (this_ *Parser) parseStructStatement() *StructStatement {
 
 	idx := this_.ExpectAndNext("parseStructStatement", token.Struct)
 
-	res := &node.StructStatement{
+	res := &StructStatement{
 		From: idx,
 	}
 
@@ -95,11 +95,11 @@ func (this_ *Parser) parseStructStatement() *node.StructStatement {
 	return res
 }
 
-func (this_ *Parser) parseExceptionStatement() *node.ExceptionStatement {
+func (this_ *Parser) parseExceptionStatement() *ExceptionStatement {
 
 	idx := this_.ExpectAndNext("parseExceptionStatement", token.Exception)
 
-	res := &node.ExceptionStatement{
+	res := &ExceptionStatement{
 		From: idx,
 	}
 
@@ -125,11 +125,11 @@ func (this_ *Parser) parseExceptionStatement() *node.ExceptionStatement {
 	return res
 }
 
-func (this_ *Parser) parseEnumStatement() *node.EnumStatement {
+func (this_ *Parser) parseEnumStatement() *EnumStatement {
 
 	idx := this_.ExpectAndNext("parseEnumStatement", token.Enum)
 
-	res := &node.EnumStatement{
+	res := &EnumStatement{
 		From: idx,
 	}
 
@@ -154,11 +154,11 @@ func (this_ *Parser) parseEnumStatement() *node.EnumStatement {
 	return res
 }
 
-func (this_ *Parser) parseServiceStatement() *node.ServiceStatement {
+func (this_ *Parser) parseServiceStatement() *ServiceStatement {
 
 	idx := this_.ExpectAndNext("parseServiceStatement", token.Service)
 
-	res := &node.ServiceStatement{
+	res := &ServiceStatement{
 		From: idx,
 	}
 
@@ -183,10 +183,10 @@ func (this_ *Parser) parseServiceStatement() *node.ServiceStatement {
 	return res
 }
 
-func (this_ *Parser) parseIFaceMethodDefinition() *node.IFaceMethodDefinition {
+func (this_ *Parser) parseIFaceMethodDefinition() *IFaceMethodDefinition {
 	idx := this_.Idx
 
-	res := &node.IFaceMethodDefinition{
+	res := &IFaceMethodDefinition{
 		From: idx,
 	}
 	//fmt.Println("parseIFaceDefinition token:", this_.Token)
@@ -232,10 +232,10 @@ func (this_ *Parser) parseIFaceMethodDefinition() *node.IFaceMethodDefinition {
 	return res
 }
 
-func (this_ *Parser) parseFieldDefinition() *node.FieldDefinition {
+func (this_ *Parser) parseFieldDefinition() *FieldDefinition {
 	idx := this_.Idx
 
-	res := &node.FieldDefinition{
+	res := &FieldDefinition{
 		Idx: idx,
 	}
 	num := ""
@@ -289,10 +289,10 @@ func (this_ *Parser) parseFieldDefinition() *node.FieldDefinition {
 	return res
 }
 
-func (this_ *Parser) parseEnumFieldDefinition() *node.FieldDefinition {
+func (this_ *Parser) parseEnumFieldDefinition() *FieldDefinition {
 	idx := this_.Idx
 
-	res := &node.FieldDefinition{
+	res := &FieldDefinition{
 		Idx: idx,
 	}
 	str, keyName, value, tkn := this_.parseFieldName()
