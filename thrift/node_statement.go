@@ -18,7 +18,7 @@ type NamespaceStatement struct {
 	From      int
 	To        int
 	Language  string
-	Namespace string
+	Namespace *node.ChainNameStatement
 }
 
 func (*NamespaceStatement) IsStatementNode() {}
@@ -27,10 +27,11 @@ func (this_ *NamespaceStatement) End() int   { return this_.To }
 
 // ExceptionStatement thrift 异常
 type ExceptionStatement struct {
-	From   int
-	To     int
-	Name   string
-	Fields []*FieldDefinition
+	From    int
+	To      int
+	Name    string
+	Extends *node.ChainNameStatement
+	Fields  []*FieldDefinition
 }
 
 func (*ExceptionStatement) IsStatementNode() {}
@@ -39,10 +40,11 @@ func (this_ *ExceptionStatement) End() int   { return this_.To }
 
 // StructStatement thrift 结构体
 type StructStatement struct {
-	From   int
-	To     int
-	Name   string
-	Fields []*FieldDefinition
+	From    int
+	To      int
+	Name    string
+	Extends *node.ChainNameStatement
+	Fields  []*FieldDefinition
 }
 
 func (*StructStatement) IsStatementNode() {}
@@ -54,6 +56,7 @@ type ServiceStatement struct {
 	From    int
 	To      int
 	Name    string
+	Extends *node.ChainNameStatement
 	Methods []*IFaceMethodDefinition
 }
 
@@ -63,10 +66,11 @@ func (this_ *ServiceStatement) End() int   { return this_.To }
 
 // EnumStatement 导入
 type EnumStatement struct {
-	From   int
-	To     int
-	Name   string
-	Fields []*FieldDefinition
+	From    int
+	To      int
+	Name    string
+	Extends *node.ChainNameStatement
+	Fields  []*FieldDefinition
 }
 
 func (*EnumStatement) IsStatementNode() {}

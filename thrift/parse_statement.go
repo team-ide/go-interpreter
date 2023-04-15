@@ -35,29 +35,11 @@ func (this_ *Parser) parseNamespaceStatement() *NamespaceStatement {
 		From: idx,
 	}
 
-	if this_.Token == token.Identifier {
-		identifier := this_.ParseIdentifier()
-		res.Language = string(identifier.Name)
-	}
-	toIdx := this_.Idx
-	namespace := ""
-	for {
-		if this_.Token == token.Period {
-			namespace += "."
-			this_.Next()
-			continue
-		} else if this_.ParsedLiteral != "" {
-			namespace += string(this_.ParsedLiteral)
-			this_.Next()
-			if this_.Token != token.Period {
-				break
-			}
-		} else {
-			break
-		}
-	}
-	res.Namespace = namespace
-	res.To = toIdx + len(namespace)
+	res.Language = this_.ParsedLiteral
+	this_.Next()
+
+	res.Namespace = this_.ParseChainNameStatement()
+	res.To = res.Namespace.To
 	//fmt.Println("parseNamespaceStatement ", res, ",Next token:", this_.Token)
 
 	return res
@@ -71,10 +53,18 @@ func (this_ *Parser) parseStructStatement() *StructStatement {
 		From: idx,
 	}
 
-	if this_.Token == token.Identifier {
-		identifier := this_.ParseIdentifier()
-		res.Name = string(identifier.Name)
+	res.Name = this_.ParsedLiteral
+	this_.Next()
+
+	if this_.Token == token.Extends {
+		this_.Next()
+		res.Extends = this_.ParseChainNameStatement()
 	}
+
+	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
+		this_.Next()
+	}
+
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
 		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
 			this_.Next()
@@ -101,10 +91,18 @@ func (this_ *Parser) parseExceptionStatement() *ExceptionStatement {
 		From: idx,
 	}
 
-	if this_.Token == token.Identifier {
-		identifier := this_.ParseIdentifier()
-		res.Name = string(identifier.Name)
+	res.Name = this_.ParsedLiteral
+	this_.Next()
+
+	if this_.Token == token.Extends {
+		this_.Next()
+		res.Extends = this_.ParseChainNameStatement()
 	}
+
+	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
+		this_.Next()
+	}
+
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
 		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
 			this_.Next()
@@ -131,10 +129,18 @@ func (this_ *Parser) parseEnumStatement() *EnumStatement {
 		From: idx,
 	}
 
-	if this_.Token == token.Identifier {
-		identifier := this_.ParseIdentifier()
-		res.Name = string(identifier.Name)
+	res.Name = this_.ParsedLiteral
+	this_.Next()
+
+	if this_.Token == token.Extends {
+		this_.Next()
+		res.Extends = this_.ParseChainNameStatement()
 	}
+
+	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
+		this_.Next()
+	}
+
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
 		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
 			this_.Next()
@@ -162,6 +168,12 @@ func (this_ *Parser) parseServiceStatement() *ServiceStatement {
 
 	res.Name = this_.ParsedLiteral
 	this_.Next()
+
+	if this_.Token == token.Extends {
+		this_.Next()
+		res.Extends = this_.ParseChainNameStatement()
+	}
+
 	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
 		this_.Next()
 	}

@@ -29,6 +29,9 @@ var (
 		"optional": {
 			Token: token.Optional,
 		},
+		"extends": {
+			Token: token.Extends,
+		},
 	}
 
 	IdentifierTokens = []token.Token{
@@ -41,6 +44,7 @@ var (
 		token.Enum,
 		token.Service,
 		token.Optional,
+		token.Extends,
 	}
 
 	UnreservedWordTokens = []token.Token{}

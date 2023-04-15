@@ -14,26 +14,9 @@ func (this_ *Parser) parseImportStatement() *ImportStatement {
 		From: idx,
 	}
 
-	imp := ""
-	for {
-		if this_.Token == token.Identifier {
-			identifier := this_.ParseIdentifier()
-			imp += string(identifier.Name)
-		} else if this_.Token == token.Period {
-			this_.Next()
-			imp += "."
-		} else if this_.Token == token.Multiply {
-			this_.Next()
-			imp += "*"
-		} else {
-			break
-		}
-	}
-	res.Import = imp
-	res.To = this_.Idx
-	if token.Semicolon == this_.Token {
-		res.To++
-	}
+	res.Import = this_.ParseChainNameStatement()
+	res.To = res.Import.To
+
 	this_.ExpectAndNext("parseImportStatement", token.Semicolon)
 	//fmt.Println("parseImportStatement ", "imp:", imp, ",Next token:", this_.Token)
 

@@ -44,6 +44,17 @@ func (*BlockStatement) IsConciseBodyNode() {}
 func (this_ *BlockStatement) Start() int   { return this_.LeftBrace }
 func (this_ *BlockStatement) End() int     { return this_.RightBrace + (1) }
 
+// ChainNameStatement 链式名称 如 x、x.xx、xx.xx.xxx
+type ChainNameStatement struct {
+	From  int
+	To    int
+	Names []string
+}
+
+func (*ChainNameStatement) IsStatementNode() {}
+func (this_ *ChainNameStatement) Start() int { return this_.From }
+func (this_ *ChainNameStatement) End() int   { return this_.To }
+
 // BreakStatement 跳出语句
 type BreakStatement struct {
 	From  int

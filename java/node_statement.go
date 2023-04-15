@@ -1,10 +1,12 @@
 package java
 
+import "github.com/team-ide/go-interpreter/node"
+
 // ImportStatement 导入
 type ImportStatement struct {
 	From   int
 	To     int
-	Import string
+	Import *node.ChainNameStatement
 }
 
 func (*ImportStatement) IsStatementNode() {}

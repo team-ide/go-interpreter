@@ -11,7 +11,7 @@ import (
 func TestThrift(t *testing.T) {
 	testFileCode("code.txt")
 
-	dir := `thrift`
+	dir := `C:\Workspaces\Code\linkdood\thrift`
 	fs, _ := os.ReadDir(dir)
 	for _, f := range fs {
 		if f.IsDir() {
