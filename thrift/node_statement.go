@@ -73,12 +73,40 @@ func (*EnumStatement) IsStatementNode() {}
 func (this_ *EnumStatement) Start() int { return this_.From }
 func (this_ *EnumStatement) End() int   { return this_.To }
 
+// FieldType 字段类型
+type FieldType interface {
+	node.Node
+	IsFieldTypeNode()
+}
+
+type FieldTypeName struct {
+	From         int
+	To           int
+	Name         string
+	GenericTypes []FieldType
+}
+
+func (*FieldTypeName) IsFieldTypeNode() {}
+func (this_ *FieldTypeName) Start() int { return this_.From }
+func (this_ *FieldTypeName) End() int   { return this_.To }
+
+type FieldTypeDot struct {
+	From         int
+	To           int
+	Names        []string
+	GenericTypes []FieldType
+}
+
+func (*FieldTypeDot) IsFieldTypeNode() {}
+func (this_ *FieldTypeDot) Start() int { return this_.From }
+func (this_ *FieldTypeDot) End() int   { return this_.To }
+
 // IFaceMethodDefinition 字段定义
 type IFaceMethodDefinition struct {
 	From   int
 	To     int
-	Return node.Expression
-	Name   node.Expression
+	Return FieldType
+	Name   string
 	Params []*FieldDefinition
 }
 
@@ -89,23 +117,14 @@ func (this_ *IFaceMethodDefinition) End() int    { return this_.To }
 
 // FieldDefinition 字段定义
 type FieldDefinition struct {
-	Idx      int
-	FieldNum int
-	Type     *node.StringLiteral
-	Key      *node.StringLiteral
-	Value    *node.StringLiteral
-	Computed bool
-	Static   bool
+	From  int
+	To    int
+	Num   int
+	Type  FieldType
+	Name  string
+	Value string
 }
 
 func (*FieldDefinition) IsClassElementNode() {}
-func (this_ *FieldDefinition) Start() int    { return this_.Idx }
-func (this_ *FieldDefinition) End() int {
-	if this_.Value != nil {
-		return this_.Value.End()
-	}
-	if this_.Key != nil {
-		return this_.Key.End()
-	}
-	return this_.Idx
-}
+func (this_ *FieldDefinition) Start() int    { return this_.From }
+func (this_ *FieldDefinition) End() int      { return this_.To }

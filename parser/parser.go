@@ -73,7 +73,7 @@ type Parser struct {
 	Idx           int         // The index of token
 	Token         token.Token // The token
 	Literal       string      // The literal of the token, if any
-	ParsedLiteral node.String
+	ParsedLiteral string
 
 	Scope             *Scope
 	InsertSemicolon   bool // 如果我们看到一个换行符，那么插入一个隐式分号
@@ -96,6 +96,9 @@ type Parser struct {
 
 	BlankSpaceFrom int
 	BlankSpaceTo   int
+
+	OnlyReadLess    bool // 只读取 < 不读取 <<、<<<
+	OnlyReadGreater bool // 只读取 > 不读取 >>、>>>
 
 	Modifiers []*Modifier // 修饰符 临时存放
 
@@ -183,7 +186,7 @@ type Scope struct {
 	AllowYield      bool
 	DeclarationList []*node.VariableDeclaration
 
-	Labels []node.String
+	Labels []string
 }
 
 func (this_ *Parser) OpenScope() {
@@ -201,7 +204,7 @@ func (this_ *Scope) Declare(declaration *node.VariableDeclaration) {
 	this_.DeclarationList = append(this_.DeclarationList, declaration)
 }
 
-func (this_ *Scope) HasLabel(name node.String) bool {
+func (this_ *Scope) HasLabel(name string) bool {
 	for _, label := range this_.Labels {
 		if label == name {
 			return true

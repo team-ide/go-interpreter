@@ -125,7 +125,7 @@ type State struct {
 	Idx                                int
 	Tok                                token.Token
 	Literal                            string
-	ParsedLiteral                      node.String
+	ParsedLiteral                      string
 	ImplicitSemicolon, InsertSemicolon bool
 	Chr                                rune
 	ChrOffset, Offset                  int

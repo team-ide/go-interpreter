@@ -246,7 +246,7 @@ error:
 	return nil, errors.New("illegal numeric literal")
 }
 
-func (this_ *Parser) parseStringLiteral(literal string, length int, unicode, strict bool) (node.String, string) {
+func (this_ *Parser) parseStringLiteral(literal string, length int, unicode, strict bool) (string, string) {
 	var sb strings.Builder
 	var chars []uint16
 	if unicode {
@@ -428,5 +428,5 @@ func (this_ *Parser) parseStringLiteral(literal string, length int, unicode, str
 	if sb.Len() != length {
 		panic(fmt.Errorf("unexpected length while parsing '%s'", literal))
 	}
-	return node.String(sb.String()), ""
+	return sb.String(), ""
 }

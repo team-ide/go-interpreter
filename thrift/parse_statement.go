@@ -1,7 +1,6 @@
 package thrift
 
 import (
-	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
 	"strconv"
 )
@@ -77,7 +76,7 @@ func (this_ *Parser) parseStructStatement() *StructStatement {
 		res.Name = string(identifier.Name)
 	}
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
-		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon {
+		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
 			this_.Next()
 			continue
 		}
@@ -107,7 +106,7 @@ func (this_ *Parser) parseExceptionStatement() *ExceptionStatement {
 		res.Name = string(identifier.Name)
 	}
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
-		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon {
+		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
 			this_.Next()
 			continue
 		}
@@ -161,9 +160,10 @@ func (this_ *Parser) parseServiceStatement() *ServiceStatement {
 		From: idx,
 	}
 
-	if this_.Token == token.Identifier {
-		identifier := this_.ParseIdentifier()
-		res.Name = string(identifier.Name)
+	res.Name = this_.ParsedLiteral
+	this_.Next()
+	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
+		this_.Next()
 	}
 	for this_.Token != token.RightBrace && this_.Token != token.Eof {
 		if this_.Token == token.LeftBrace || this_.Token == token.Semicolon || this_.Token == token.Comma {
@@ -182,6 +182,47 @@ func (this_ *Parser) parseServiceStatement() *ServiceStatement {
 	return res
 }
 
+func (this_ *Parser) parseFieldDefinition() *FieldDefinition {
+	idx := this_.Idx
+
+	res := &FieldDefinition{
+		From: idx,
+	}
+	num := ""
+	//fmt.Println("parseFieldDefinition token:", this_.Token, ",Literal:", this_.Literal, ",ParsedLiteral:", this_.ParsedLiteral)
+	// 表示有编号
+	if this_.Literal != "" {
+		var err error
+		res.Num, err = strconv.Atoi(this_.Literal)
+		if err == nil {
+			this_.Next()
+			this_.ExpectAndNext("parseFieldDefinition", token.Colon)
+		}
+	}
+	if this_.Token == token.Optional {
+		this_.Next()
+	}
+	res.Type = this_.parseFieldType()
+	res.Num, _ = strconv.Atoi(num)
+
+	res.Name = this_.ParsedLiteral
+	res.To = this_.Idx + len(this_.ParsedLiteral)
+	this_.Next()
+
+	if this_.Token == token.Assign {
+		this_.Next()
+		if this_.ParsedLiteral == "" {
+			res.Value = this_.Literal
+			res.To = this_.Idx + len(this_.Literal)
+		} else {
+			res.Value = this_.ParsedLiteral
+			res.To = this_.Idx + len(this_.ParsedLiteral)
+		}
+		this_.Next()
+	}
+	return res
+}
+
 func (this_ *Parser) parseIFaceMethodDefinition() *IFaceMethodDefinition {
 	idx := this_.Idx
 
@@ -190,28 +231,10 @@ func (this_ *Parser) parseIFaceMethodDefinition() *IFaceMethodDefinition {
 	}
 	//fmt.Println("parseIFaceDefinition token:", this_.Token)
 
-	str, keyName, value, tkn := this_.parseFieldName()
-	if str == "" && keyName == "" && tkn == "" {
+	res.Return = this_.parseFieldType()
 
-	}
-	res.Return = value
-
-	if this_.Token == token.Less {
-		this_.Next()
-		str, keyName, value, tkn = this_.parseFieldName()
-		//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
-		if this_.Token == token.Comma {
-			this_.Next()
-			str, keyName, value, tkn = this_.parseFieldName()
-			//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
-		}
-		if this_.Token == token.Greater {
-			this_.Next()
-		}
-	}
-
-	str, keyName, value, tkn = this_.parseFieldName()
-	res.Name = value
+	res.Name = this_.ParsedLiteral
+	this_.Next()
 
 	for this_.Token != token.RightParenthesis && this_.Token != token.Eof {
 
@@ -231,101 +254,94 @@ func (this_ *Parser) parseIFaceMethodDefinition() *IFaceMethodDefinition {
 	return res
 }
 
-func (this_ *Parser) parseFieldDefinition() *FieldDefinition {
-	idx := this_.Idx
-
-	res := &FieldDefinition{
-		Idx: idx,
-	}
-	num := ""
-	//fmt.Println("parseFieldDefinition token:", this_.Token)
-	for {
-		if this_.Token == token.Colon {
-			this_.Next()
-			break
-		} else if this_.ParsedLiteral != "" {
-			num += string(this_.ParsedLiteral)
-			this_.Next()
-		} else if this_.Literal != "" {
-			num += this_.Literal
-			this_.Next()
-		} else {
-			break
-		}
-	}
-	if this_.Token == token.Optional {
-		this_.Next()
-	}
-	str, keyName, value, tkn := this_.parseFieldName()
-	if str == "" && keyName == "" && tkn == "" {
-
-	}
-	res.Type = value
-	res.FieldNum, _ = strconv.Atoi(num)
-	//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
-	if this_.Token == token.Less {
-		this_.Next()
-		str, keyName, value, tkn = this_.parseFieldName()
-		//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
-		if this_.Token == token.Comma {
-			this_.Next()
-			str, keyName, value, tkn = this_.parseFieldName()
-			//fmt.Println("parseFieldDefinition type ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
-		}
-		if this_.Token == token.Greater {
-			this_.Next()
-		}
-	}
-	str, keyName, value, tkn = this_.parseFieldName()
-	res.Key = value
-	//fmt.Println("parseFieldDefinition name ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
-	if this_.Token == token.Assign {
-		this_.Next()
-		str, keyName, value, tkn = this_.parseFieldName()
-		res.Value = value
-		//fmt.Println("parseFieldDefinition value ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
-	}
-	return res
-}
-
 func (this_ *Parser) parseEnumFieldDefinition() *FieldDefinition {
 	idx := this_.Idx
 
 	res := &FieldDefinition{
-		Idx: idx,
+		From: idx,
 	}
-	str, keyName, value, tkn := this_.parseFieldName()
-	if str == "" && keyName == "" && tkn == "" {
-
-	}
-	res.Key = value
-	//fmt.Println("parseFieldDefinition name ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+	res.Name = this_.ParsedLiteral
+	res.To = this_.Idx + len(this_.ParsedLiteral)
+	this_.Next()
 	if this_.Token == token.Assign {
 		this_.Next()
-		res.Value = &node.StringLiteral{
-			Idx:     this_.Idx,
-			Literal: this_.Literal,
-			Value:   this_.ParsedLiteral,
+		if this_.ParsedLiteral == "" {
+			res.Value = this_.Literal
+			res.To = this_.Idx + len(this_.Literal)
+		} else {
+			res.Value = this_.ParsedLiteral
+			res.To = this_.Idx + len(this_.ParsedLiteral)
 		}
-		//fmt.Println("parseFieldDefinition value ", ",num:", num, ",str:", str, ",keyName:", keyName, ",value:", value, ",tkn:", tkn)
+		this_.Next()
 	}
 	return res
 }
 
-func (this_ *Parser) parseFieldName() (string, node.String, *node.StringLiteral, token.Token) {
-	idx, tkn, literal, parsedLiteral := this_.Idx, this_.Token, this_.Literal, this_.ParsedLiteral
+func (this_ *Parser) parseFieldName() string {
+	parsedLiteral := this_.ParsedLiteral
 	this_.Next()
+	return parsedLiteral
+}
+
+// parseFieldType 解析字段类型 如 xx、xx.x、xx<x>、xx<x,x>、xx.x<x,x>、xx.x<x,x.xx>、xx.x<x.xx,x.xx>
+func (this_ *Parser) parseFieldType() FieldType {
+	from, typeName := this_.Idx, this_.ParsedLiteral
+	//fmt.Println("parseFieldType", ",token:", this_.Token, ",position:", this_.GetPosition(this_.Idx), ",typeName:", typeName)
+	this_.OnlyReadGreater = true
+	this_.OnlyReadLess = true
+	this_.Next()
+	this_.OnlyReadGreater = false
+	this_.OnlyReadLess = false
+
+	var res FieldType
+	var genericTypes *[]FieldType
+	var to *int
 	if this_.Token == token.Period {
 		//fmt.Println("parseFieldName Period")
+
+		fieldTypeDot := &FieldTypeDot{
+			From:  from,
+			To:    from + len(typeName),
+			Names: []string{typeName},
+		}
+		for this_.Token == token.Period {
+			this_.Next()
+			fieldTypeDot.To = this_.Idx + len(this_.ParsedLiteral)
+			fieldTypeDot.Names = append(fieldTypeDot.Names, this_.ParsedLiteral)
+
+			this_.OnlyReadGreater = true
+			this_.OnlyReadLess = true
+			this_.Next()
+			this_.OnlyReadGreater = false
+			this_.OnlyReadLess = false
+
+		}
+		to = &fieldTypeDot.To
+		genericTypes = &fieldTypeDot.GenericTypes
+		res = fieldTypeDot
+	} else {
+		fieldTypeName := &FieldTypeName{
+			From: from,
+			To:   from + len(typeName),
+			Name: typeName,
+		}
+		to = &fieldTypeName.To
+		genericTypes = &fieldTypeName.GenericTypes
+		res = fieldTypeName
+	}
+	if this_.Token == token.Less {
 		this_.Next()
-		literal_, parsedLiteral_, _, _ := this_.parseFieldName()
-		literal += "." + literal_
-		parsedLiteral += "." + parsedLiteral_
+		for this_.Token != token.Greater {
+			if this_.Token == token.Comma {
+				this_.Next()
+				continue
+			}
+			gType := this_.parseFieldType()
+			*genericTypes = append(*genericTypes, gType)
+		}
+		this_.OnlyReadGreater = true
+		*to = this_.ExpectAndNext("parseFieldType", token.Greater)
+		this_.OnlyReadGreater = false
 	}
-	value := &node.StringLiteral{
-		Idx:     idx,
-		Literal: literal,
-		Value:   parsedLiteral,
-	}
-	return literal, parsedLiteral, value, tkn
+	return res
 }

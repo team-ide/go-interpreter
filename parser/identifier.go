@@ -2,11 +2,10 @@ package parser
 
 import (
 	"fmt"
-	"github.com/team-ide/go-interpreter/node"
 	"unicode/utf8"
 )
 
-func (this_ *Parser) ScanIdentifier() (string, node.String, bool, string) {
+func (this_ *Parser) ScanIdentifier() (string, string, bool, string) {
 	offset := this_.ChrOffset
 	hasEscape := false
 	isUnicode := false
@@ -76,7 +75,7 @@ func (this_ *Parser) ScanIdentifier() (string, node.String, bool, string) {
 	}
 
 	literal := this_.Str[offset:this_.ChrOffset]
-	var parsed node.String
+	var parsed string
 	if hasEscape || isUnicode {
 		var err string
 		// TODO strict
@@ -85,7 +84,7 @@ func (this_ *Parser) ScanIdentifier() (string, node.String, bool, string) {
 			return "", "", false, err
 		}
 	} else {
-		parsed = node.String(literal)
+		parsed = literal
 	}
 
 	return literal, parsed, hasEscape, ""

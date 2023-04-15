@@ -15,13 +15,11 @@ const (
 	BOM = 0xFEFF
 )
 
-type String string
-
-func FromUtf16(b []uint16) String {
+func FromUtf16(b []uint16) string {
 	var str string
 	hdr := (*reflect.StringHeader)(unsafe.Pointer(&str))
 	hdr.Data = uintptr(unsafe.Pointer(&b[0]))
 	hdr.Len = len(b) * 2
 
-	return String(str)
+	return str
 }

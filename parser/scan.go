@@ -1,11 +1,10 @@
 package parser
 
 import (
-	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/token"
 )
 
-func (this_ *Parser) Scan() (tkn token.Token, literal string, parsedLiteral node.String, idx int) {
+func (this_ *Parser) Scan() (tkn token.Token, literal string, parsedLiteral string, idx int) {
 
 	this_.ImplicitSemicolon = false
 
@@ -175,9 +174,17 @@ func (this_ *Parser) Scan() (tkn token.Token, literal string, parsedLiteral node
 			case '^':
 				tkn = this_.Switch2(token.ExclusiveOr, token.ExclusiveOrAssign)
 			case '<':
-				tkn = this_.Switch4(token.Less, token.LessOrEqual, '<', token.ShiftLeft, token.ShiftLeftAssign)
+				if this_.OnlyReadLess {
+					tkn = token.Less
+				} else {
+					tkn = this_.Switch4(token.Less, token.LessOrEqual, '<', token.ShiftLeft, token.ShiftLeftAssign)
+				}
 			case '>':
-				tkn = this_.Switch6(token.Greater, token.GreaterOrEqual, '>', token.ShiftRight, token.ShiftRightAssign, '>', token.UnsignedShiftRight, token.UnsignedShiftRightAssign)
+				if this_.OnlyReadGreater {
+					tkn = token.Greater
+				} else {
+					tkn = this_.Switch6(token.Greater, token.GreaterOrEqual, '>', token.ShiftRight, token.ShiftRightAssign, '>', token.UnsignedShiftRight, token.UnsignedShiftRightAssign)
+				}
 			case '=':
 				if this_.Chr == '>' {
 					this_.Read()

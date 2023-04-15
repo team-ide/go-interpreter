@@ -315,7 +315,7 @@ func (this_ *Parser) parseVarDeclarationList(var_ int) []*node.Binding {
 	return declarationList
 }
 
-func (this_ *Parser) parseObjectPropertyKey() (string, node.String, node.Expression, token.Token) {
+func (this_ *Parser) parseObjectPropertyKey() (string, string, node.Expression, token.Token) {
 	if this_.Token == token.LeftBracket {
 		this_.Next()
 		expr := this_.parseAssignmentExpression()
@@ -356,7 +356,7 @@ func (this_ *Parser) parseObjectPropertyKey() (string, node.String, node.Express
 			value = &node.StringLiteral{
 				Idx:     idx,
 				Literal: literal,
-				Value:   node.String(literal),
+				Value:   literal,
 			}
 		} else {
 			_ = this_.ErrorUnexpectedToken("parseObjectPropertyKey not IsIdentifierToken:"+tkn.String(), tkn)
@@ -671,7 +671,7 @@ func (this_ *Parser) parseNewExpression() node.Expression {
 		if this_.Literal == "target" {
 			return &node.MetaProperty{
 				Meta: &node.Identifier{
-					Name: node.String(token.New.String()),
+					Name: token.New.String(),
 					Idx:  idx,
 				},
 				Property: this_.ParseIdentifier(),

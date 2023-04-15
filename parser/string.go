@@ -1,11 +1,10 @@
 package parser
 
 import (
-	"github.com/team-ide/go-interpreter/node"
 	"unicode/utf8"
 )
 
-func (this_ *Parser) ParseTemplateCharacters() (literal string, parsed node.String, finished bool, parseErr, err string) {
+func (this_ *Parser) ParseTemplateCharacters() (literal string, parsed string, finished bool, parseErr, err string) {
 	offset := this_.ChrOffset
 	var end int
 	length := 0
@@ -75,7 +74,7 @@ unterminated:
 	return
 }
 
-func (this_ *Parser) ScanString(offset int, parse bool) (literal string, parsed node.String, err string) {
+func (this_ *Parser) ScanString(offset int, parse bool) (literal string, parsed string, err string) {
 	// " ' /
 	quote := rune(this_.Str[offset])
 	length := 0

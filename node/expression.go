@@ -264,7 +264,7 @@ func (this_ *ArrowFunctionLiteral) End() int    { return this_.Body.End() }
 
 // Identifier 标识符
 type Identifier struct {
-	Name String
+	Name string
 	Idx  int
 }
 
@@ -421,7 +421,7 @@ func (this_ *SequenceExpression) End() int    { return this_.Sequence[len(this_.
 type StringLiteral struct {
 	Idx     int
 	Literal string
-	Value   String
+	Value   string
 }
 
 func (*StringLiteral) IsExpressionNode() {}
@@ -432,7 +432,7 @@ func (this_ *StringLiteral) End() int    { return this_.Idx + (len(this_.Literal
 type TemplateElement struct {
 	Idx     int
 	Literal string
-	Parsed  String
+	Parsed  string
 	Valid   bool
 }
 
