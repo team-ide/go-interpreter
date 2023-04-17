@@ -11,10 +11,6 @@ type Node interface {
 	End() int   // 节点所在 结束位置
 }
 
-const (
-	BOM = 0xFEFF
-)
-
 func FromUtf16(b []uint16) string {
 	var str string
 	hdr := (*reflect.StringHeader)(unsafe.Pointer(&str))

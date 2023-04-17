@@ -16,7 +16,7 @@ func (this_ *Parser) parseIncludeStatement() *IncludeStatement {
 
 	inc := ""
 	if this_.Token == token.String {
-		inc = string(this_.ParsedLiteral)
+		inc = this_.ParsedLiteral
 		toIdx += len(this_.Literal)
 		this_.ExpectAndNext("parseIncludeStatement", token.String)
 	}

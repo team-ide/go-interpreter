@@ -62,15 +62,7 @@ func outOne(tree *node.Tree, code string, name string, leven int, one interface{
 	}
 	var n node.Node = nil
 
-	s, ok := one.(node.Statement)
-	if ok && s != nil {
-		n = s
-	}
-	e, ok := one.(node.Expression)
-	if ok && e != nil {
-		n = e
-	}
-	c, ok := one.(node.ClassElement)
+	c, ok := one.(node.Node)
 	if ok && c != nil {
 		n = c
 	}

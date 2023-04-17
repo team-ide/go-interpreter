@@ -11,7 +11,6 @@ func New(src string) (p *Parser) {
 		//Chr:    ' ',
 		Str:            src,
 		Length:         len(src),
-		Base:           0,
 		OffsetPosition: map[int]*node.Position{},
 	}
 	return
@@ -68,22 +67,13 @@ type Parser struct {
 	ChrOffset int  // 当前 字符 偏移量
 	Offset    int  // 当前 字符 偏移量
 
-	Base int
-
 	Idx           int         // The index of token
 	Token         token.Token // The token
 	Literal       string      // The literal of the token, if any
 	ParsedLiteral string
 
-	Scope             *Scope
 	InsertSemicolon   bool // 如果我们看到一个换行符，那么插入一个隐式分号
 	ImplicitSemicolon bool // 存在隐式分号
-
-	Recover struct {
-		// Scratch when trying to seek to the next statement, etc.
-		Idx   int
-		Count int
-	}
 
 	Errors ErrorList
 
@@ -171,48 +161,4 @@ func (this_ *Parser) Read() {
 		this_.ChrOffset = this_.Length
 		this_.Chr = -1 // EOF 读取结束
 	}
-}
-
-type Scope struct {
-	Outer           *Scope
-	AllowIn         bool
-	AllowLet        bool
-	InIteration     bool
-	InSwitch        bool
-	InFuncParams    bool
-	InFunction      bool
-	InAsync         bool
-	AllowAwait      bool
-	AllowYield      bool
-	DeclarationList []*node.VariableDeclaration
-
-	Labels []string
-}
-
-func (this_ *Parser) OpenScope() {
-	this_.Scope = &Scope{
-		Outer:   this_.Scope,
-		AllowIn: true,
-	}
-}
-
-func (this_ *Parser) CloseScope() {
-	this_.Scope = this_.Scope.Outer
-}
-
-func (this_ *Scope) Declare(declaration *node.VariableDeclaration) {
-	this_.DeclarationList = append(this_.DeclarationList, declaration)
-}
-
-func (this_ *Scope) HasLabel(name string) bool {
-	for _, label := range this_.Labels {
-		if label == name {
-			return true
-		}
-	}
-	if this_.Outer != nil && !this_.InFunction {
-		// Crossing a function boundary to look for a label is verboten
-		return this_.Outer.HasLabel(name)
-	}
-	return false
 }

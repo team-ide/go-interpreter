@@ -30,9 +30,6 @@ func (this_ *Parser) parseStatement() node.Statement {
 	}
 
 	switch this_.Token {
-	case token.Semicolon:
-		// 解析 分号
-		return this_.ParseSemicolonStatement()
 	case token.Include:
 		return this_.parseIncludeStatement()
 	case token.Namespace:
@@ -46,41 +43,8 @@ func (this_ *Parser) parseStatement() node.Statement {
 	case token.Service:
 		return this_.parseServiceStatement()
 	default:
-		var identifier *node.Identifier
-		if this_.Token == token.Identifier {
-			identifier = this_.ParseIdentifier()
-		}
-		fmt.Println("parseStatement this_.Token:", this_.Token, ",identifier:", identifier)
+		fmt.Println("parseStatement this_.Token:", this_.Token)
 	}
 	this_.Next()
-	//expression := this_.parseExpression()
-	//
-	//if identifier, isIdentifier := expression.(*node.Identifier); isIdentifier && this_.Token == token.Colon {
-	//	// LabelledStatement
-	//	colon := this_.Idx
-	//	this_.Next() // :
-	//	label := identifier.Name
-	//	for _, value := range this_.Scope.Labels {
-	//		if label == value {
-	//			_ = this_.Error("parseStatement", identifier.Start(), fmt.Sprintf("Label '%s' already exists", label))
-	//		}
-	//	}
-	//	this_.Scope.Labels = append(this_.Scope.Labels, label) // Push the label
-	//	this_.Scope.AllowLet = false
-	//	statement := this_.parseStatement()
-	//	this_.Scope.Labels = this_.Scope.Labels[:len(this_.Scope.Labels)-1] // Pop the label
-	//	return &node.LabelledStatement{
-	//		Label:     identifier,
-	//		Colon:     colon,
-	//		Statement: statement,
-	//	}
-	//}
-	//
-	//this_.OptionalSemicolon()
-
-	//bs, _ := json.Marshal(expression)
-	//fmt.Println("expression type:", reflect.TypeOf(expression).String(), ",value:", this_.Slice(expression.Start(), expression.End()), ",data:", string(bs))
-	return &node.ExpressionStatement{
-		//Expression: expression,
-	}
+	return &node.BadStatement{}
 }

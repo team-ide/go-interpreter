@@ -2,9 +2,8 @@ package node
 
 // Tree 属性结构
 type Tree struct {
-	Children        []Statement
-	DeclarationList []*VariableDeclaration
-	OffsetPosition  map[int]*Position
+	Children       []Statement
+	OffsetPosition map[int]*Position
 }
 
 func (this_ *Tree) GetPosition(offset int) *Position {

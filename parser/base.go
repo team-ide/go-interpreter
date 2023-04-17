@@ -155,41 +155,10 @@ func (this_ *Parser) IsBindingIdentifier(tok token.Token) bool {
 	if tok == token.Identifier {
 		return true
 	}
-
-	if tok == token.Await {
-		return !this_.Scope.AllowAwait
-	}
-	if tok == token.Yield {
-		return !this_.Scope.AllowYield
-	}
-
 	if this_.IsUnreservedWordToken(tok) {
 		return true
 	}
 	return false
-}
-
-func (this_ *Parser) IsLogicalAndExpr(expr node.Expression) bool {
-	if exp, ok := expr.(*node.BinaryExpression); ok && exp.Operator == token.LogicalAnd {
-		return true
-	}
-	return false
-}
-
-func normaliseCRLF(s string) string {
-	var buf strings.Builder
-	buf.Grow(len(s))
-	for i := 0; i < len(s); i++ {
-		if s[i] == '\r' {
-			buf.WriteByte('\n')
-			if i < len(s)-1 && s[i+1] == '\n' {
-				i++
-			}
-		} else {
-			buf.WriteByte(s[i])
-		}
-	}
-	return buf.String()
 }
 
 func hex2decimal(chr byte) (value rune, ok bool) {
@@ -246,12 +215,16 @@ error:
 	return nil, errors.New("illegal numeric literal")
 }
 
+const (
+	BOM = 0xFEFF
+)
+
 func (this_ *Parser) parseStringLiteral(literal string, length int, unicode, strict bool) (string, string) {
 	var sb strings.Builder
 	var chars []uint16
 	if unicode {
 		chars = make([]uint16, 1, length+1)
-		chars[0] = node.BOM
+		chars[0] = BOM
 	} else {
 		sb.Grow(length)
 	}

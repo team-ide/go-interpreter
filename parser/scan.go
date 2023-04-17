@@ -57,7 +57,6 @@ func (this_ *Parser) Scan() (tkn token.Token, literal string, parsedLiteral stri
 					token.This,
 					token.Break,
 					token.Throw, // A newline after a throw is not allowed, but we need to detect it
-					token.Yield,
 					token.Return,
 					token.Continue,
 					token.Debugger:

@@ -151,21 +151,6 @@ const (
 
 	With Token = "with" // with
 
-	// JavaScript严格模式补充
-
-	//Implements  Token = "implements" // implements
-	//Interface   Token = "interface"  // interface
-
-	Let Token = "let" // let
-
-	//Package     Token = "package"    // package
-	//Private     Token = "private"    // private
-	//Protected   Token = "protected"  // protected
-	//Public      Token = "public"     // public
-	//Static      Token = "static"     // static
-
-	Yield Token = "yield" // yield
-
 	// Thrift中出现的补充
 
 	Include   Token = "include"   // include
