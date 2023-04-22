@@ -158,5 +158,6 @@ const (
 	Exception Token = "exception" // exception
 	Service   Token = "service"   // service
 	Optional  Token = "optional"  // optional
+	Set       Token = "set"       // optional
 
 )

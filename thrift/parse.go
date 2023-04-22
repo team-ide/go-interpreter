@@ -11,10 +11,11 @@ type Parser struct {
 	*parser.Parser
 }
 
-func Parse(src string) (tree *node.Tree, err error) {
+func Parse(filename, src string) (tree *node.Tree, err error) {
 	p := &Parser{
 		Parser: parser.New(src),
 	}
+	p.Filename = filename
 	p.ParseStatement = p.parseStatement
 	p.KeywordToken = KeywordToken
 	p.IdentifierTokens = IdentifierTokens

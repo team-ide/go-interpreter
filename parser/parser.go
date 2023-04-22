@@ -60,8 +60,9 @@ func (this_ *Parser) IsModifierToken(tkn token.Token) bool {
 }
 
 type Parser struct {
-	Str    string
-	Length int
+	Filename string
+	Str      string
+	Length   int
 
 	Chr       rune // 当前 字符
 	ChrOffset int  // 当前 字符 偏移量

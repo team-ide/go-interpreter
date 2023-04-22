@@ -11,7 +11,7 @@ import (
 func TestThrift(t *testing.T) {
 	testFileCode("code.txt")
 
-	dir := `C:\Workspaces\Code\linkdood\thrift`
+	dir := `thrift`
 	fs, _ := os.ReadDir(dir)
 	for _, f := range fs {
 		if f.IsDir() {
@@ -33,14 +33,14 @@ func testFileCode(filename string) {
 	}
 	code := string(bs)
 
-	err = testCode(code)
+	err = testCode(filename, code)
 	if err != nil {
 		fmt.Println("error filename:", filename)
 		panic(err)
 	}
 }
-func testCode(code string) error {
-	tree, err := Parse(code)
+func testCode(filename string, code string) error {
+	tree, err := Parse(filename, code)
 	if tree != nil {
 		parser.OutTree(code, tree)
 	}

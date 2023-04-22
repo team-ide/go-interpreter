@@ -1,6 +1,7 @@
 package thrift
 
 import (
+	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/team-ide/go-interpreter/token"
 	"strconv"
 )
@@ -58,7 +59,7 @@ func (this_ *Parser) parseStructStatement() *StructStatement {
 
 	if this_.Token == token.Extends {
 		this_.Next()
-		res.Extends = this_.ParseChainNameStatement()
+		res.ExtendsInclude, res.ExtendsName, res.To = this_.ParseIncludeName()
 	}
 
 	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
@@ -70,7 +71,7 @@ func (this_ *Parser) parseStructStatement() *StructStatement {
 			this_.Next()
 			continue
 		}
-		field := this_.parseFieldDefinition()
+		field := this_.parseFieldNode()
 		res.Fields = append(res.Fields, field)
 	}
 	res.To = this_.Idx
@@ -96,7 +97,7 @@ func (this_ *Parser) parseExceptionStatement() *ExceptionStatement {
 
 	if this_.Token == token.Extends {
 		this_.Next()
-		res.Extends = this_.ParseChainNameStatement()
+		res.ExtendsInclude, res.ExtendsName, res.To = this_.ParseIncludeName()
 	}
 
 	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
@@ -108,7 +109,7 @@ func (this_ *Parser) parseExceptionStatement() *ExceptionStatement {
 			this_.Next()
 			continue
 		}
-		field := this_.parseFieldDefinition()
+		field := this_.parseFieldNode()
 		res.Fields = append(res.Fields, field)
 	}
 	res.To = this_.Idx
@@ -134,7 +135,7 @@ func (this_ *Parser) parseEnumStatement() *EnumStatement {
 
 	if this_.Token == token.Extends {
 		this_.Next()
-		res.Extends = this_.ParseChainNameStatement()
+		res.ExtendsInclude, res.ExtendsName, res.To = this_.ParseIncludeName()
 	}
 
 	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
@@ -146,7 +147,7 @@ func (this_ *Parser) parseEnumStatement() *EnumStatement {
 			this_.Next()
 			continue
 		}
-		field := this_.parseEnumFieldDefinition()
+		field := this_.parseEnumFieldNode()
 		res.Fields = append(res.Fields, field)
 	}
 	res.To = this_.Idx
@@ -171,7 +172,7 @@ func (this_ *Parser) parseServiceStatement() *ServiceStatement {
 
 	if this_.Token == token.Extends {
 		this_.Next()
-		res.Extends = this_.ParseChainNameStatement()
+		res.ExtendsInclude, res.ExtendsName, res.To = this_.ParseIncludeName()
 	}
 
 	for this_.Token != token.LeftBrace && this_.Token != token.Eof {
@@ -182,7 +183,7 @@ func (this_ *Parser) parseServiceStatement() *ServiceStatement {
 			this_.Next()
 			continue
 		}
-		method := this_.parseIFaceMethodDefinition()
+		method := this_.parseServiceMethodNode()
 		res.Methods = append(res.Methods, method)
 	}
 	res.To = this_.Idx
@@ -194,28 +195,29 @@ func (this_ *Parser) parseServiceStatement() *ServiceStatement {
 	return res
 }
 
-func (this_ *Parser) parseFieldDefinition() *FieldDefinition {
+func (this_ *Parser) parseFieldNode() *FieldNode {
 	idx := this_.Idx
 
-	res := &FieldDefinition{
+	res := &FieldNode{
 		From: idx,
 	}
-	num := ""
 	//fmt.Println("parseFieldDefinition token:", this_.Token, ",Literal:", this_.Literal, ",ParsedLiteral:", this_.ParsedLiteral)
+	var num int
 	// 表示有编号
 	if this_.Literal != "" {
 		var err error
-		res.Num, err = strconv.Atoi(this_.Literal)
+		num, err = strconv.Atoi(this_.Literal)
 		if err == nil {
 			this_.Next()
 			this_.ExpectAndNext("parseFieldDefinition", token.Colon)
 		}
 	}
 	if this_.Token == token.Optional {
+		res.Optional = true
 		this_.Next()
 	}
 	res.Type = this_.parseFieldType()
-	res.Num, _ = strconv.Atoi(num)
+	res.Num = int16(num)
 
 	res.Name = this_.ParsedLiteral
 	res.To = this_.Idx + len(this_.ParsedLiteral)
@@ -235,10 +237,10 @@ func (this_ *Parser) parseFieldDefinition() *FieldDefinition {
 	return res
 }
 
-func (this_ *Parser) parseIFaceMethodDefinition() *IFaceMethodDefinition {
+func (this_ *Parser) parseServiceMethodNode() *ServiceMethodNode {
 	idx := this_.Idx
 
-	res := &IFaceMethodDefinition{
+	res := &ServiceMethodNode{
 		From: idx,
 	}
 	//fmt.Println("parseIFaceDefinition token:", this_.Token)
@@ -255,7 +257,7 @@ func (this_ *Parser) parseIFaceMethodDefinition() *IFaceMethodDefinition {
 			continue
 		}
 
-		field := this_.parseFieldDefinition()
+		field := this_.parseFieldNode()
 		res.Params = append(res.Params, field)
 	}
 
@@ -266,10 +268,10 @@ func (this_ *Parser) parseIFaceMethodDefinition() *IFaceMethodDefinition {
 	return res
 }
 
-func (this_ *Parser) parseEnumFieldDefinition() *FieldDefinition {
+func (this_ *Parser) parseEnumFieldNode() *FieldNode {
 	idx := this_.Idx
 
-	res := &FieldDefinition{
+	res := &FieldNode{
 		From: idx,
 	}
 	res.Name = this_.ParsedLiteral
@@ -289,71 +291,119 @@ func (this_ *Parser) parseEnumFieldDefinition() *FieldDefinition {
 	return res
 }
 
-func (this_ *Parser) parseFieldName() string {
-	parsedLiteral := this_.ParsedLiteral
-	this_.Next()
-	return parsedLiteral
-}
-
 // parseFieldType 解析字段类型 如 xx、xx.x、xx<x>、xx<x,x>、xx.x<x,x>、xx.x<x,x.xx>、xx.x<x.xx,x.xx>
-func (this_ *Parser) parseFieldType() FieldType {
+func (this_ *Parser) parseFieldType() *FieldType {
+
 	from, typeName := this_.Idx, this_.ParsedLiteral
-	//fmt.Println("parseFieldType", ",token:", this_.Token, ",position:", this_.GetPosition(this_.Idx), ",typeName:", typeName)
-	this_.OnlyReadGreater = true
-	this_.OnlyReadLess = true
-	this_.Next()
-	this_.OnlyReadGreater = false
-	this_.OnlyReadLess = false
 
-	var res FieldType
-	var genericTypes *[]FieldType
-	var to *int
-	if this_.Token == token.Period {
-		//fmt.Println("parseFieldName Period")
-
-		fieldTypeDot := &FieldTypeDot{
-			From:  from,
-			To:    from + len(typeName),
-			Names: []string{typeName},
-		}
-		for this_.Token == token.Period {
-			this_.Next()
-			fieldTypeDot.To = this_.Idx + len(this_.ParsedLiteral)
-			fieldTypeDot.Names = append(fieldTypeDot.Names, this_.ParsedLiteral)
-
-			this_.OnlyReadGreater = true
-			this_.OnlyReadLess = true
-			this_.Next()
-			this_.OnlyReadGreater = false
-			this_.OnlyReadLess = false
-
-		}
-		to = &fieldTypeDot.To
-		genericTypes = &fieldTypeDot.GenericTypes
-		res = fieldTypeDot
-	} else {
-		fieldTypeName := &FieldTypeName{
-			From: from,
-			To:   from + len(typeName),
-			Name: typeName,
-		}
-		to = &fieldTypeName.To
-		genericTypes = &fieldTypeName.GenericTypes
-		res = fieldTypeName
+	res := &FieldType{
+		From: from,
+		To:   this_.Idx + len(typeName),
 	}
-	if this_.Token == token.Less {
+
+	res.TypeName = typeName
+	switch typeName {
+	case "void":
+		res.TypeId = thrift.VOID
+	case "bool":
+		res.TypeId = thrift.BOOL
+	case "byte":
+		res.TypeId = thrift.BYTE
+	case "i8":
+		res.TypeId = thrift.I08
+	case "double":
+		res.TypeId = thrift.DOUBLE
+	case "i16":
+		res.TypeId = thrift.I16
+	case "i32":
+		res.TypeId = thrift.I32
+	case "i64":
+		res.TypeId = thrift.I64
+	case "string":
+		res.TypeId = thrift.STRING
+	case "utf7":
+		res.TypeId = thrift.UTF7
+	case "uuid":
+		res.TypeId = thrift.UUID
+	case "map":
+		res.TypeId = thrift.MAP
+	case "set":
+		res.TypeId = thrift.SET
+	case "list":
+		res.TypeId = thrift.LIST
+	default:
+		res.TypeId = thrift.STRUCT
+		res.StructInclude, res.StructName, res.To = this_.ParseIncludeName()
+
+		res.TypeName = res.StructInclude + "." + res.StructName
+		//if res.StructName == "" {
+		//	panic(this_.Filename + " Eof err " + this_.ToJSON(this_.GetPosition(from)))
+		//}
+
+	}
+
+	if res.TypeId != thrift.STRUCT {
+		this_.OnlyReadGreater = true
+		this_.OnlyReadLess = true
 		this_.Next()
-		for this_.Token != token.Greater {
+		this_.OnlyReadGreater = false
+		this_.OnlyReadLess = false
+	}
+
+	var genericTypes []*FieldType
+	if this_.Token == token.Less {
+		this_.OnlyReadGreater = true
+		this_.OnlyReadLess = true
+		this_.Next()
+		this_.OnlyReadGreater = false
+		this_.OnlyReadLess = false
+		for this_.Token != token.Greater && this_.Token != token.Eof {
 			if this_.Token == token.Comma {
 				this_.Next()
 				continue
 			}
 			gType := this_.parseFieldType()
-			*genericTypes = append(*genericTypes, gType)
+			if gType != nil {
+				genericTypes = append(genericTypes, gType)
+			}
 		}
+		//if this_.Token != token.Greater {
+		//	panic(this_.Filename + " Eof err " + this_.ToJSON(this_.GetPosition(from)))
+		//}
 		this_.OnlyReadGreater = true
-		*to = this_.ExpectAndNext("parseFieldType", token.Greater)
+		res.To = this_.ExpectAndNext("parseFieldType", token.Greater)
 		this_.OnlyReadGreater = false
 	}
+
+	if res.TypeId == thrift.LIST {
+		res.ListType = genericTypes[0]
+	} else if res.TypeId == thrift.SET {
+		res.SetType = genericTypes[0]
+	} else if res.TypeId == thrift.MAP {
+		res.MapKeyType = genericTypes[0]
+		res.MapValueType = genericTypes[1]
+	}
+	//fmt.Println("parseFieldType type:", this_.ToJSON(res))
+
 	return res
+}
+
+func (this_ *Parser) ParseIncludeName() (include string, name string, to int) {
+
+	name = this_.ParsedLiteral
+	to = this_.Idx + len(name)
+	this_.OnlyReadGreater = true
+	this_.OnlyReadLess = true
+	this_.Next()
+	if this_.Token == token.Period {
+		this_.Next()
+		include = name
+		name = this_.ParsedLiteral
+		to = this_.Idx + len(name)
+		this_.Next()
+	}
+	this_.OnlyReadGreater = false
+	this_.OnlyReadLess = false
+
+	return
 }

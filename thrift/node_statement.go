@@ -1,12 +1,15 @@
 package thrift
 
-import "github.com/team-ide/go-interpreter/node"
+import (
+	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/team-ide/go-interpreter/node"
+)
 
 // IncludeStatement thrift 导入
 type IncludeStatement struct {
-	From    int
-	To      int
-	Include string
+	From    int    `json:"from"`
+	To      int    `json:"to"`
+	Include string `json:"include"`
 }
 
 func (*IncludeStatement) IsStatementNode() {}
@@ -15,10 +18,10 @@ func (this_ *IncludeStatement) End() int   { return this_.To }
 
 // NamespaceStatement thrift 生成语言命名空间
 type NamespaceStatement struct {
-	From      int
-	To        int
-	Language  string
-	Namespace *node.ChainNameStatement
+	From      int                      `json:"from"`
+	To        int                      `json:"to"`
+	Language  string                   `json:"language"`
+	Namespace *node.ChainNameStatement `json:"namespace"`
 }
 
 func (*NamespaceStatement) IsStatementNode() {}
@@ -27,11 +30,12 @@ func (this_ *NamespaceStatement) End() int   { return this_.To }
 
 // ExceptionStatement thrift 异常
 type ExceptionStatement struct {
-	From    int
-	To      int
-	Name    string
-	Extends *node.ChainNameStatement
-	Fields  []*FieldDefinition
+	From           int          `json:"from"`
+	To             int          `json:"to"`
+	Name           string       `json:"name"`
+	ExtendsInclude string       `json:"extendsInclude"`
+	ExtendsName    string       `json:"extendsName"`
+	Fields         []*FieldNode `json:"fields"`
 }
 
 func (*ExceptionStatement) IsStatementNode() {}
@@ -40,11 +44,12 @@ func (this_ *ExceptionStatement) End() int   { return this_.To }
 
 // StructStatement thrift 结构体
 type StructStatement struct {
-	From    int
-	To      int
-	Name    string
-	Extends *node.ChainNameStatement
-	Fields  []*FieldDefinition
+	From           int          `json:"from"`
+	To             int          `json:"to"`
+	Name           string       `json:"name"`
+	ExtendsInclude string       `json:"extendsInclude"`
+	ExtendsName    string       `json:"extendsName"`
+	Fields         []*FieldNode `json:"fields"`
 }
 
 func (*StructStatement) IsStatementNode() {}
@@ -53,11 +58,12 @@ func (this_ *StructStatement) End() int   { return this_.To }
 
 // ServiceStatement 导入
 type ServiceStatement struct {
-	From    int
-	To      int
-	Name    string
-	Extends *node.ChainNameStatement
-	Methods []*IFaceMethodDefinition
+	From           int                  `json:"from"`
+	To             int                  `json:"to"`
+	Name           string               `json:"name"`
+	ExtendsInclude string               `json:"extendsInclude"`
+	ExtendsName    string               `json:"extendsName"`
+	Methods        []*ServiceMethodNode `json:"methods"`
 }
 
 func (*ServiceStatement) IsStatementNode() {}
@@ -66,11 +72,12 @@ func (this_ *ServiceStatement) End() int   { return this_.To }
 
 // EnumStatement 导入
 type EnumStatement struct {
-	From    int
-	To      int
-	Name    string
-	Extends *node.ChainNameStatement
-	Fields  []*FieldDefinition
+	From           int    `json:"from"`
+	To             int    `json:"to"`
+	Name           string `json:"name"`
+	ExtendsInclude string `json:"extendsInclude"`
+	ExtendsName    string `json:"extendsName"`
+	Fields         []*FieldNode
 }
 
 func (*EnumStatement) IsStatementNode() {}
@@ -78,57 +85,44 @@ func (this_ *EnumStatement) Start() int { return this_.From }
 func (this_ *EnumStatement) End() int   { return this_.To }
 
 // FieldType 字段类型
-type FieldType interface {
-	node.Node
-	IsFieldTypeNode()
+type FieldType struct {
+	From          int          `json:"from"`
+	To            int          `json:"to"`
+	TypeId        thrift.TType `json:"typeId"`
+	TypeName      string       `json:"typeName"`
+	StructInclude string       `json:"structInclude"`
+	StructName    string       `json:"structName"`
+	ListType      *FieldType   `json:"listType"`
+	SetType       *FieldType   `json:"setType"`
+	MapKeyType    *FieldType   `json:"mapKeyType"`
+	MapValueType  *FieldType   `json:"mapValueType"`
 }
 
-type FieldTypeName struct {
-	From         int
-	To           int
-	Name         string
-	GenericTypes []FieldType
+func (this_ *FieldType) Start() int { return this_.From }
+func (this_ *FieldType) End() int   { return this_.To }
+
+// ServiceMethodNode 服务接口方法
+type ServiceMethodNode struct {
+	From   int          `json:"from"`
+	To     int          `json:"to"`
+	Return *FieldType   `json:"return"`
+	Name   string       `json:"name"`
+	Params []*FieldNode `json:"params"`
 }
 
-func (*FieldTypeName) IsFieldTypeNode() {}
-func (this_ *FieldTypeName) Start() int { return this_.From }
-func (this_ *FieldTypeName) End() int   { return this_.To }
+func (this_ *ServiceMethodNode) Start() int { return this_.From }
+func (this_ *ServiceMethodNode) End() int   { return this_.To }
 
-type FieldTypeDot struct {
-	From         int
-	To           int
-	Names        []string
-	GenericTypes []FieldType
+// FieldNode 字段定义
+type FieldNode struct {
+	From     int        `json:"from"`
+	To       int        `json:"to"`
+	Num      int16      `json:"num"`
+	Optional bool       `json:"optional"`
+	Type     *FieldType `json:"type"`
+	Name     string     `json:"name"`
+	Value    string     `json:"value"`
 }
 
-func (*FieldTypeDot) IsFieldTypeNode() {}
-func (this_ *FieldTypeDot) Start() int { return this_.From }
-func (this_ *FieldTypeDot) End() int   { return this_.To }
-
-// IFaceMethodDefinition 字段定义
-type IFaceMethodDefinition struct {
-	From   int
-	To     int
-	Return FieldType
-	Name   string
-	Params []*FieldDefinition
-}
-
-func (*IFaceMethodDefinition) IsExpressionNode() {}
-func (*IFaceMethodDefinition) IsDefinitionNode() {}
-func (this_ *IFaceMethodDefinition) Start() int  { return this_.From }
-func (this_ *IFaceMethodDefinition) End() int    { return this_.To }
-
-// FieldDefinition 字段定义
-type FieldDefinition struct {
-	From  int
-	To    int
-	Num   int
-	Type  FieldType
-	Name  string
-	Value string
-}
-
-func (*FieldDefinition) IsClassElementNode() {}
-func (this_ *FieldDefinition) Start() int    { return this_.From }
-func (this_ *FieldDefinition) End() int      { return this_.To }
+func (this_ *FieldNode) Start() int { return this_.From }
+func (this_ *FieldNode) End() int   { return this_.To }
