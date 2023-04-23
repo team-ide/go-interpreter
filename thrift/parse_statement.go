@@ -265,6 +265,23 @@ func (this_ *Parser) parseServiceMethodNode() *ServiceMethodNode {
 	if this_.Token == token.RightParenthesis {
 		res.To = this_.ExpectAndNext("parseIFaceDefinition", token.RightParenthesis) + 1
 	}
+	if this_.ParsedLiteral == "throws" {
+		this_.Next()
+		for this_.Token != token.RightParenthesis && this_.Token != token.Eof {
+
+			if this_.Token == token.LeftParenthesis || this_.Token == token.Semicolon || this_.Token == token.Comma {
+				this_.Next()
+				continue
+			}
+
+			field := this_.parseFieldNode()
+			res.Exceptions = append(res.Exceptions, field)
+		}
+		if this_.Token == token.RightParenthesis {
+			res.To = this_.ExpectAndNext("parseIFaceDefinition", token.RightParenthesis) + 1
+		}
+
+	}
 	return res
 }
 

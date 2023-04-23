@@ -103,11 +103,12 @@ func (this_ *FieldType) End() int   { return this_.To }
 
 // ServiceMethodNode 服务接口方法
 type ServiceMethodNode struct {
-	From   int          `json:"from"`
-	To     int          `json:"to"`
-	Return *FieldType   `json:"return"`
-	Name   string       `json:"name"`
-	Params []*FieldNode `json:"params"`
+	From       int          `json:"from"`
+	To         int          `json:"to"`
+	Return     *FieldType   `json:"return"`
+	Name       string       `json:"name"`
+	Exceptions []*FieldNode `json:"exceptions"`
+	Params     []*FieldNode `json:"params"`
 }
 
 func (this_ *ServiceMethodNode) Start() int { return this_.From }
