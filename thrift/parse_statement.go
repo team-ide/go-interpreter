@@ -247,9 +247,15 @@ func (this_ *Parser) parseServiceMethodNode() *ServiceMethodNode {
 	}
 	//fmt.Println("parseIFaceDefinition token:", this_.Token)
 
+	if this_.ParsedLiteral == "oneway" {
+		res.Oneway = true
+		this_.Next()
+	}
+
 	res.Return = this_.parseFieldType()
 
 	res.Name = this_.ParsedLiteral
+
 	this_.Next()
 
 	for this_.Token != token.RightParenthesis && this_.Token != token.Eof {

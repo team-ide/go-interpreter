@@ -100,6 +100,7 @@ func (this_ *FieldType) End() int   { return this_.To }
 type ServiceMethodNode struct {
 	From       int          `json:"from"`
 	To         int          `json:"to"`
+	Oneway     bool         `json:"oneway"`
 	Return     *FieldType   `json:"return"`
 	Name       string       `json:"name"`
 	Exceptions []*FieldNode `json:"exceptions"`
