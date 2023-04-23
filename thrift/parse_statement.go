@@ -89,7 +89,9 @@ func (this_ *Parser) parseExceptionStatement() *ExceptionStatement {
 	idx := this_.ExpectAndNext("parseExceptionStatement", token.Exception)
 
 	res := &ExceptionStatement{
-		From: idx,
+		StructStatement: &StructStatement{
+			From: idx,
+		},
 	}
 
 	res.Name = this_.ParsedLiteral
