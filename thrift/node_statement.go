@@ -30,12 +30,7 @@ func (this_ *NamespaceStatement) End() int   { return this_.To }
 
 // ExceptionStatement thrift 异常
 type ExceptionStatement struct {
-	From           int          `json:"from"`
-	To             int          `json:"to"`
-	Name           string       `json:"name"`
-	ExtendsInclude string       `json:"extendsInclude"`
-	ExtendsName    string       `json:"extendsName"`
-	Fields         []*FieldNode `json:"fields"`
+	*StructStatement
 }
 
 func (*ExceptionStatement) IsStatementNode() {}
