@@ -348,8 +348,8 @@ func (this_ *Parser) parseFieldType() *FieldType {
 		res.TypeId = thrift.STRING
 	case "utf7":
 		res.TypeId = thrift.UTF7
-	case "uuid":
-		res.TypeId = thrift.UUID
+	//case "uuid":
+	//	res.TypeId = thrift.UUID
 	case "map":
 		res.TypeId = thrift.MAP
 	case "set":
