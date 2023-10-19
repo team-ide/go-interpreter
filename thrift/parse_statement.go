@@ -348,14 +348,21 @@ func (this_ *Parser) parseFieldType() *FieldType {
 		res.TypeId = thrift.STRING
 	case "utf7":
 		res.TypeId = thrift.UTF7
-	//case "uuid":
-	//	res.TypeId = thrift.UUID
 	case "map":
 		res.TypeId = thrift.MAP
 	case "set":
 		res.TypeId = thrift.SET
 	case "list":
 		res.TypeId = thrift.LIST
+	case "utf8":
+		res.TypeId = thrift.STRING
+	case "utf16":
+		res.TypeId = thrift.STRING
+	case "uuid":
+		//res.TypeId = thrift.UUID
+		res.TypeId = thrift.STRING
+	case "binary":
+		res.TypeId = thrift.STRING
 	default:
 		res.TypeId = thrift.STRUCT
 		res.StructInclude, res.StructName, res.To = this_.ParseIncludeName()
