@@ -1,7 +1,6 @@
 package java
 
 import (
-	"fmt"
 	"github.com/team-ide/go-interpreter/node"
 	"github.com/team-ide/go-interpreter/parser"
 	"github.com/team-ide/go-interpreter/token"
@@ -24,7 +23,7 @@ func Parse(src string) (tree *node.Tree, err error) {
 }
 
 func (this_ *Parser) parseStatement() node.Statement {
-	fmt.Println("parseStatement this_.Token:", this_.Token)
+	//fmt.Println("parseStatement this_.Token:", this_.Token)
 	if this_.Token == token.Eof {
 		_ = this_.ErrorUnexpectedToken("parseStatement this_.Token is token.Eof", this_.Token)
 		return &node.BadStatement{From: this_.Idx, To: this_.Idx + 1}
